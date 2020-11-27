@@ -19,10 +19,14 @@ version for your distribution by downloading it directly from the TOR Project
 repository.
 
 
+
+
 Requirements
 
 The script should work on many debian-based distros with the unbound package 
 present in the repositories. Tested on Debian, Ubuntu, Mint.
+
+
 
 How it works
 
@@ -42,6 +46,8 @@ IMPORTANT
 If something goes wrong or you just want to update the script, first remove all
 files and settings using the appropriate option in the same script.
 
+
+
 Warning
 
 This is NOT a solution that grants strong anonymity and the developers themselves 
@@ -60,6 +66,8 @@ The real benefits of using this script derive from the security of DNS traffic:
 dnscrypt makes spying, spoofing and man-in-the-middle attacks difficult.
 If you are looking for a strong anonymity solution, switch to Linux distributions 
 focused on security and privacy like Whomix or Tails.
+
+
 
 Troubleshotting and workaround
 
