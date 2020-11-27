@@ -51,8 +51,8 @@ files and settings using the appropriate option in the same script.
 Warning
 
 This is NOT a solution that grants strong anonymity and the developers themselves 
-do not recommend using tor as a trasparent proxy.
-(https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy)
+do not recommend using tor as a trasparent proxy
+(https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy).
 When you browse the web even if you do not use personal data and hide your IP address,
 traces are left that can uniquely identify your machine such as the hostname and mac 
 address of the network device. Your browser itself can uniquely identify you: from 
@@ -60,8 +60,8 @@ the point of view of tracking/fingerprinting Tor browser guarantees greater secu
 because it already comes with built-in fixes and extensions like Noscript and HTTPS 
 Everywhere, useful to avoid some attacks and tracking methods.
 However you could still use Tor browser (without DNSCrypt/DNSSEC) even while the
-service is running, but this scenario is also not recommended.
-(https://trac.torproject.org/projects/tor/wiki/doc/TorifyHOWTO#ToroverTor)
+service is running, but this scenario is also not recommended
+(https://trac.torproject.org/projects/tor/wiki/doc/TorifyHOWTO#ToroverTor).
 The real benefits of using this script derive from the security of DNS traffic: 
 dnscrypt makes spying, spoofing and man-in-the-middle attacks difficult.
 If you are looking for a strong anonymity solution, switch to Linux distributions 
