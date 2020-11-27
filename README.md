@@ -21,14 +21,14 @@ repository.
 
 
 
-Requirements
+REQUIREMENTS
 
 The script should work on many debian-based distros with the unbound package 
 present in the repositories. Tested on Debian, Ubuntu, Mint.
 
 
 
-How it works
+HOW IT WORKS
 
 The script works as a launcher: after installing the necessary software, you can 
 reconfigure resolvers and relays before each reactivation of the service or you can
@@ -47,8 +47,7 @@ If something goes wrong or you just want to update the script, first remove all
 files and settings using the appropriate option in the same script.
 
 
-
-Warning
+WARNING
 
 This is NOT a solution that grants strong anonymity and the developers themselves 
 do not recommend using tor as a trasparent proxy
@@ -69,7 +68,7 @@ focused on security and privacy like Whomix or Tails.
 
 
 
-Troubleshotting and workaround
+TROUBLESHOTTING AND WORKAROUND
 
 This script may not work properly if used on a not-fully updated system.
 
