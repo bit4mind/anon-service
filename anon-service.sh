@@ -342,9 +342,11 @@ until [ -s $root/tor.txt ]
 do
 echo "Waiting...";
 sleep $time
-xterm -e "curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs > $root/tor.txt" 
+echo "Checking connection to Tor";
+curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs > $root/tor.txt
 sleep 3
-echo "+++ OK! +++";
+sed -i 's/browser/system/g' tor.txt
+cat tor.txt
 sleep 2
 done
 rm $root/tor.txt > /dev/null 2>&1
