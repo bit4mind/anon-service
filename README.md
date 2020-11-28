@@ -1,5 +1,5 @@
 # anon-service
-Transparent proxy through Tor with DNSCrypt and Anonymized-DNS feature enabled.
+Transparent proxy through Tor with DNSCrypt and Anonymized DNS feature enabled.
 
 From Wikipedia: Tor is free and open-source software for enabling anonymous
 communication by directing Internet traffic through a free, worldwide, volunteer
