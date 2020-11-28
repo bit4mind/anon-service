@@ -338,18 +338,23 @@ xterm -e unbound &
 chown -R $owner:$owner $root
 xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" &
 xterm -T "Dnscrypt-proxy" -e ./dnscrypt-proxy &
-until [ -s $root/tor.txt ]
-do
-echo "Waiting...";
-sleep $time
 echo "Checking connection to Tor";
-curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs > $root/tor.txt
+rm $root/tor.log > /dev/null 2>&1
+until [ -s $root/tor.log ]
+do
+sleep $time
+curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs > $root/tor.log
+torlogsize=$(stat -c%s $root/tor.log)
+if (( $torlogsize > 1 )); then
+sed -i 's/browser/system/g' $root/tor.log
+cat $root/tor.log
 sleep 3
-sed -i 's/browser/system/g' tor.txt
-cat tor.txt
-sleep 2
+else
+echo "Waiting for connection...";
+rm $root/tor.log > /dev/null 2>&1
+fi
 done
-rm $root/tor.txt > /dev/null 2>&1
+rm $root/tor.log > /dev/null 2>&1
 ## Configuring basic iptables rules
 ## Reference: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
 # destinations you don't want routed through Tor
