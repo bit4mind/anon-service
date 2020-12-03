@@ -58,7 +58,7 @@ echo "   4. Execute all tasks above";
 echo "   5. Stop anon-service and exit without removing data files and settings";
 echo "   6. Exit removing anon-service files and settings from system";
 echo -e "\n"
-echo -n " Choose: ";
+echo -n "  Choose: ";
 read -e task
 case "$task" in  
 1)
@@ -459,18 +459,17 @@ exit 0
 ##
 clear
 if [ -s $root/dnscrypt-proxy.toml ]; then
-wmctrl -r ':ACTIVE:' -b toggle,maximized_vert,maximized_horz
-clear
-menu
+wmctrl -r ':ACTIVE:' -e 0,0,0,801,601 && sleep 1
+wmctrl -r ':ACTIVE:' -e 0,0,0,800,600 && menu
 else
 rm conn.txt > /dev/null 2>&1
 ping -c1 opendns.com > conn.txt 2>&1
 if ( grep -q "icmp_seq=1" conn.txt ); then
+clear
 rm conn.txt > /dev/null 2>&1
 apt-get install -y wmctrl > /dev/null
-wmctrl -r ':ACTIVE:' -b toggle,maximized_vert,maximized_horz
-clear
-menu
+wmctrl -r ':ACTIVE:' -e 0,0,0,800,600 && sleep 1
+wmctrl -r ':ACTIVE:' -e 0,0,0,801,601 && menu
 else
 echo "          Please first connect your system to internet!";
 exit 1   
