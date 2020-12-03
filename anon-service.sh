@@ -460,6 +460,7 @@ exit 0
 clear
 if [ -s $root/dnscrypt-proxy.toml ]; then
 wmctrl -r ':ACTIVE:' -b toggle,maximized_vert,maximized_horz
+clear
 menu
 else
 rm conn.txt > /dev/null 2>&1
@@ -468,6 +469,7 @@ if ( grep -q "icmp_seq=1" conn.txt ); then
 rm conn.txt > /dev/null 2>&1
 apt-get install -y wmctrl > /dev/null
 wmctrl -r ':ACTIVE:' -b toggle,maximized_vert,maximized_horz
+clear
 menu
 else
 echo "          Please first connect your system to internet!";
