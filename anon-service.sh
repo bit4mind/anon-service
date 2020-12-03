@@ -105,7 +105,7 @@ usermod -u 999 $owner > /dev/null 2>&1
 mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
-apt-get install -y curl wget xterm gedit apt-transport-https unbound > /dev/null
+apt-get install -y curl wget psmisc xterm gedit apt-transport-https unbound > /dev/null
 sleep 1
 clear
 echo " Which version of Tor do you prefer to use?";
@@ -454,7 +454,9 @@ echo "    +++ Have a nice day! ;) +++";
 echo -e "\n\n";
 exit 0
 }
-
+##
+## Main
+##
 clear
 if [ -s $root/dnscrypt-proxy.toml ]; then
 menu
