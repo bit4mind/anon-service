@@ -319,6 +319,11 @@ echo "   forward-addr: 127.0.0.1@10000" >> $unbound
 ## Starting services and configuring iptables
 ##
 start(){
+if [ ! -f "$root" ]; then
+echo "Sorry! Your system is not ready to start the service";
+echo "Please first check if you have installed the necessary files";
+exit 1
+fi
 cd $root
 service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
