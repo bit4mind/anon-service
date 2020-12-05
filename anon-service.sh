@@ -55,8 +55,9 @@ echo "   2. Edit public servers and relays for anonymized DNS";
 echo "      feature and configure other service";
 echo "   3. Start anon-service";
 echo "   4. Execute all tasks above";
-echo "   5. Stop anon-service and exit without removing data files and settings";
-echo "   6. Exit removing anon-service files and settings from system";
+echo "   5. Close this window";
+echo "   6. Stop anon-service and exit without removing data files and settings";
+echo "   7. Exit removing anon-service files and settings from system";
 echo -e "\n"
 echo -n "  Choose: ";
 read -e task
@@ -84,9 +85,12 @@ clear
 menu
 ;;
 5)
-shutdown
+xdotool windowkill `xdotool getactivewindow`
 ;;
 6)
+shutdown
+;;
+7)
 cleanall
 ;;
 *)
@@ -105,7 +109,7 @@ usermod -u 999 $owner > /dev/null 2>&1
 mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
-apt-get install -y curl wget psmisc xterm gedit apt-transport-https unbound > /dev/null
+apt-get install -y curl wget psmisc xdotool xterm gedit apt-transport-https unbound > /dev/null
 sleep 1
 clear
 echo " Which version of Tor do you prefer to use?";
@@ -221,6 +225,12 @@ cp $netman $netman.bak
 ## CONFIGURING SERVICES
 ##
 configure(){
+if [ ! -f "$root" ]; then
+echo "";
+echo "Sorry! Your system is not ready to complete this action";
+echo "Please first check if you have installed the necessary files";
+exit 1
+fi
 ## Configuring dnscrypt_proxy
 rm $root/dnscrypt-proxy.toml > /dev/null 2>&1
 cp $root/dnscrypt-proxy.toml.bak $root/dnscrypt-proxy.toml
@@ -320,6 +330,7 @@ echo "   forward-addr: 127.0.0.1@10000" >> $unbound
 ##
 start(){
 if [ ! -f "$root" ]; then
+echo "";
 echo "Sorry! Your system is not ready to start the service";
 echo "Please first check if you have installed the necessary files";
 exit 1
