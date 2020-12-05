@@ -221,6 +221,12 @@ cp $netman $netman.bak
 ## CONFIGURING SERVICES
 ##
 configure(){
+if [ ! -f "$root" ]; then
+echo "";
+echo "Sorry! Your system is not ready to complete this action";
+echo "Please first check if you have installed the necessary files";
+exit 1
+fi
 ## Configuring dnscrypt_proxy
 rm $root/dnscrypt-proxy.toml > /dev/null 2>&1
 cp $root/dnscrypt-proxy.toml.bak $root/dnscrypt-proxy.toml
@@ -320,6 +326,7 @@ echo "   forward-addr: 127.0.0.1@10000" >> $unbound
 ##
 start(){
 if [ ! -f "$root" ]; then
+echo "";
 echo "Sorry! Your system is not ready to start the service";
 echo "Please first check if you have installed the necessary files";
 exit 1
