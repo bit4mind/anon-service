@@ -37,7 +37,6 @@ unbound=/etc/unbound/unbound.conf
 time=19
 
 menu(){
-echo "                                                            ";
 echo "             ▄▄▄      ███▄    █ ▒█████   ███▄    █          ";
 echo "            ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          ";
 echo "            ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         ";
@@ -225,7 +224,7 @@ cp $netman $netman.bak
 ## CONFIGURING SERVICES
 ##
 configure(){
-if [ ! -f "$root" ]; then
+if [ ! -f "$root/dnscrypt-proxy.toml" ]; then
 echo "";
 echo "Sorry! Your system is not ready to complete this action";
 echo "Please first check if you have installed the necessary files";
@@ -329,7 +328,7 @@ echo "   forward-addr: 127.0.0.1@10000" >> $unbound
 ## Starting services and configuring iptables
 ##
 start(){
-if [ ! -f "$root" ]; then
+if [ ! -f "$root/dnscrypt-proxy.toml" ]; then
 echo "";
 echo "Sorry! Your system is not ready to start the service";
 echo "Please first check if you have installed the necessary files";
