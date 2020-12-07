@@ -37,6 +37,7 @@ unbound=/etc/unbound/unbound.conf
 time=19
 
 menu(){
+clear
 echo "             ▄▄▄      ███▄    █ ▒█████   ███▄    █          ";
 echo "            ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          ";
 echo "            ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         ";
@@ -48,7 +49,7 @@ echo "       ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██
 echo "         ▒   ██▒▒▓█  ▄ ▒██▀▀█▄    ▒██ █░░░██░▒▓▓▄ ▄██▒▓█  ▄ ";
 echo "       ▒██████▒▒░▒████▒░██▓ ▒██▒   ▒▀█░  ░██░▒ ▓███▀ ░▒████▒";
 echo "             ░           ░           ░       ░ by bit4mind  ";
-echo " "
+echo " ";
 echo "   1. Check dependencies and download upgraded services";
 echo "   2. Edit public servers and relays for anonymized DNS"; 
 echo "      feature and configure other service";
@@ -57,6 +58,10 @@ echo "   4. Execute all tasks above";
 echo "   5. Close this window";
 echo "   6. Stop anon-service and exit without removing data files and settings";
 echo "   7. Exit removing anon-service files and settings from system";
+#echo " ";
+echo -en "\033[38;2;0;100;0m    Misc\033[0m\n";
+#echo "";
+echo "   8. Change IP address";
 echo -e "\n"
 echo -n "  Choose: ";
 read -e task
@@ -91,6 +96,15 @@ shutdown
 ;;
 7)
 cleanall
+;;
+8)
+if ! pgrep -x "tor" > /dev/null; then
+echo " ";
+echo "Tor is not running!"
+exit 1
+else
+killall -HUP tor && menu
+fi
 ;;
 *)
 echo "--- Are you serious? ---"
@@ -490,4 +504,3 @@ echo "          Please first connect your system to internet!";
 exit 1   
 fi
 fi
-
