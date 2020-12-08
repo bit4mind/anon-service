@@ -52,7 +52,7 @@ echo "             ░           ░           ░       ░ by bit4mind  ";
 echo " "
 echo "   1. Check dependencies and download upgraded services";
 echo "   2. Edit public servers and relays for anonymized DNS"; 
-echo "      feature and configure other service";
+echo "      feature and configure other services";
 echo "   3. Start anon-service";
 echo "   4. Execute all tasks above";
 echo "   5. Stop anon-service and exit without removing data files and settings";
