@@ -2,7 +2,7 @@
 
 # #####################################################################
 # anon-service.sh
-# version 1.0
+# version 1.09
 # 
 # Transparent proxy through Tor with DNSCrypt and Anonymized DNS 
 # feature enabled.
@@ -38,58 +38,65 @@ time=19
 
 menu(){
 clear
-echo "             ▄▄▄      ███▄    █ ▒█████   ███▄    █          ";
-echo "            ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          ";
-echo "            ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         ";
-echo "            ░██▄▄▄▄██▓██▒  ▐▌██▒██   ██░▓██▒  ▐▌██▒         ";
-echo "             ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         ";
-echo "         ██████ ▓█████  ██▀███░  ██▒ ░ █▓ ██▓ ▄████▄ ▓█████ ";
-echo "       ▒██    ▒ ▓█   ▀ ▓██ ▒ ██▒▓██░   █▒▓██▒▒██▀ ▀█ ▓█   ▀ ";
-echo "       ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██  █▒░▒██▒▒▓█    ▄▒███   ";
-echo "         ▒   ██▒▒▓█  ▄ ▒██▀▀█▄    ▒██ █░░░██░▒▓▓▄ ▄██▒▓█  ▄ ";
-echo "       ▒██████▒▒░▒████▒░██▓ ▒██▒   ▒▀█░  ░██░▒ ▓███▀ ░▒████▒";
-echo "             ░           ░           ░       ░ by bit4mind  ";
+echo "                    ▄▄▄      ███▄    █ ▒█████   ███▄    █          ";
+echo "                   ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          ";
+echo "                   ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         ";
+echo "                   ░██▄▄▄▄██▓██▒  ▐▌██▒██   ██░▓██▒  ▐▌██▒         ";
+echo "                   ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         ";
+echo "                ██████ ▓█████  ██▀███░  ██▒ ░ █▓ ██▓ ▄████▄ ▓█████ ";
+echo "              ▒██    ▒ ▓█   ▀ ▓██ ▒ ██▒▓██░   █▒▓██▒▒██▀ ▀█ ▓█   ▀ ";
+echo "              ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██  █▒░▒██▒▒▓█    ▄▒███   ";
+echo "                ▒   ██▒▒▓█  ▄ ▒██▀▀█▄    ▒██ █░░░██░▒▓▓▄ ▄██▒▓█  ▄ ";
+echo "              ▒██████▒▒░▒████▒░██▓ ▒██▒   ▒▀█░  ░██░▒ ▓███▀ ░▒████▒";
+echo "                    ░           ░           ░       ░ by bit4mind  ";
 echo " ";
-echo "   1. Check dependencies and download upgraded services";
-echo "   2. Edit public servers and relays for anonymized DNS"; 
-echo "      feature and configure other services";
-echo "   3. Start anon-service";
-echo "   4. Execute all tasks above";
-echo "   5. Close this window";
+echo "   0. Check dependencies and download upgraded services";
+echo "   1. Set servers/relays for anonymized DNS feature and configure other services";
+echo "   2. Start anon-service";
+echo "   3. Execute all tasks above";
+echo "   4. Close this window";
+echo "   5. Enable service to start automatically at boot";
 echo "   6. Stop anon-service and exit without removing data files and settings";
 echo "   7. Exit removing anon-service files and settings from system";
-#echo " ";
 echo -en "\033[38;2;0;100;0m    Misc\033[0m\n";
-#echo "";
 echo "   8. Change IP address";
-echo -e "\n"
+echo "   9. Install this script";
+echo " ";
 echo -n "  Choose: ";
 read -e task
 case "$task" in  
-1)
+0)
 download
-clear
+menu
+;;
+1)
+configure
 menu
 ;;
 2)
-configure
-clear
+start
 menu
 ;;
 3)
-start
-clear
-menu
-;;
-4)
 download
 configure
 start
-clear
 menu
 ;;
-5)
+4)
 xdotool windowkill `xdotool getactivewindow`
+;;
+5)
+if [ ! -f "$root/dnscrypt-proxy.toml" ]; then
+echo "";
+echo " Sorry! Your system is not ready to start the service";
+echo " Please first check if you have installed the necessary files";
+exit 1
+fi
+## code here
+echo " Cooming soon!";
+sleep 5
+menu
 ;;
 6)
 shutdown
@@ -100,11 +107,23 @@ cleanall
 8)
 if ! pgrep -x "tor" > /dev/null; then
 echo " ";
-echo "Tor is not running!"
+echo " Tor is not running!"
 exit 1
 else
-killall -HUP tor && menu
+echo " ";
+killall -HUP tor && curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 1 "Your IP address" | sed -e 's/<[^>]*>//g' | xargs
+sleep 7
+menu
 fi
+;;
+9)
+touch /usr/bin/anon-service > /dev/null 2>&1
+cp $root/$0 /usr/bin/anon-service
+chmod +x /usr/bin/anon-service
+echo " ";
+echo " Now you can run it simply typing \"sudo anon-service\" in your terminal";
+sleep 7
+menu
 ;;
 *)
 echo "--- Are you serious? ---"
@@ -119,6 +138,7 @@ echo "+++ Checking dependencies and preparing the system +++"
 rm -rf $root > /dev/null 2>&1
 adduser -q --disabled-password --gecos "" $owner > /dev/null 2>&1
 usermod -u 999 $owner > /dev/null 2>&1
+cp $0 $root
 mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
@@ -159,8 +179,8 @@ touch $repo
 echo "deb [arch=amd64] https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
 echo "deb-src [arch=amd64] https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
 else
-echo "Sorry! Apparently your OS has not candidate in Tor Project repository.";
-echo "Please re-run the script and choose other options.";
+echo " Sorry! Apparently your OS has not candidate in Tor Project repository.";
+echo " Please re-run the script and choose other options.";
 exit 1
 fi
 cd $root/temp/
@@ -175,11 +195,11 @@ apt-get update > $root/temp/apt.log
 sleep 1
 if ( grep "torproject.org $os Release" $root/temp/apt.log )
 then
-   echo "Sorry! The script can't obtain the correct codename for your OS";
-   echo "Please try to enter the correct codename for the debian/ubuntu repository";
-   echo "compatible with your OS. In doubt search on internet!";
-   echo "Warning: if the repository is not correct, the script could crash!"; 
-   echo -n "(for example: buster): ";
+   echo " Sorry! The script can't obtain the correct codename for your OS";
+   echo " Please try to enter the correct codename for the debian/ubuntu repository";
+   echo " compatible with your OS. In doubt search on internet!";
+   echo " Warning: if the repository is not correct, the script could crash!"; 
+   echo -n " (for example: buster): ";
    read -e codename 
    rm $repo
    touch $repo
@@ -253,34 +273,34 @@ xterm -T "Resolvers" -e "gedit $root/public-resolvers.md" &
 sleep 1
 clear
 echo " "
-echo "Please enter the name of the first resolver to use, only ipv4!";
-echo -n "First server: ";
+echo " Please enter the name of the first resolver to use, only ipv4!";
+echo -n " First server: ";
 read -e server1
 echo " "
-echo "Please enter the name of the second resolver to use, only ipv4!";
-echo -n "Second server: ";
+echo " Please enter the name of the second resolver to use, only ipv4!";
+echo -n " Second server: ";
 read -e server2
 echo "+++ Opening file contain relays +++";
 killall gedit > /dev/null 2>&1
 xterm -T "Relay" -e "gedit $root/relays.md" &
 clear
 echo " "
-echo "Carefully choose relays and servers so that they are run by different entities!";
+echo " Carefully choose relays and servers so that they are run by different entities!";
 echo " "
-echo "Please enter the name of the first realy to use!";
-echo -n "First relay for the first server: ";
+echo " Please enter the name of the first realy to use!";
+echo -n " First relay for the first server: ";
 read -e relay1
 echo " "
-echo "Please enter the name of the second relay to use!";
-echo -n "Second relay for the first server: ";
+echo " Please enter the name of the second relay to use!";
+echo -n " Second relay for the first server: ";
 read -e relay2
 echo " "
-echo "Please enter the name of the third resolver to use!";
-echo -n "First relay for the second server: ";
+echo " Please enter the name of the third resolver to use!";
+echo -n " First relay for the second server: ";
 read -e relay3
 echo " "
-echo "Please enter the name of the fourth resolver to use!";
-echo -n "Second relay for the second server: ";
+echo " Please enter the name of the fourth resolver to use!";
+echo -n " Second relay for the second server: ";
 read -e relay4
 killall gedit > /dev/null 2>&1
 clear
@@ -344,8 +364,8 @@ echo "   forward-addr: 127.0.0.1@10000" >> $unbound
 start(){
 if [ ! -f "$root/dnscrypt-proxy.toml" ]; then
 echo "";
-echo "Sorry! Your system is not ready to start the service";
-echo "Please first check if you have installed the necessary files";
+echo " Sorry! Your system is not ready to start the service";
+echo " Please first check if you have installed the necessary files";
 exit 1
 fi
 cd $root
@@ -365,9 +385,9 @@ service network-manager restart
 sleep 13
 xterm -e unbound &
 chown -R $owner:$owner $root
-xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" &
-xterm -T "Dnscrypt-proxy" -e ./dnscrypt-proxy &
-echo "Checking connection to Tor";
+nohup xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
+nohup xterm -T "Dnscrypt-proxy" -e ./dnscrypt-proxy > /dev/null 2>&1 &
+echo " Checking connection to Tor";
 rm $root/tor.log > /dev/null 2>&1
 until [ -s $root/tor.log ]
 do
@@ -379,7 +399,7 @@ sed -i 's/browser/system/g' $root/tor.log
 cat $root/tor.log
 sleep 3
 else
-echo "Waiting for connection...";
+echo " Waiting for connection...";
 rm $root/tor.log > /dev/null 2>&1
 fi
 done
@@ -456,6 +476,7 @@ fi
 if [[ -f "$netman.bak" ]]; then
 cp $netman.bak $netman > /dev/null 2>&1
 fi
+rm /usr/bin/anon-service.sh > /dev/null 2>&1
 service systemd-resolved restart
 service network-manager restart
 rm $repo > /dev/null 2>&1
@@ -487,9 +508,15 @@ exit 0
 ## Main
 ##
 clear
+ifsudo=$(id -u)
+if [ $ifsudo != 0 ]; then
+echo " ";
+echo " Please run script with administrator privileges";
+exit 1
+fi
 if [ -s $root/dnscrypt-proxy.toml ]; then
-wmctrl -r ':ACTIVE:' -e 0,0,0,780,570 && sleep 1
-wmctrl -r ':ACTIVE:' -e 0,0,0,781,571 && menu
+wmctrl -r ':ACTIVE:' -e 0,0,0,830,530 && sleep 1
+wmctrl -r ':ACTIVE:' -e 0,0,0,831,531 && menu
 else
 rm conn.txt > /dev/null 2>&1
 ping -c1 opendns.com > conn.txt 2>&1
@@ -497,8 +524,8 @@ if ( grep -q "icmp_seq=1" conn.txt ); then
 clear
 rm conn.txt > /dev/null 2>&1
 apt-get install -y wmctrl > /dev/null
-wmctrl -r ':ACTIVE:' -e 0,0,0,780,570 && sleep 1
-wmctrl -r ':ACTIVE:' -e 0,0,0,781,571 && menu
+wmctrl -r ':ACTIVE:' -e 0,0,0,830,530 && sleep 1
+wmctrl -r ':ACTIVE:' -e 0,0,0,831,531 && menu
 else
 echo "          Please first connect your system to internet!";
 exit 1   
