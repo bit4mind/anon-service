@@ -221,7 +221,7 @@ cp $netman $netman.bak
 ## CONFIGURING SERVICES
 ##
 configure(){
-if [ ! -f "$root/dnscrypt-proxy.toml" ]; then
+if [ ! -f "$root/dnscrypt-proxy.toml.bak" ]; then
 echo "";
 echo "Sorry! Your system is not ready to complete this action";
 echo "Please first check if you have installed the necessary files";
