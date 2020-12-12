@@ -315,9 +315,9 @@ cp $netman.bak $root/NetworkManager.conf.temp
 cd $root
 chown $USER:$USER NetworkManager.conf.temp
 sed -i 's/^dns=dnsmasq/#&/' NetworkManager.conf.temp
-#sed -i 's/^dns=default/#&/' NetworkManager.conf.temp
 sed '/\[main\]/a dns=default' NetworkManager.conf.temp > NetworkManager.conf
 mv NetworkManager.conf $netman
+chown root:root $netman
 if [[ -f "$resolved" ]]; then
 cp $resolved $resolved.bak
 cp $resolved $root/resolved.conf.temp
@@ -325,6 +325,7 @@ chown $USER:$USER resolved.conf.temp
 sed -i 's/^DNSStubListener=yes/#&/' resolved.conf.temp
 echo "DNSStubListener=no" >> resolved.conf.temp
 cp resolved.conf.temp $resolved
+chown root:root $resolved
 fi
 service dnsmasq stop > /dev/null 2>&1
 service bind stop > /dev/null 2>&1
