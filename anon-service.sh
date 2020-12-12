@@ -274,28 +274,6 @@ sed -i '699iroutes = \[' $root/dnscrypt-proxy.toml
 sed -i "700i{ server_name='$server1', via=['$relay1', '$relay2'] }," $root/dnscrypt-proxy.toml
 sed -i "701i{ server_name='$server2', via=['$relay3', '$relay4'] }" $root/dnscrypt-proxy.toml
 sed -i '702i\]' $root/dnscrypt-proxy.toml
-## Disabling dnsmasq
-cp $netman.bak $root/NetworkManager.conf.temp
-cd $root
-chown $USER:$USER NetworkManager.conf.temp
-sed -i 's/^dns=dnsmasq/#&/' NetworkManager.conf.temp
-#sed -i 's/^dns=default/#&/' NetworkManager.conf.temp
-sed '/\[main\]/a dns=default' NetworkManager.conf.temp > NetworkManager.conf
-mv NetworkManager.conf $netman
-if [[ -f "$resolved" ]]; then
-cp $resolved $resolved.bak
-cp $resolved $root/resolved.conf.temp
-chown $USER:$USER resolved.conf.temp
-sed -i 's/^DNSStubListener=yes/#&/' resolved.conf.temp
-echo "DNSStubListener=no" >> resolved.conf.temp
-cp resolved.conf.temp $resolved
-fi
-service dnsmasq stop > /dev/null 2>&1
-service bind stop > /dev/null 2>&1
-#service dnscrypt-proxy stop
-killall dnsmasq bind > /dev/null 2>&1
-rm /etc/resolv.conf 
-sleep 1
 ## Configuring Tor
 cp $tor $root/torrc
 echo "VirtualAddrNetworkIPv4 10.192.0.0/10" >> $root/torrc
@@ -331,6 +309,29 @@ echo "Sorry! Your system is not ready to start the service";
 echo "Please first check if you have installed the necessary files";
 exit 1
 fi
+## Disabling dnsmasq
+cp $root/resolved.bak $resolved > /dev/null 2>&1
+cp $netman.bak $root/NetworkManager.conf.temp
+cd $root
+chown $USER:$USER NetworkManager.conf.temp
+sed -i 's/^dns=dnsmasq/#&/' NetworkManager.conf.temp
+#sed -i 's/^dns=default/#&/' NetworkManager.conf.temp
+sed '/\[main\]/a dns=default' NetworkManager.conf.temp > NetworkManager.conf
+mv NetworkManager.conf $netman
+if [[ -f "$resolved" ]]; then
+cp $resolved $resolved.bak
+cp $resolved $root/resolved.conf.temp
+chown $USER:$USER resolved.conf.temp
+sed -i 's/^DNSStubListener=yes/#&/' resolved.conf.temp
+echo "DNSStubListener=no" >> resolved.conf.temp
+cp resolved.conf.temp $resolved
+fi
+service dnsmasq stop > /dev/null 2>&1
+service bind stop > /dev/null 2>&1
+#service dnscrypt-proxy stop
+killall dnsmasq bind > /dev/null 2>&1
+rm /etc/resolv.conf 
+sleep 1
 cd $root
 service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
@@ -404,10 +405,10 @@ service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
 if [[ -f "$root/resolved.bak" ]]; then
-cp $root/resolved.bak $resolved > /dev/null 2>&1
+mv $root/resolved.bak $resolved > /dev/null 2>&1
 fi
 if [[ -f "$netman.bak" ]]; then
-cp $netman.bak $netman > /dev/null 2>&1
+mv $netman.bak $netman > /dev/null 2>&1
 fi
 service systemd-resolved restart
 service network-manager restart
@@ -483,4 +484,3 @@ echo "          Please first connect your system to internet!";
 exit 1   
 fi
 fi
-
