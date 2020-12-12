@@ -406,10 +406,10 @@ service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
 if [[ -f "$root/resolved.bak" ]]; then
-mv $root/resolved.bak $resolved > /dev/null 2>&1
+cp $root/resolved.bak $resolved > /dev/null 2>&1
 fi
 if [[ -f "$netman.bak" ]]; then
-mv $netman.bak $netman > /dev/null 2>&1
+cp $netman.bak $netman > /dev/null 2>&1
 fi
 service systemd-resolved restart
 service network-manager restart
