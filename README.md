@@ -20,7 +20,6 @@ repository.
 
 
 
-
 REQUIREMENTS
 
 The script should work on many debian-based distros with the unbound package 
@@ -34,8 +33,9 @@ The script works as a launcher: after installing the necessary software, you can
 reconfigure resolvers and relays before each reactivation of the service or you can
 stop the service without deleting the data and then reactivate it faster without 
 having to install the requirements again and reconfigure DNS traffic.
-In the next version will be added the possibility to install and enable the script 
-as a real service at startup
+You can install it to start automatically at boot: in this case you could restart
+service simply restarting your connection and continue to use the script for
+changing IP address, configuring dnscrypt servers and relays or removing all things.
 
 Usage:
 chmod +x anon-script.sh
@@ -79,3 +79,5 @@ Resolvers and Relays list empty: wget problem with TLS, update your system or us
 your browser.
 
 Unbound package not found: update your system or install it before.
+
+If this version does not working try old release.
