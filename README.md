@@ -45,7 +45,11 @@ sudo ./anon-script.sh
 Important: 
 If something goes wrong or you just want to update the script, first remove all
 files and settings using the appropriate option in the same script.
-
+Note:
+If you install the script to start automatically at boot, be aware that the service 
+will start with a small delay after the host has established the connection to the 
+network. Before the service is fully loaded, the connection will not work: you can 
+check its status via syslog with the command tail -f /var/log/syslog
 
 WARNING
 
@@ -80,4 +84,4 @@ your browser.
 
 Unbound package not found: update your system or install it before.
 
-If this version does not working try old release.
+If this version, does not working try old release.
