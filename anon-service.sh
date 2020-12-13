@@ -57,7 +57,7 @@ echo "   3. Execute all tasks above";
 echo "   4. Close this window";
 echo "   5. Enable service to start automatically at boot";
 echo "   6. Stop anon-service and exit without removing data files and settings";
-echo "   7. Exit removing anon-service files and settings from system";
+echo "   7. Exit removing anon-service files and settings from system (needed reboot)";
 echo -en "\033[38;2;0;100;0m    Misc\033[0m\n";
 echo "   8. Change IP address";
 echo "   9. Install this script";
@@ -74,13 +74,13 @@ configure
 menu
 ;;
 2)
-start
+start_service
 menu
 ;;
 3)
 download
 configure
-start
+start_service
 menu
 ;;
 4)
@@ -93,13 +93,67 @@ echo " Sorry! Your system is not ready to start the service";
 echo " Please first check if you have installed the necessary files";
 exit 1
 fi
-## code here
-echo " Cooming soon!";
-sleep 5
-menu
+touch resolv.conf
+echo nameserver 127.0.0.1 > resolv.conf
+mv resolv.conf /etc/resolv.conf
+touch /etc/network/if-up.d/anon-service
+echo "#!/bin/sh" > /etc/network/if-up.d/anon-service
+echo "root=/home/anon-service" >> /etc/network/if-up.d/anon-service
+echo "owner=anon-service" >> /etc/network/if-up.d/anon-service
+echo "iptables -F" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -F" >> /etc/network/if-up.d/anon-service
+echo "iptables --flush" >> /etc/network/if-up.d/anon-service
+echo "iptables --table nat --flush" >> /etc/network/if-up.d/anon-service
+echo "iptables --delete-chain" >> /etc/network/if-up.d/anon-service
+echo "iptables --table nat --delete-chain" >> /etc/network/if-up.d/anon-service 
+echo "iptables -P OUTPUT ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "iptables -P INPUT ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "iptables -P FORWARD ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "service dnsmasq stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
+echo "service bind stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
+echo "killall dnsmasq bind > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
+echo "sleep 1s" >> /etc/network/if-up.d/anon-service
+echo "cd $root" >> /etc/network/if-up.d/anon-service
+echo "service tor stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
+echo "service dnscrypt-proxy stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
+echo "service unbound stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
+echo "killall unbound tor dnscrypt-proxy > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
+echo "cp resolved.conf.temp $resolved > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
+echo "chown -R $owner:$owner $root" >> /etc/network/if-up.d/anon-service
+echo "nohup su - $owner -c \"tor -f $root/torrc\" > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
+echo "sleep 1s" >> /etc/network/if-up.d/anon-service
+echo "nohup ./dnscrypt-proxy > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
+echo "sleep 30s" >> /etc/network/if-up.d/anon-service
+echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> /etc/network/if-up.d/anon-service
+echo "_tor_uid=\"$(id -u debian-tor)\"" >> /etc/network/if-up.d/anon-service
+echo "_trans_port="9040"" >> /etc/network/if-up.d/anon-service
+echo "iptables -F" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -F" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,FIN ACK,FIN -j DROP" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -A OUTPUT -m owner --uid-owner \$_tor_uid -j RETURN" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53" >> /etc/network/if-up.d/anon-service
+echo "for _clearnet in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -A OUTPUT -d \$_clearnet -j RETURN" >> /etc/network/if-up.d/anon-service
+echo "done" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports \$_trans_port" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "for _clearnet in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -d \$_clearnet -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "done" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -m owner --uid-owner \$_tor_uid -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -j REJECT" >> /etc/network/if-up.d/anon-service
+echo "unbound" >> /etc/network/if-up.d/anon-service
+echo "echo \"+++ anon-service started +++\"" >> /etc/network/if-up.d/anon-service
+chown root:root /etc/network/if-up.d/anon-service
+chmod 755 /etc/network/if-up.d/anon-service
+chmod +x /etc/network/if-up.d/anon-service
+echo "";
+echo "       Please reboot your system now!"
+exit 0
 ;;
 6)
-shutdown
+shutdown_service
 ;;
 7)
 cleanall
@@ -340,7 +394,7 @@ echo "   forward-addr: 127.0.0.1@10000" >> $unbound
 ##
 ## Starting services and configuring iptables
 ##
-start(){
+start_service(){
 if [ ! -f "$root/dnscrypt-proxy.toml" ]; then
 echo "";
 echo " Sorry! Your system is not ready to start the service";
@@ -435,7 +489,7 @@ iptables -A OUTPUT -j REJECT
 ##
 ## Exit
 ##
-shutdown(){
+shutdown_service(){
 clear
 echo "+++ Stopping anon-service +++";
 rm $root/tor.txt > /dev/null 2>&1
@@ -484,6 +538,7 @@ service systemd-resolved restart
 service network-manager restart
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
+rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
 apt-get remove -y tor unbound > /dev/null 2>&1
 apt-get clean > /dev/null
 apt-get -y autoremove > /dev/null 2>&1
