@@ -84,7 +84,7 @@ start_service
 menu
 ;;
 4)
-xdotool windowkill `xdotool getactivewindow`
+wmctrl -c :ACTIVE:
 ;;
 5)
 if [ ! -f "$root/dnscrypt-proxy.toml" ]; then
@@ -172,7 +172,7 @@ fi
 ;;
 9)
 touch /usr/bin/anon-service > /dev/null 2>&1
-cp $root/$0 /usr/bin/anon-service
+cp $0 /usr/bin/anon-service
 chmod +x /usr/bin/anon-service
 echo " ";
 echo " Now you can run it simply typing \"sudo anon-service\" in your terminal";
@@ -192,11 +192,11 @@ echo "+++ Checking dependencies and preparing the system +++"
 rm -rf $root > /dev/null 2>&1
 adduser -q --disabled-password --gecos "" $owner > /dev/null 2>&1
 usermod -u 999 $owner > /dev/null 2>&1
-cp $0 $root
+mv cpath $root/
 mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
-apt-get install -y curl wget psmisc xdotool xterm gedit apt-transport-https unbound > /dev/null
+apt-get install -y curl wget psmisc xterm gedit apt-transport-https unbound > /dev/null
 sleep 1
 clear
 echo " Which version of Tor do you prefer to use?";
@@ -307,6 +307,7 @@ wget -q https://download.dnscrypt.info/dnscrypt-resolvers/v3/relays.md
 cp $resolved $root/resolved.bak
 ## Backup NetworkManager.conf
 cp $netman $netman.bak
+cd $(cat $root/cpath)
 }
 ##
 ## CONFIGURING SERVICES
@@ -390,6 +391,7 @@ echo "forward-zone:" >> $unbound
 echo "   name: \".\"" >> $unbound
 echo "   forward-addr: 127.0.0.1@10000" >> $unbound
 #echo "include: \"/etc/unbound/unbound.conf.d/*.conf\"" >> $unbound
+cd $(cat $root/cpath)
 }
 ##
 ## Starting services and configuring iptables
@@ -485,6 +487,7 @@ iptables -A OUTPUT -d $_clearnet -j ACCEPT
 done
 iptables -A OUTPUT -m owner --uid-owner $_tor_uid -j ACCEPT
 iptables -A OUTPUT -j REJECT
+cd $(cat $root/cpath)
 }
 ##
 ## Exit
@@ -538,6 +541,7 @@ service systemd-resolved restart
 service network-manager restart
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
+rm cpath > /dev/null 2>&1
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
 apt-get remove -y tor unbound > /dev/null 2>&1
 apt-get clean > /dev/null
@@ -572,9 +576,10 @@ echo " ";
 echo " Please run script with administrator privileges";
 exit 1
 fi
+pwd > cpath
 if [ -s $root/dnscrypt-proxy.toml ]; then
-wmctrl -r ':ACTIVE:' -e 0,0,0,830,530 && sleep 1
-wmctrl -r ':ACTIVE:' -e 0,0,0,831,531 && menu
+wmctrl -r ':ACTIVE:' -e 0,0,0,840,530 && sleep 1
+wmctrl -r ':ACTIVE:' -e 0,0,0,841,531 && menu
 else
 rm conn.txt > /dev/null 2>&1
 ping -c1 opendns.com > conn.txt 2>&1
@@ -582,8 +587,8 @@ if ( grep -q "icmp_seq=1" conn.txt ); then
 clear
 rm conn.txt > /dev/null 2>&1
 apt-get install -y wmctrl > /dev/null
-wmctrl -r ':ACTIVE:' -e 0,0,0,830,530 && sleep 1
-wmctrl -r ':ACTIVE:' -e 0,0,0,831,531 && menu
+wmctrl -r ':ACTIVE:' -e 0,0,0,840,530 && sleep 1
+wmctrl -r ':ACTIVE:' -e 0,0,0,841,531 && menu
 else
 rm conn.txt > /dev/null 2>&1
 echo "          Please first connect your system to internet!";
