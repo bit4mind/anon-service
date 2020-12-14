@@ -533,7 +533,7 @@ fi
 if [[ -f "$netman.bak" ]]; then
 cp $netman.bak $netman > /dev/null 2>&1
 fi
-rm /usr/bin/anon-service.sh > /dev/null 2>&1
+rm /usr/bin/anon-service > /dev/null 2>&1
 service systemd-resolved restart
 service network-manager restart
 rm $repo > /dev/null 2>&1
