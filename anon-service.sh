@@ -481,6 +481,7 @@ if ( grep -q "icmp_seq=1" conn.txt ); then
 rm conn.txt > /dev/null 2>&1
 menu
 else
+rm conn.txt > /dev/null 2>&1
 echo "          Please first connect your system to internet!";
 exit 1   
 fi
