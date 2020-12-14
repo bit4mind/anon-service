@@ -585,6 +585,7 @@ apt-get install -y wmctrl > /dev/null
 wmctrl -r ':ACTIVE:' -e 0,0,0,830,530 && sleep 1
 wmctrl -r ':ACTIVE:' -e 0,0,0,831,531 && menu
 else
+rm conn.txt > /dev/null 2>&1
 echo "          Please first connect your system to internet!";
 exit 1   
 fi
