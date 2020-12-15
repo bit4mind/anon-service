@@ -93,6 +93,11 @@ echo " Sorry! Your system is not ready to start the service";
 echo " Please first check if you have installed the necessary files";
 exit 1
 fi
+cd $root
+cp resolved.conf.temp $resolved
+chown root:root $resolved
+cp NetworkManager.conf $netman
+chown root:root $netman
 touch resolv.conf
 echo nameserver 127.0.0.1 > resolv.conf
 mv resolv.conf /etc/resolv.conf
@@ -118,7 +123,6 @@ echo "service tor stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "service dnscrypt-proxy stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "service unbound stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "killall unbound tor dnscrypt-proxy > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
-echo "cp resolved.conf.temp $resolved > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "chown -R $owner:$owner $root" >> /etc/network/if-up.d/anon-service
 echo "nohup su - $owner -c \"tor -f $root/torrc\" > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
 echo "sleep 1s" >> /etc/network/if-up.d/anon-service
@@ -159,9 +163,11 @@ shutdown_service
 cleanall
 ;;
 8)
-if ! pgrep -x "tor" > /dev/null; then
+service dnscrypt-proxy stop
+sleep 3
+if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
 echo " ";
-echo " Tor is not running!"
+echo " Service is not running!"
 exit 1
 else
 echo " ";
@@ -192,6 +198,7 @@ echo "+++ Checking dependencies and preparing the system +++"
 rm -rf $root > /dev/null 2>&1
 adduser -q --disabled-password --gecos "" $owner > /dev/null 2>&1
 usermod -u 999 $owner > /dev/null 2>&1
+pwd > cpath
 mv cpath $root/
 mkdir -p $root/temp
 chmod -R 777 $root/temp
@@ -304,9 +311,13 @@ wget -q https://download.dnscrypt.info/dnscrypt-resolvers/v3/public-resolvers.md
 echo "+++ Downloading anonymized DNS relays list +++";
 wget -q https://download.dnscrypt.info/dnscrypt-resolvers/v3/relays.md
 ## Backup systemd-resolved
+if [ ! -f "$root/resolved.bak" ]; then
 cp $resolved $root/resolved.bak
+fi
 ## Backup NetworkManager.conf
+if [ ! -f "$netman.bak" ]; then
 cp $netman $netman.bak
+fi
 cd $(cat $root/cpath)
 }
 ##
@@ -322,7 +333,6 @@ fi
 ## Configuring dnscrypt_proxy
 rm $root/dnscrypt-proxy.toml > /dev/null 2>&1
 cp $root/dnscrypt-proxy.toml.bak $root/dnscrypt-proxy.toml
-cp $root/resolved.bak $resolved
 echo "+++ Opening file contain public resolvers +++";
 xterm -T "Resolvers" -e "gedit $root/public-resolvers.md" &
 sleep 1
@@ -391,6 +401,18 @@ echo "forward-zone:" >> $unbound
 echo "   name: \".\"" >> $unbound
 echo "   forward-addr: 127.0.0.1@10000" >> $unbound
 #echo "include: \"/etc/unbound/unbound.conf.d/*.conf\"" >> $unbound
+## Disabling dnsmasq and configure Network-Manager
+cp $netman.bak $root/NetworkManager.conf.temp
+cd $root
+chown $USER:$USER NetworkManager.conf.temp
+sed -i 's/^dns=dnsmasq/#&/' NetworkManager.conf.temp
+sed '/\[main\]/a dns=default' NetworkManager.conf.temp > NetworkManager.conf
+if [[ -f "$resolved" ]]; then
+cp $resolved $root/resolved.conf.temp
+chown $USER:$USER resolved.conf.temp
+sed -i 's/^DNSStubListener=yes/#&/' resolved.conf.temp
+echo "DNSStubListener=no" >> resolved.conf.temp
+fi
 cd $(cat $root/cpath)
 }
 ##
@@ -403,27 +425,14 @@ echo " Sorry! Your system is not ready to start the service";
 echo " Please first check if you have installed the necessary files";
 exit 1
 fi
-## Disabling dnsmasq
-cp $root/resolved.bak $resolved > /dev/null 2>&1
-cp $netman.bak $root/NetworkManager.conf.temp
-cd $root
-chown $USER:$USER NetworkManager.conf.temp
-sed -i 's/^dns=dnsmasq/#&/' NetworkManager.conf.temp
-sed '/\[main\]/a dns=default' NetworkManager.conf.temp > NetworkManager.conf
-mv NetworkManager.conf $netman
-chown root:root $netman
-if [[ -f "$resolved" ]]; then
-cp $resolved $resolved.bak
-cp $resolved $root/resolved.conf.temp
-chown $USER:$USER resolved.conf.temp
-sed -i 's/^DNSStubListener=yes/#&/' resolved.conf.temp
-echo "DNSStubListener=no" >> resolved.conf.temp
+## Configure Network-Manager
 cp resolved.conf.temp $resolved
 chown root:root $resolved
-fi
+cp NetworkManager.conf $netman
+chown root:root $netman
 service dnsmasq stop > /dev/null 2>&1
 service bind stop > /dev/null 2>&1
-#service dnscrypt-proxy stop
+service dnscrypt-proxy stop
 killall dnsmasq bind > /dev/null 2>&1
 rm /etc/resolv.conf 
 sleep 1
@@ -432,7 +441,6 @@ service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
-cp resolved.conf.temp $resolved > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
 echo -e "\n\n"
 echo "   Please change your DNS system setting to 127.0.0.1 and then press ENTER";
@@ -500,10 +508,10 @@ service dnscrypt-proxy stop > /dev/null 2>&1
 service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
-if [[ -f "$root/resolved.bak" ]]; then
+if [ ! -f "/etc/network/if-up.d/anon-service" ]; then
 cp $root/resolved.bak $resolved > /dev/null 2>&1
 fi
-if [[ -f "$netman.bak" ]]; then
+if [ ! -f "/etc/network/if-up.d/anon-service" ]; then
 cp $netman.bak $netman > /dev/null 2>&1
 fi
 service systemd-resolved restart
@@ -576,7 +584,6 @@ echo " ";
 echo " Please run script with administrator privileges";
 exit 1
 fi
-pwd > cpath
 if [ -s $root/dnscrypt-proxy.toml ]; then
 wmctrl -r ':ACTIVE:' -e 0,0,0,840,530 && sleep 1
 wmctrl -r ':ACTIVE:' -e 0,0,0,841,531 && menu
