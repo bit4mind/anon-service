@@ -45,8 +45,8 @@ chmod +x anon-script.sh
 ```
 ```
 sudo ./anon-script.sh
-
 ```
+
 ### Important: 
 If something goes wrong or you just want to update the script, first remove all
 files and settings using the appropriate option in the same script.
