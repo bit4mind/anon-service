@@ -16,4 +16,4 @@ Added
 Changed
 
     Menu look like
-    Windows manager control
+    Window manager control
