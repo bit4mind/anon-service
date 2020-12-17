@@ -41,10 +41,10 @@ changing IP address, configuring dnscrypt servers and relays or removing all thi
 Usage:
 
 ```
-chmod +x anon-script.sh
+chmod +x anon-service.sh
 ```
 ```
-sudo ./anon-script.sh
+sudo ./anon-service.sh
 ```
 
 ### Important: 
