@@ -1,10 +1,11 @@
-
-Changelog
+CHANGELOG
 
 All notable changes to this project will be documented in this file.
 
 Unreleased
 1.09 - 2020-12-17
+
+
 Added
 
     Close this window option
