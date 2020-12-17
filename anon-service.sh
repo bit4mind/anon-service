@@ -57,7 +57,7 @@ echo "   3. Execute all tasks above";
 echo "   4. Close this window";
 echo "   5. Enable service to start automatically at boot";
 echo "   6. Stop anon-service and exit without removing data files and settings";
-echo "   7. Exit removing anon-service files and settings from system (needed reboot)";
+echo "   7. Exit removing anon-service files and settings from system";
 echo -en "\033[38;2;0;100;0m    Misc\033[0m\n";
 echo "   8. Change IP address";
 echo "   9. Install this script";
@@ -163,7 +163,7 @@ shutdown_service
 cleanall
 ;;
 8)
-service dnscrypt-proxy stop
+service dnscrypt-proxy stop > /dev/null 2>&1
 sleep 3
 if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
 echo " ";
@@ -178,7 +178,7 @@ fi
 ;;
 9)
 touch /usr/bin/anon-service > /dev/null 2>&1
-cp $0 /usr/bin/anon-service
+cp $0 /usr/bin/anon-service > /dev/null 2>&1
 chmod +x /usr/bin/anon-service
 echo " ";
 echo " Now you can run it simply typing \"sudo anon-service\" in your terminal";
@@ -426,15 +426,16 @@ echo " Please first check if you have installed the necessary files";
 exit 1
 fi
 ## Configure Network-Manager
-cp resolved.conf.temp $resolved
+cd $root
+cp resolved.conf.temp $resolved 
 chown root:root $resolved
 cp NetworkManager.conf $netman
 chown root:root $netman
 service dnsmasq stop > /dev/null 2>&1
 service bind stop > /dev/null 2>&1
-service dnscrypt-proxy stop
+service dnscrypt-proxy stop > /dev/null 2>&1
 killall dnsmasq bind > /dev/null 2>&1
-rm /etc/resolv.conf 
+rm /etc/resolv.conf > /dev/null 2>&1 
 sleep 1
 cd $root
 service tor stop > /dev/null 2>&1
@@ -508,11 +509,12 @@ service dnscrypt-proxy stop > /dev/null 2>&1
 service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
-if [ ! -f "/etc/network/if-up.d/anon-service" ]; then
 cp $root/resolved.bak $resolved > /dev/null 2>&1
-fi
-if [ ! -f "/etc/network/if-up.d/anon-service" ]; then
 cp $netman.bak $netman > /dev/null 2>&1
+if [ -f "/etc/network/if-up.d/anon-service" ]; then
+echo "";
+echo " Now the service is not enable at boot time";
+echo " If you want, reactivate it using appropriate option";
 fi
 service systemd-resolved restart
 service network-manager restart
