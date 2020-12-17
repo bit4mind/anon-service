@@ -38,9 +38,9 @@ In the next version will be added the possibility to install and enable the scri
 as a real service at startup
 
 Usage:
-chmod +x anon-script.sh
+chmod +x anon-service.sh
 
-sudo ./anon-script.sh
+sudo ./anon-service.sh
 
 Important: 
 If something goes wrong or you just want to update the script, first remove all
