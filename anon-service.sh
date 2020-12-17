@@ -512,6 +512,7 @@ killall unbound tor dnscrypt-proxy > /dev/null 2>&1
 cp $root/resolved.bak $resolved > /dev/null 2>&1
 cp $netman.bak $netman > /dev/null 2>&1
 if [ -f "/etc/network/if-up.d/anon-service" ]; then
+rm /etc/network/if-up.d/anon-service
 echo "";
 echo " Now the service is not enable at boot time";
 echo " If you want, reactivate it using appropriate option";
