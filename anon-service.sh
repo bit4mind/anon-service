@@ -587,6 +587,8 @@ echo " ";
 echo " Please run script with administrator privileges";
 exit 1
 fi
+apt-get update > /dev/null
+apt-get install -y wmctrl > /dev/null
 if [ -s $root/dnscrypt-proxy.toml ]; then
 wmctrl -r ':ACTIVE:' -e 0,0,0,840,530 && sleep 1
 wmctrl -r ':ACTIVE:' -e 0,0,0,841,531 && menu
