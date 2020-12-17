@@ -37,6 +37,7 @@ unbound=/etc/unbound/unbound.conf
 time=19
 
 menu(){
+clear
 echo "                                                            ";
 echo "             ▄▄▄      ███▄    █ ▒█████   ███▄    █          ";
 echo "            ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          ";
@@ -63,28 +64,24 @@ read -e task
 case "$task" in  
 1)
 download
-clear
 menu
 ;;
 2)
 configure
-clear
 menu
 ;;
 3)
-start
-clear
+start_service
 menu
 ;;
 4)
 download
 configure
-start
-clear
+start_service
 menu
 ;;
 5)
-shutdown
+shutdown_service
 ;;
 6)
 cleanall
@@ -102,6 +99,8 @@ echo "+++ Checking dependencies and preparing the system +++"
 rm -rf $root > /dev/null 2>&1
 adduser -q --disabled-password --gecos "" $owner > /dev/null 2>&1
 usermod -u 999 $owner > /dev/null 2>&1
+pwd > cpath
+mv cpath $root/
 mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
@@ -142,8 +141,8 @@ touch $repo
 echo "deb [arch=amd64] https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
 echo "deb-src [arch=amd64] https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
 else
-echo "Sorry! Apparently your OS has not candidate in Tor Project repository.";
-echo "Please re-run the script and choose other options.";
+echo " Sorry! Apparently your OS has not candidate in Tor Project repository.";
+echo " Please re-run the script and choose other options.";
 exit 1
 fi
 cd $root/temp/
@@ -158,11 +157,11 @@ apt-get update > $root/temp/apt.log
 sleep 1
 if ( grep "torproject.org $os Release" $root/temp/apt.log )
 then
-   echo "Sorry! The script can't obtain the correct codename for your OS";
-   echo "Please try to enter the correct codename for the debian/ubuntu repository";
-   echo "compatible with your OS. In doubt search on internet!";
-   echo "Warning: if the repository is not correct, the script could crash!"; 
-   echo -n "(for example: buster): ";
+   echo " Sorry! The script can't obtain the correct codename for your OS";
+   echo " Please try to enter the correct codename for the debian/ubuntu repository";
+   echo " compatible with your OS. In doubt search on internet!";
+   echo " Warning: if the repository is not correct, the script could crash!"; 
+   echo -n " (for example: buster): ";
    read -e codename 
    rm $repo
    touch $repo
@@ -213,9 +212,14 @@ wget -q https://download.dnscrypt.info/dnscrypt-resolvers/v3/public-resolvers.md
 echo "+++ Downloading anonymized DNS relays list +++";
 wget -q https://download.dnscrypt.info/dnscrypt-resolvers/v3/relays.md
 ## Backup systemd-resolved
+if [ ! -f "$root/resolved.bak" ]; then
 cp $resolved $root/resolved.bak
+fi
 ## Backup NetworkManager.conf
+if [ ! -f "$netman.bak" ]; then
 cp $netman $netman.bak
+fi
+cd $(cat $root/cpath)
 }
 ##
 ## CONFIGURING SERVICES
@@ -230,40 +234,39 @@ fi
 ## Configuring dnscrypt_proxy
 rm $root/dnscrypt-proxy.toml > /dev/null 2>&1
 cp $root/dnscrypt-proxy.toml.bak $root/dnscrypt-proxy.toml
-cp $root/resolved.bak $resolved
 echo "+++ Opening file contain public resolvers +++";
 xterm -T "Resolvers" -e "gedit $root/public-resolvers.md" &
 sleep 1
 clear
 echo " "
-echo "Please enter the name of the first resolver to use, only ipv4!";
-echo -n "First server: ";
+echo " Please enter the name of the first resolver to use, only ipv4!";
+echo -n " First server: ";
 read -e server1
 echo " "
-echo "Please enter the name of the second resolver to use, only ipv4!";
-echo -n "Second server: ";
+echo " Please enter the name of the second resolver to use, only ipv4!";
+echo -n " Second server: ";
 read -e server2
 echo "+++ Opening file contain relays +++";
 killall gedit > /dev/null 2>&1
 xterm -T "Relay" -e "gedit $root/relays.md" &
 clear
 echo " "
-echo "Carefully choose relays and servers so that they are run by different entities!";
+echo " Carefully choose relays and servers so that they are run by different entities!";
 echo " "
-echo "Please enter the name of the first realy to use!";
-echo -n "First relay for the first server: ";
+echo " Please enter the name of the first realy to use!";
+echo -n " First relay for the first server: ";
 read -e relay1
 echo " "
-echo "Please enter the name of the second relay to use!";
-echo -n "Second relay for the first server: ";
+echo " Please enter the name of the second relay to use!";
+echo -n " Second relay for the first server: ";
 read -e relay2
 echo " "
-echo "Please enter the name of the third resolver to use!";
-echo -n "First relay for the second server: ";
+echo " Please enter the name of the third resolver to use!";
+echo -n " First relay for the second server: ";
 read -e relay3
 echo " "
-echo "Please enter the name of the fourth resolver to use!";
-echo -n "Second relay for the second server: ";
+echo " Please enter the name of the fourth resolver to use!";
+echo -n " Second relay for the second server: ";
 read -e relay4
 killall gedit > /dev/null 2>&1
 clear
@@ -274,6 +277,7 @@ sed -i '699iroutes = \[' $root/dnscrypt-proxy.toml
 sed -i "700i{ server_name='$server1', via=['$relay1', '$relay2'] }," $root/dnscrypt-proxy.toml
 sed -i "701i{ server_name='$server2', via=['$relay3', '$relay4'] }" $root/dnscrypt-proxy.toml
 sed -i '702i\]' $root/dnscrypt-proxy.toml
+sleep 1
 ## Configuring Tor
 cp $tor $root/torrc
 echo "VirtualAddrNetworkIPv4 10.192.0.0/10" >> $root/torrc
@@ -298,47 +302,47 @@ echo "forward-zone:" >> $unbound
 echo "   name: \".\"" >> $unbound
 echo "   forward-addr: 127.0.0.1@10000" >> $unbound
 #echo "include: \"/etc/unbound/unbound.conf.d/*.conf\"" >> $unbound
-}
-##
-## Starting services and configuring iptables
-##
-start(){
-if [ ! -f "$root/dnscrypt-proxy.toml" ]; then
-echo "";
-echo "Sorry! Your system is not ready to start the service";
-echo "Please first check if you have installed the necessary files";
-exit 1
-fi
-## Disabling dnsmasq
-cp $root/resolved.bak $resolved > /dev/null 2>&1
+## Disabling dnsmasq and configure Network-Manager
 cp $netman.bak $root/NetworkManager.conf.temp
 cd $root
 chown $USER:$USER NetworkManager.conf.temp
 sed -i 's/^dns=dnsmasq/#&/' NetworkManager.conf.temp
 sed '/\[main\]/a dns=default' NetworkManager.conf.temp > NetworkManager.conf
-mv NetworkManager.conf $netman
-chown root:root $netman
 if [[ -f "$resolved" ]]; then
-cp $resolved $resolved.bak
 cp $resolved $root/resolved.conf.temp
 chown $USER:$USER resolved.conf.temp
 sed -i 's/^DNSStubListener=yes/#&/' resolved.conf.temp
 echo "DNSStubListener=no" >> resolved.conf.temp
-cp resolved.conf.temp $resolved
-chown root:root $resolved
 fi
+cd $(cat $root/cpath)
+}
+##
+## Starting services and configuring iptables
+##
+start_service(){
+if [ ! -f "$root/dnscrypt-proxy.toml" ]; then
+echo "";
+echo " Sorry! Your system is not ready to start the service";
+echo " Please first check if you have installed the necessary files";
+exit 1
+fi
+## Configure Network-Manager
+cd $root
+cp resolved.conf.temp $resolved 
+chown root:root $resolved
+cp NetworkManager.conf $netman
+chown root:root $netman
 service dnsmasq stop > /dev/null 2>&1
 service bind stop > /dev/null 2>&1
-#service dnscrypt-proxy stop
+service dnscrypt-proxy stop > /dev/null 2>&1
 killall dnsmasq bind > /dev/null 2>&1
-rm /etc/resolv.conf 
+rm /etc/resolv.conf > /dev/null 2>&1 
 sleep 1
 cd $root
 service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
-cp resolved.conf.temp $resolved > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
 echo -e "\n\n"
 echo "   Please change your DNS system setting to 127.0.0.1 and then press ENTER";
@@ -350,9 +354,9 @@ service network-manager restart
 sleep 13
 xterm -e unbound &
 chown -R $owner:$owner $root
-xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" &
-xterm -T "Dnscrypt-proxy" -e ./dnscrypt-proxy &
-echo "Checking connection to Tor";
+nohup xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
+nohup xterm -T "Dnscrypt-proxy" -e ./dnscrypt-proxy > /dev/null 2>&1 &
+echo " Checking connection to Tor";
 rm $root/tor.log > /dev/null 2>&1
 until [ -s $root/tor.log ]
 do
@@ -364,7 +368,7 @@ sed -i 's/browser/system/g' $root/tor.log
 cat $root/tor.log
 sleep 3
 else
-echo "Waiting for connection...";
+echo " Waiting for connection...";
 rm $root/tor.log > /dev/null 2>&1
 fi
 done
@@ -393,11 +397,12 @@ iptables -A OUTPUT -d $_clearnet -j ACCEPT
 done
 iptables -A OUTPUT -m owner --uid-owner $_tor_uid -j ACCEPT
 iptables -A OUTPUT -j REJECT
+cd $(cat $root/cpath)
 }
 ##
 ## Exit
 ##
-shutdown(){
+shutdown_service(){
 clear
 echo "+++ Stopping anon-service +++";
 rm $root/tor.txt > /dev/null 2>&1
@@ -405,12 +410,8 @@ service dnscrypt-proxy stop > /dev/null 2>&1
 service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
-if [[ -f "$root/resolved.bak" ]]; then
 cp $root/resolved.bak $resolved > /dev/null 2>&1
-fi
-if [[ -f "$netman.bak" ]]; then
 cp $netman.bak $netman > /dev/null 2>&1
-fi
 service systemd-resolved restart
 service network-manager restart
 iptables -F
@@ -445,6 +446,7 @@ service systemd-resolved restart
 service network-manager restart
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
+rm cpath > /dev/null 2>&1
 apt-get remove -y tor unbound > /dev/null 2>&1
 apt-get clean > /dev/null
 apt-get -y autoremove > /dev/null 2>&1
