@@ -1,4 +1,5 @@
 # anon-service
+
 Transparent proxy through Tor with DNSCrypt and Anonymized DNS feature enabled.
 
 From Wikipedia: Tor is free and open-source software for enabling anonymous
@@ -20,14 +21,14 @@ repository.
 
 
 
-REQUIREMENTS
+## REQUIREMENTS
 
 The script should work on many debian-based distros with the unbound package 
 present in the repositories. Tested on Debian, Ubuntu, Mint.
 
 
 
-HOW IT WORKS
+## HOW IT WORKS
 
 The script works as a launcher: after installing the necessary software, you can 
 reconfigure resolvers and relays before each reactivation of the service or you can
@@ -38,11 +39,15 @@ service simply restarting your connection and continue to use the script for
 changing IP address, configuring dnscrypt servers and relays or removing all things.
 
 Usage:
-chmod +x anon-script.sh
 
+```
+chmod +x anon-script.sh
+```
+```
 sudo ./anon-script.sh
 
-Important: 
+```
+### Important: 
 If something goes wrong or you just want to update the script, first remove all
 files and settings using the appropriate option in the same script.
 Note:
@@ -51,7 +56,7 @@ will start with a small delay after the host has established the connection to t
 network. Before the service is fully loaded, the connection will not work: you can 
 check its status via syslog with the command tail -f /var/log/syslog
 
-WARNING
+### WARNING
 
 This is NOT a solution that grants strong anonymity and the developers themselves 
 do not recommend using tor as a trasparent proxy
@@ -70,9 +75,7 @@ dnscrypt makes spying, spoofing and man-in-the-middle attacks difficult.
 If you are looking for a strong anonymity solution, switch to Linux distributions 
 focused on security and privacy like Whomix or Tails.
 
-
-
-TROUBLESHOTTING AND WORKAROUND
+## TROUBLESHOTTING AND WORKAROUND
 
 This script may not work properly if used on a not-fully updated system.
 
