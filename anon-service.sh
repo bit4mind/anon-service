@@ -28,6 +28,8 @@
 export root=/home/anon-service
 owner=anon-service
 repo=/etc/apt/sources.list.d/tor.list
+## DNSCrypt-proxy release
+dnscrel="2.0.44"
 ## If necessary, change the path according to your system
 netman=/etc/NetworkManager/NetworkManager.conf
 resolved=/etc/systemd/resolved.conf
@@ -216,6 +218,7 @@ read -e choose
 case "$choose"
 in 1)
 touch $root/temp/distribution.txt
+## Tor Project supported distro
 echo -e "bionic\nbullseye\nbuster\neoan\nfocal\ngroovy\njessie\nsid\nstretch\nxenial\n\n" > $root/temp/distribution.txt
 touch $root/temp/os.txt
 for target in $(cat $root/temp/distribution.txt)
@@ -292,11 +295,11 @@ uname -a > $root/temp/arch.txt
 if ( grep -Fq "x86_64" $root/temp/arch.txt ); then
    cd $root/temp/
 echo "+++ Downloading dnscrypt-proxy +++";
-   wget -q https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/2.0.44/dnscrypt-proxy-linux_x86_64-2.0.44.tar.gz
+   wget -q https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_x86_64-$dnscrel.tar.gz
 else
    cd $root/temp/
 echo "+++ Downloading dnscrypt-proxy +++";
-   wget -q https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/2.0.44/dnscrypt-proxy-linux_i386-2.0.44.tar.gz
+   wget -q https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_i386-$dnscrel.tar.gz
 fi
 tar -xf dnscrypt-proxy-linux_*.tar.gz
 cp linux-*/dnscrypt-proxy $root
@@ -552,7 +555,6 @@ service systemd-resolved restart
 service network-manager restart
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
-#rm cpath > /dev/null 2>&1
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
 apt-get remove -y tor unbound > /dev/null 2>&1
 apt-get clean > /dev/null
