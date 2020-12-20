@@ -552,7 +552,7 @@ service systemd-resolved restart
 service network-manager restart
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
-rm cpath > /dev/null 2>&1
+#rm cpath > /dev/null 2>&1
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
 apt-get remove -y tor unbound > /dev/null 2>&1
 apt-get clean > /dev/null
