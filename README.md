@@ -75,7 +75,4 @@ This script may not work properly if used on a not-fully updated system.
 Tor stucks before 100% and connection not works: try to increase time value 
 at the beginning of a script.
 
-Resolvers and Relays list empty: wget problem with TLS, update your system or use
-your browser.
-
 Unbound package not found: update your system or install it before.
