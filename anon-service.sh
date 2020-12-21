@@ -211,9 +211,9 @@ rm -rf $root/temp > /dev/null 2>&1
 rm *.md > /dev/null 2>&1
 rm *.md* > /dev/null 2>&1
 echo "+++ Downloading public resolvers list +++";
-curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/public-resolvers.md
+curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/public-resolvers.md > /dev/null 2>&1
 echo "+++ Downloading anonymized DNS relays list +++";
-curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/relays.md
+curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/relays.md > /dev/null 2>&1
 ## Backup systemd-resolved
 if [ ! -f "$root/resolved.bak" ]; then
 cp $resolved $root/resolved.bak
