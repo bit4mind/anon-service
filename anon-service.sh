@@ -97,12 +97,15 @@ esac
 ##  Checking dependencies and downloading upgraded services
 ##
 download(){
+if [ -s "$root" ]; then
+echo "";
+echo " Please, firstly remove all files and settings via dedicated option";
+exit 1
+fi
 echo "+++ Checking dependencies and preparing the system +++"
 rm -rf $root > /dev/null 2>&1
 adduser -q --disabled-password --gecos "" $owner > /dev/null 2>&1
 usermod -u 999 $owner > /dev/null 2>&1
-pwd > cpath
-mv cpath $root/
 mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
@@ -215,20 +218,19 @@ curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/public-resolvers
 echo "+++ Downloading anonymized DNS relays list +++";
 curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/relays.md > /dev/null 2>&1
 ## Backup systemd-resolved
-if [ ! -f "$root/resolved.bak" ]; then
+if [ ! -s "$root/resolved.bak" ]; then
 cp $resolved $root/resolved.bak
 fi
 ## Backup NetworkManager.conf
-if [ ! -f "$netman.bak" ]; then
+if [ ! -s "$netman.bak" ]; then
 cp $netman $netman.bak
 fi
-cd $(cat $root/cpath)
 }
 ##
 ## CONFIGURING SERVICES
 ##
 configure(){
-if [ ! -f "$root/dnscrypt-proxy.toml.bak" ]; then
+if [ ! -s "$root/dnscrypt-proxy.toml.bak" ]; then
 echo "";
 echo "Sorry! Your system is not ready to complete this action";
 echo "Please first check if you have installed the necessary files";
@@ -311,24 +313,33 @@ cd $root
 chown $USER:$USER NetworkManager.conf.temp
 sed -i 's/^dns=dnsmasq/#&/' NetworkManager.conf.temp
 sed '/\[main\]/a dns=default' NetworkManager.conf.temp > NetworkManager.conf
-if [[ -f "$resolved" ]]; then
+if [[ -s "$resolved" ]]; then
 cp $resolved $root/resolved.conf.temp
 chown $USER:$USER resolved.conf.temp
 sed -i 's/^DNSStubListener=yes/#&/' resolved.conf.temp
 echo "DNSStubListener=no" >> resolved.conf.temp
 fi
-cd $(cat $root/cpath)
 }
 ##
 ## Starting services and configuring iptables
 ##
 start_service(){
-if [ ! -f "$root/dnscrypt-proxy.toml" ]; then
+if [ ! -s "$root/dnscrypt-proxy.toml" ]; then
 echo "";
 echo " Sorry! Your system is not ready to start the service";
 echo " Please first check if you have installed the necessary files";
 exit 1
 fi
+## Firewall flush
+iptables -F
+iptables -t nat -F
+iptables --flush
+iptables --table nat --flush
+iptables --delete-chain
+iptables --table nat --delete-chain 
+iptables -P OUTPUT ACCEPT
+iptables -P INPUT ACCEPT
+iptables -P FORWARD ACCEPT
 ## Configure Network-Manager
 cd $root
 cp resolved.conf.temp $resolved 
@@ -400,7 +411,6 @@ iptables -A OUTPUT -d $_clearnet -j ACCEPT
 done
 iptables -A OUTPUT -m owner --uid-owner $_tor_uid -j ACCEPT
 iptables -A OUTPUT -j REJECT
-cd $(cat $root/cpath)
 }
 ##
 ## Exit
@@ -438,11 +448,11 @@ service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy xterm > /dev/null 2>&1
-if [[ -f "$root/resolved.bak" ]]; then
+if [[ -s "$root/resolved.bak" ]]; then
 cp $root/resolved.bak $resolved > /dev/null 2>&1
 service systemd-resolved restart
 fi
-if [[ -f "$netman.bak" ]]; then
+if [[ -s "$netman.bak" ]]; then
 cp $netman.bak $netman > /dev/null 2>&1
 fi
 service systemd-resolved restart
@@ -454,6 +464,7 @@ apt-get clean > /dev/null
 apt-get -y autoremove > /dev/null 2>&1
 apt-get -y autoclean > /dev/null 2>&1
 userdel -r $owner > /dev/null 2>&1
+rm -rf $root > /dev/null 2>&1
 iptables -F
 iptables -t nat -F
 iptables --flush
