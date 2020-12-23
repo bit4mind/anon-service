@@ -54,7 +54,7 @@ echo "                    ░           ░           ░       ░ by bit4mind 
 echo " ";
 echo "   0. Check dependencies and download upgraded services";
 echo "   1. Set servers/relays for anonymized DNS feature and configure other services";
-echo "   2. Start anon-service";
+echo "   2. Start/Restart anon-service";
 echo "   3. Execute all tasks above";
 echo "   4. Close this window";
 echo "   5. Enable service to start automatically at boot";
