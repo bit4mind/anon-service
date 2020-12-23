@@ -56,7 +56,7 @@ echo " "
 echo "   1. Check dependencies and download upgraded services";
 echo "   2. Edit public servers and relays for anonymized DNS"; 
 echo "      feature and configure other services";
-echo "   3. Start anon-service";
+echo "   3. Start/Restart anon-service";
 echo "   4. Execute all tasks above";
 echo "   5. Stop anon-service and exit without removing data files and settings";
 echo "   6. Exit removing anon-service files and settings from system";
@@ -417,6 +417,14 @@ iptables -A OUTPUT -j REJECT
 ##
 shutdown_service(){
 clear
+service dnscrypt-proxy stop > /dev/null 2>&1
+sleep 3
+if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
+echo " ";
+echo " Service is not running!"
+sleep 7
+menu
+else
 echo "+++ Stopping anon-service +++";
 rm $root/tor.txt > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
@@ -437,6 +445,7 @@ iptables -P OUTPUT ACCEPT
 iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
 exit 0
+fi
 }
 ##
 ## Cleaning all and exit
