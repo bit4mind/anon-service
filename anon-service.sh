@@ -44,7 +44,7 @@ echo "                    ▄▄▄      ███▄    █ ▒█████ 
 echo "                   ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          ";
 echo "                   ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         ";
 echo "                   ░██▄▄▄▄██▓██▒  ▐▌██▒██   ██░▓██▒  ▐▌██▒         ";
-echo "                   ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         ";
+echo "                    ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         ";
 echo "                ██████ ▓█████  ██▀███░  ██▒ ░ █▓ ██▓ ▄████▄ ▓█████ ";
 echo "              ▒██    ▒ ▓█   ▀ ▓██ ▒ ██▒▓██░   █▒▓██▒▒██▀ ▀█ ▓█   ▀ ";
 echo "              ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██  █▒░▒██▒▒▓█    ▄▒███   ";
@@ -489,10 +489,10 @@ echo "+++ Starting anon-service +++";
 service systemd-resolved restart
 service network-manager restart
 sleep 13
-xterm -e unbound &
+unbound &
 chown -R $owner:$owner $root
 nohup xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
-nohup xterm -T "Dnscrypt-proxy" -e ./dnscrypt-proxy > /dev/null 2>&1 &
+nohup xterm -T "Dnscrypt-proxy" -e su - $owner -c "./dnscrypt-proxy" > /dev/null 2>&1 &
 echo " Checking connection to Tor";
 rm $root/tor.log > /dev/null 2>&1
 until [ -s $root/tor.log ]
