@@ -134,7 +134,7 @@ echo "killall unbound tor dnscrypt-proxy > /dev/null 2>&1" >> /etc/network/if-up
 echo "chown -R $owner:$owner $root" >> /etc/network/if-up.d/anon-service
 echo "nohup su - $owner -c \"tor -f $root/torrc\" > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
 echo "sleep 1s" >> /etc/network/if-up.d/anon-service
-echo "nohup ./dnscrypt-proxy > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
+echo "nohup su - $owner -c \"./dnscrypt-proxy\" > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
 echo "sleep 30s" >> /etc/network/if-up.d/anon-service
 echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> /etc/network/if-up.d/anon-service
 echo "_tor_uid=\"$(id -u debian-tor)\"" >> /etc/network/if-up.d/anon-service
