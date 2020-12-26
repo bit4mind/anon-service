@@ -58,7 +58,7 @@ echo "   2. Edit public servers and relays for anonymized DNS";
 echo "      feature and configure other services";
 echo "   3. Start/Restart anon-service";
 echo "   4. Execute all tasks above";
-echo "   5. Stop anon-service and exit without removing data files and settings";
+echo "   5. Stop anon-service/Restore original files without removing anon-service";
 echo "   6. Exit removing anon-service files and settings from system";
 echo -e "\n"
 echo -n " Choose: ";
@@ -393,10 +393,13 @@ rm $root/tor.log > /dev/null 2>&1
 _non_tor="127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
 # the UID that Tor runs as (varies from system to system)
 _tor_uid="$(id -u debian-tor)"
+# Tor's VirtualAddrNetworkIPv4
+_virt_addr="10.192.0.0/10"
 # Tor's TransPort
 _trans_port="9040"
 iptables -F
 iptables -t nat -F
+iptables -t nat -A OUTPUT -d $_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports $_trans_port
 iptables -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,FIN ACK,FIN -j DROP
 iptables -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP
 iptables -t nat -A OUTPUT -m owner --uid-owner $_tor_uid -j RETURN
@@ -411,6 +414,8 @@ iptables -A OUTPUT -d $_clearnet -j ACCEPT
 done
 iptables -A OUTPUT -m owner --uid-owner $_tor_uid -j ACCEPT
 iptables -A OUTPUT -j REJECT
+iptables -P FORWARD DROP
+iptables -P OUTPUT DROP
 }
 ##
 ## Exit
@@ -420,12 +425,15 @@ clear
 service dnscrypt-proxy stop > /dev/null 2>&1
 sleep 3
 if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
-echo " ";
-echo " Service is not running!"
+echo "";
+echo " Service is not running!";
+echo "";
+echo "+++ Restoring original files +++"; 
 sleep 7
-menu
 else
 echo "+++ Stopping anon-service +++";
+sleep 7
+fi
 rm $root/tor.txt > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service tor stop > /dev/null 2>&1
@@ -444,8 +452,7 @@ iptables --table nat --delete-chain
 iptables -P OUTPUT ACCEPT
 iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
-exit 0
-fi
+menu
 }
 ##
 ## Cleaning all and exit
