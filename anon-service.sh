@@ -369,6 +369,7 @@ service network-manager restart
 sleep 13
 chown -R $owner:$owner $root
 nohup xterm -T "Dnscrypt-proxy" -e su - $owner -c "./dnscrypt-proxy" > /dev/null 2>&1 &
+sleep 1
 nohup xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
 echo " Checking connection to Tor";
 rm $root/tor.log > /dev/null 2>&1
@@ -393,7 +394,6 @@ rm $root/tor.log > /dev/null 2>&1
 _non_tor="127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
 # Other IANA reserved blocks (These are not processed by tor and dropped by default)
 _resv_iana="0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4 255.255.255.255/32"
-### Don't lock yourself out after the flush
 # the UID that Tor runs as (varies from system to system)
 _tor_uid="$(id -u debian-tor)"
 # Tor's VirtualAddrNetworkIPv4
@@ -419,10 +419,9 @@ iptables -A INPUT -i lo -j ACCEPT
 for _lan in $_non_tor; do
 iptables -A INPUT -s $_lan -j ACCEPT
 done
-sleep 5
-iptables -A FORWARD -j DROP
-sleep 1
+sleep 6
 iptables -A INPUT -j DROP
+iptables -A FORWARD -j DROP
 iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports $_trans_port
 for _clearnet in $_non_tor; do
 iptables -A OUTPUT -d $_clearnet -j ACCEPT
