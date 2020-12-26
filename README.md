@@ -21,14 +21,14 @@ repository.
 
 
 
-REQUIREMENTS
+## REQUIREMENTS
 
-The script should work on many debian-based distros with the unbound package 
-present in the repositories. Tested on Debian, Ubuntu, Mint.
+The script should work on many debian-based distros with network-manager installed and 
+the unbound package present in the repositories. Tested on Debian, Ubuntu, Mint.
 
 
 
-HOW IT WORKS
+## HOW IT WORKS
 
 The script works as a launcher: after installing the necessary software, you can 
 reconfigure resolvers and relays before each reactivation of the service or you can
@@ -38,16 +38,21 @@ In the next version will be added the possibility to install and enable the scri
 as a real service at startup
 
 Usage:
+
+''''
 chmod +x anon-service.sh
+''''
 
+'''
 sudo ./anon-service.sh
+'''
 
-Important: 
+# Important: 
 If something goes wrong or you just want to update the script, first remove all
 files and settings using the appropriate option in the same script.
 
 
-WARNING
+# WARNING
 
 This is NOT a solution that grants strong anonymity and the developers themselves 
 do not recommend using tor as a trasparent proxy
@@ -68,7 +73,7 @@ focused on security and privacy like Whomix or Tails.
 
 
 
-TROUBLESHOTTING AND WORKAROUND
+## TROUBLESHOTTING AND WORKAROUND
 
 This script may not work properly if used on a not-fully updated system.
 
