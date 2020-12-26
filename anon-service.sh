@@ -400,6 +400,7 @@ _trans_port="9040"
 iptables -F
 iptables -t nat -F
 iptables -t nat -A OUTPUT -d $_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports $_trans_port
+iptables -A FORWARD -j DROP
 iptables -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,FIN ACK,FIN -j DROP
 iptables -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP
 iptables -t nat -A OUTPUT -m owner --uid-owner $_tor_uid -j RETURN
