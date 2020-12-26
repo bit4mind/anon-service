@@ -39,13 +39,12 @@ as a real service at startup
 
 Usage:
 
-''''
+```
 chmod +x anon-service.sh
-''''
-
-'''
+```
+```
 sudo ./anon-service.sh
-'''
+```
 
 # Important: 
 If something goes wrong or you just want to update the script, first remove all
