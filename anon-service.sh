@@ -366,7 +366,6 @@ echo "+++ Starting anon-service +++";
 service systemd-resolved restart
 service network-manager restart
 sleep 13
-unbound &
 chown -R $owner:$owner $root
 nohup xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
 nohup xterm -T "Dnscrypt-proxy" -e su - $owner -c "./dnscrypt-proxy" > /dev/null 2>&1 &
@@ -417,6 +416,7 @@ iptables -A OUTPUT -m owner --uid-owner $_tor_uid -j ACCEPT
 iptables -A OUTPUT -j REJECT
 iptables -P FORWARD DROP
 iptables -P OUTPUT DROP
+unbound &
 }
 ##
 ## Exit
