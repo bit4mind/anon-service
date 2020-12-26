@@ -367,8 +367,8 @@ service systemd-resolved restart
 service network-manager restart
 sleep 13
 chown -R $owner:$owner $root
-nohup xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
 nohup xterm -T "Dnscrypt-proxy" -e su - $owner -c "./dnscrypt-proxy" > /dev/null 2>&1 &
+nohup xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
 echo " Checking connection to Tor";
 rm $root/tor.log > /dev/null 2>&1
 until [ -s $root/tor.log ]
@@ -390,6 +390,9 @@ rm $root/tor.log > /dev/null 2>&1
 ## Reference: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
 # destinations you don't want routed through Tor
 _non_tor="127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
+# Other IANA reserved blocks (These are not processed by tor and dropped by default)
+_resv_iana="0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4 255.255.255.255/32"
+### Don't lock yourself out after the flush
 # the UID that Tor runs as (varies from system to system)
 _tor_uid="$(id -u debian-tor)"
 # Tor's VirtualAddrNetworkIPv4
@@ -399,22 +402,35 @@ _trans_port="9040"
 iptables -F
 iptables -t nat -F
 iptables -t nat -A OUTPUT -d $_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports $_trans_port
-iptables -A FORWARD -j DROP
-iptables -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,FIN ACK,FIN -j DROP
-iptables -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP
+iptables -A OUTPUT -m state --state INVALID -j DROP
+iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -t nat -A OUTPUT -m owner --uid-owner $_tor_uid -j RETURN
 iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53
 for _clearnet in $_non_tor; do
 iptables -t nat -A OUTPUT -d $_clearnet -j RETURN
 done
+for _iana in $_resv_iana; do
+  iptables -t nat -A OUTPUT -d $_iana -j RETURN
+done
+sleep 7
+iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+for _lan in $_non_tor; do
+iptables -A INPUT -s $_lan -j ACCEPT
+done
+sleep 5
+iptables -A FORWARD -j DROP
+sleep 1
+iptables -A INPUT -j DROP
 iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports $_trans_port
-iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 for _clearnet in $_non_tor; do
 iptables -A OUTPUT -d $_clearnet -j ACCEPT
 done
 iptables -A OUTPUT -m owner --uid-owner $_tor_uid -j ACCEPT
-iptables -A OUTPUT -j REJECT
+iptables -A OUTPUT -j DROP
+sleep 1
 iptables -P FORWARD DROP
+iptables -P INPUT DROP
 iptables -P OUTPUT DROP
 unbound &
 }
