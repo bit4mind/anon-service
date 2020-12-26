@@ -84,6 +84,7 @@ menu
 ;;
 5)
 shutdown_service
+menu
 ;;
 6)
 cleanall
@@ -469,7 +470,6 @@ iptables --table nat --delete-chain
 iptables -P OUTPUT ACCEPT
 iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
-menu
 }
 ##
 ## Cleaning all and exit
