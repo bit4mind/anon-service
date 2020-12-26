@@ -46,12 +46,12 @@ chmod +x anon-service.sh
 sudo ./anon-service.sh
 ```
 
-# Important: 
+### Important: 
 If something goes wrong or you just want to update the script, first remove all
 files and settings using the appropriate option in the same script.
 
 
-# WARNING
+### WARNING
 
 This is NOT a solution that grants strong anonymity and the developers themselves 
 do not recommend using tor as a trasparent proxy
