@@ -58,7 +58,7 @@ echo "   2. Start/Restart anon-service";
 echo "   3. Execute all tasks above";
 echo "   4. Close this window";
 echo "   5. Enable service to start automatically at boot";
-echo "   6. Stop anon-service and exit without removing data files and settings";
+echo "   6. Stop anon-service/Restore original files without removing anon-service";
 echo "   7. Exit removing anon-service files and settings from system";
 echo -en "\033[38;2;0;100;0m    Misc\033[0m\n";
 echo "   8. Change IP address";
@@ -96,7 +96,9 @@ if [ ! -s "$root/dnscrypt-proxy.toml" ]; then
 echo "";
 echo " Sorry! Your system is not ready to start the service";
 echo " Please first check if you have installed the necessary files";
-exit 1
+sleep 7
+menu
+exit
 fi
 if [ -s "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
@@ -132,36 +134,55 @@ echo "service dnscrypt-proxy stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon
 echo "service unbound stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "killall unbound tor dnscrypt-proxy > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "chown -R $owner:$owner $root" >> /etc/network/if-up.d/anon-service
-echo "nohup su - $owner -c \"tor -f $root/torrc\" > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
-echo "sleep 1s" >> /etc/network/if-up.d/anon-service
 echo "nohup su - $owner -c \"./dnscrypt-proxy\" > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
+echo "sleep 1s" >> /etc/network/if-up.d/anon-service
+echo "nohup su - $owner -c \"tor -f $root/torrc\" > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
 echo "sleep 30s" >> /etc/network/if-up.d/anon-service
 echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> /etc/network/if-up.d/anon-service
+echo "_resv_iana=\"0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4 255.255.255.255/32\"" >> /etc/network/if-up.d/anon-service
 echo "_tor_uid=\"$(id -u debian-tor)\"" >> /etc/network/if-up.d/anon-service
 echo "_trans_port="9040"" >> /etc/network/if-up.d/anon-service
 echo "iptables -F" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -F" >> /etc/network/if-up.d/anon-service
-echo "iptables -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,FIN ACK,FIN -j DROP" >> /etc/network/if-up.d/anon-service
-echo "iptables -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -A OUTPUT -d \$_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports \$_trans_port" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -m state --state INVALID -j DROP" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -m owner --uid-owner \$_tor_uid -j RETURN" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53" >> /etc/network/if-up.d/anon-service
 echo "for _clearnet in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -d \$_clearnet -j RETURN" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
+echo "for _iana in \$_resv_iana; do" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -A OUTPUT -d \$_iana -j RETURN" >> /etc/network/if-up.d/anon-service
+echo "done" >> /etc/network/if-up.d/anon-service
+echo "sleep 7s" >> /etc/network/if-up.d/anon-service
+echo "iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "iptables -A INPUT -i lo -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "for _lan in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
+echo "iptables -A INPUT -s \$_lan -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "done" >> /etc/network/if-up.d/anon-service
+echo "sleep 6s" >> /etc/network/if-up.d/anon-service
+echo "iptables -A INPUT -j DROP" >> /etc/network/if-up.d/anon-service
+echo "iptables -A FORWARD -j DROP" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports \$_trans_port" >> /etc/network/if-up.d/anon-service
-echo "iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "for _clearnet in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
 echo "iptables -A OUTPUT -d \$_clearnet -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
 echo "iptables -A OUTPUT -m owner --uid-owner \$_tor_uid -j ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "iptables -A OUTPUT -j REJECT" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -j DROP" >> /etc/network/if-up.d/anon-service
+echo "sleep 1s" >> /etc/network/if-up.d/anon-service
+echo "iptables -P FORWARD DROP" >> /etc/network/if-up.d/anon-service
+echo "iptables -P INPUT DROP" >> /etc/network/if-up.d/anon-service
+echo "iptables -P OUTPUT DROP" >> /etc/network/if-up.d/anon-service
 echo "unbound" >> /etc/network/if-up.d/anon-service
 echo "echo \"+++ anon-service started +++\"" >> /etc/network/if-up.d/anon-service
 chown root:root /etc/network/if-up.d/anon-service
 chmod 755 /etc/network/if-up.d/anon-service
 chmod +x /etc/network/if-up.d/anon-service
 echo "";
-echo "       Please reboot your system now!"
+echo " Now, if you have already set 127.0.0.1 in your DNS setting,"; 
+echo " you can reboot your system!";
+echo "";
 exit 0
 ;;
 6)
@@ -169,6 +190,7 @@ if [ -s "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
 shutdown_service
+menu
 ;;
 7)
 cleanall
@@ -214,7 +236,9 @@ download(){
 if [ -s "$root" ]; then
 echo "";
 echo " Please, firstly remove all files and settings via dedicated option";
-exit 1
+sleep 7
+menu
+exit
 fi
 echo "+++ Checking dependencies and preparing the system +++"
 #rm -rf $root > /dev/null 2>&1
@@ -350,7 +374,9 @@ if [ ! -s "$root/dnscrypt-proxy.toml.bak" ]; then
 echo "";
 echo "Sorry! Your system is not ready to complete this action";
 echo "Please first check if you have installed the necessary files";
-exit 1
+sleep 7
+menu
+exit
 fi
 if [ -s "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
@@ -448,7 +474,9 @@ if [ ! -s "$root/dnscrypt-proxy.toml" ]; then
 echo "";
 echo " Sorry! Your system is not ready to start the service";
 echo " Please first check if you have installed the necessary files";
-exit 1
+sleep 7
+menu
+exit
 fi
 if [ -s "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
@@ -488,11 +516,11 @@ clear
 echo "+++ Starting anon-service +++";
 service systemd-resolved restart
 service network-manager restart
-sleep 13
-unbound &
+sleep 11
 chown -R $owner:$owner $root
-nohup xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
 nohup xterm -T "Dnscrypt-proxy" -e su - $owner -c "./dnscrypt-proxy" > /dev/null 2>&1 &
+sleep 2
+nohup xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
 echo " Checking connection to Tor";
 rm $root/tor.log > /dev/null 2>&1
 until [ -s $root/tor.log ]
@@ -512,28 +540,49 @@ done
 rm $root/tor.log > /dev/null 2>&1
 ## Configuring basic iptables rules
 ## Reference: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
-# destinations you don't want routed through Tor
+# Destinations you don't want routed through Tor
 _non_tor="127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
-# the UID that Tor runs as (varies from system to system)
+# Other IANA reserved blocks (These are not processed by tor and dropped by default)
+_resv_iana="0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4 255.255.255.255/32"
+# The UID that Tor runs as (varies from system to system)
 _tor_uid="$(id -u debian-tor)"
+# Tor's VirtualAddrNetworkIPv4
+_virt_addr="10.192.0.0/10"
 # Tor's TransPort
 _trans_port="9040"
 iptables -F
 iptables -t nat -F
-iptables -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,FIN ACK,FIN -j DROP
-iptables -A OUTPUT ! -o lo ! -d 127.0.0.1 ! -s 127.0.0.1 -p tcp -m tcp --tcp-flags ACK,RST ACK,RST -j DROP
+iptables -t nat -A OUTPUT -d $_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports $_trans_port
+iptables -A OUTPUT -m state --state INVALID -j DROP
+iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -t nat -A OUTPUT -m owner --uid-owner $_tor_uid -j RETURN
 iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53
 for _clearnet in $_non_tor; do
 iptables -t nat -A OUTPUT -d $_clearnet -j RETURN
 done
+for _iana in $_resv_iana; do
+  iptables -t nat -A OUTPUT -d $_iana -j RETURN
+done
+sleep 7
+iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+for _lan in $_non_tor; do
+iptables -A INPUT -s $_lan -j ACCEPT
+done
+sleep 6
+iptables -A INPUT -j DROP
+iptables -A FORWARD -j DROP
 iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports $_trans_port
-iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 for _clearnet in $_non_tor; do
 iptables -A OUTPUT -d $_clearnet -j ACCEPT
 done
 iptables -A OUTPUT -m owner --uid-owner $_tor_uid -j ACCEPT
-iptables -A OUTPUT -j REJECT
+iptables -A OUTPUT -j DROP
+sleep 1
+iptables -P FORWARD DROP
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+unbound &
 cd $(cat $root/cpath)
 }
 ##
@@ -544,12 +593,15 @@ clear
 service dnscrypt-proxy stop > /dev/null 2>&1
 sleep 3
 if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
-echo " ";
-echo " Service is not running!"
+echo "";
+echo " Service is not running!";
+echo "";
+echo "+++ Restoring original files +++"; 
 sleep 7
-menu
 else
 echo "+++ Stopping anon-service +++";
+sleep 7
+fi
 rm $root/tor.txt > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service tor stop > /dev/null 2>&1
@@ -574,8 +626,7 @@ iptables --table nat --delete-chain
 iptables -P OUTPUT ACCEPT
 iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
-exit 0
-fi
+cd $(cat $root/cpath)
 }
 ##
 ## Cleaning all and exit
