@@ -614,6 +614,7 @@ rm /etc/network/if-up.d/anon-service
 echo "";
 echo " Now the service is not enable at boot time";
 echo " If you want, reactivate it using appropriate option";
+sleep 7
 fi
 service systemd-resolved restart
 service network-manager restart
