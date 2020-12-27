@@ -432,7 +432,7 @@ sleep 1
 cp $tor $root/torrc
 echo "VirtualAddrNetworkIPv4 10.192.0.0/10" >> $root/torrc
 echo "AutomapHostsOnResolve 1" >> $root/torrc
-echo "TransPort 9040" >> $root/torrc
+echo "TransPort 9040 IsolateClientAddr IsolateClientProtocol IsolateDestAddr IsolateDestPort" >> $root/torrc
 echo "DNSPort 5353" >> $root/torrc
 ## Configuring unbound
 unbound-anchor > /dev/null 2>&1
