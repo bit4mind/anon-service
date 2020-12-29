@@ -35,8 +35,7 @@ netman=/etc/NetworkManager/NetworkManager.conf
 resolved=/etc/systemd/resolved.conf
 tor=/etc/tor/torrc
 unbound=/etc/unbound/unbound.conf
-## If Tor stucks before 100%, try to increase this value
-time=19
+
 
 menu(){
 clear
@@ -111,6 +110,7 @@ chown root:root $netman
 touch resolv.conf
 echo nameserver 127.0.0.1 > resolv.conf
 mv resolv.conf /etc/resolv.conf
+rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
 touch /etc/network/if-up.d/anon-service
 echo "#!/bin/sh" > /etc/network/if-up.d/anon-service
 echo "root=/home/anon-service" >> /etc/network/if-up.d/anon-service
@@ -136,12 +136,24 @@ echo "killall unbound tor dnscrypt-proxy > /dev/null 2>&1" >> /etc/network/if-up
 echo "chown -R $owner:$owner $root" >> /etc/network/if-up.d/anon-service
 echo "nohup su - $owner -c \"./dnscrypt-proxy\" > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
 echo "sleep 1s" >> /etc/network/if-up.d/anon-service
+echo "rm $root/notices.log > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
+echo "touch $root/notices.log" >> /etc/network/if-up.d/anon-service
+echo "chown anon-service:anon-service $root/notices.log" >> /etc/network/if-up.d/anon-service
 echo "nohup su - $owner -c \"tor -f $root/torrc\" > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
-echo "sleep 30s" >> /etc/network/if-up.d/anon-service
+echo "while :" >> /etc/network/if-up.d/anon-service
+echo "do" >> /etc/network/if-up.d/anon-service 
+echo "if (grep -Fq \"100%\" $root/notices.log ); then" >> /etc/network/if-up.d/anon-service 
+echo "break" >> /etc/network/if-up.d/anon-service
+echo "else" >> /etc/network/if-up.d/anon-service
+echo "sleep 1s" >> /etc/network/if-up.d/anon-service
+echo "fi" >> /etc/network/if-up.d/anon-service
+echo "done" >> /etc/network/if-up.d/anon-service
+echo "rm $root/notices.log > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> /etc/network/if-up.d/anon-service
 echo "_resv_iana=\"0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4 255.255.255.255/32\"" >> /etc/network/if-up.d/anon-service
 echo "_tor_uid=\"$(id -u debian-tor)\"" >> /etc/network/if-up.d/anon-service
-echo "_trans_port="9040"" >> /etc/network/if-up.d/anon-service
+echo "_virt_addr=\"10.192.0.0/10\"" >> /etc/network/if-up.d/anon-service
+echo "_trans_port=\"9040\"" >> /etc/network/if-up.d/anon-service
 echo "iptables -F" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -F" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -d \$_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports \$_trans_port" >> /etc/network/if-up.d/anon-service
@@ -180,8 +192,8 @@ chown root:root /etc/network/if-up.d/anon-service
 chmod 755 /etc/network/if-up.d/anon-service
 chmod +x /etc/network/if-up.d/anon-service
 echo "";
-echo " Now, if you have already set 127.0.0.1 in your DNS setting,"; 
-echo " you can reboot your system!";
+echo " Now you are ready to go! If you haven't set 127.0.0.1 in your DNS setting,"; 
+echo " do it and restart your connection or reboot your system.";
 echo "";
 exit 0
 ;;
@@ -381,6 +393,9 @@ fi
 if [ -s "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
+## Disable tor and unbound starting at boot time
+systemctl disable unbound > /dev/null 2>&1
+systemctl disable tor > /dev/null 2>&1
 ## Configuring dnscrypt_proxy
 rm $root/dnscrypt-proxy.toml > /dev/null 2>&1
 cp $root/dnscrypt-proxy.toml.bak $root/dnscrypt-proxy.toml
@@ -430,6 +445,7 @@ sed -i '702i\]' $root/dnscrypt-proxy.toml
 sleep 1
 ## Configuring Tor
 cp $tor $root/torrc
+echo "$root/notices.log" >> $root/torrc
 echo "VirtualAddrNetworkIPv4 10.192.0.0/10" >> $root/torrc
 echo "AutomapHostsOnResolve 1" >> $root/torrc
 echo "TransPort 9040 IsolateClientAddr IsolateClientProtocol IsolateDestAddr IsolateDestPort" >> $root/torrc
@@ -520,24 +536,22 @@ sleep 11
 chown -R $owner:$owner $root
 nohup xterm -T "Dnscrypt-proxy" -e su - $owner -c "./dnscrypt-proxy" > /dev/null 2>&1 &
 sleep 2
+rm $root/notices.log > /dev/null 2>&1
+touch $root/notices.log
+chown anon-service:anon-service $root/notices.log
 nohup xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
 echo " Checking connection to Tor";
-rm $root/tor.log > /dev/null 2>&1
-until [ -s $root/tor.log ]
-do
-sleep $time
-curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 1 Congratulations | xargs > $root/tor.log
-torlogsize=$(stat -c%s $root/tor.log)
-if (( $torlogsize > 1 )); then
-sed -i 's/browser/system/g' $root/tor.log
-cat $root/tor.log
-sleep 3
+while :
+do 
+if (grep -Fq "100%" $root/notices.log ); then 
+break
 else
+sleep 2
 echo " Waiting for connection...";
-rm $root/tor.log > /dev/null 2>&1
 fi
 done
-rm $root/tor.log > /dev/null 2>&1
+echo "Congratulations! Your system is configurated to use Tor"; 
+rm $root/notices.log > /dev/null 2>&1
 ## Configuring basic iptables rules
 ## Reference: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
 # Destinations you don't want routed through Tor
