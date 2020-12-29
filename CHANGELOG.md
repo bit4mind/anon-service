@@ -3,7 +3,7 @@ CHANGELOG
 All notable changes to this project will be documented in this file.
 
 Unreleased
-1.09 - 2020-12-17
+1.09 - 2020-12-29
 
 
 Added
@@ -17,3 +17,4 @@ Changed
 
     Menu look like
     Window manager control
+    Checking connection to TOR network
