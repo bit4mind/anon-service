@@ -49,8 +49,8 @@ sudo ./anon-service.sh
 ```
 
 ### Important: 
-If something goes wrong or you just want to update the script, first remove all
-files and settings using the appropriate option in the same script.
+If you want to update the script, first remove all files and settings using the 
+appropriate option in the same script.
 Note:
 If you install the script to start automatically at boot, be aware that the service 
 will start with a small delay after the host has established the connection to the 
@@ -82,9 +82,6 @@ focused on security and privacy like Whomix or Tails.
 ## TROUBLESHOTTING AND WORKAROUND
 
 This script may not work properly if used on a not-fully updated system.
-
-Tor stucks before 100% and connection not works: try to increase time value 
-at the beginning of a script.
 
 Unbound package not found: update your system or install it before.
 
