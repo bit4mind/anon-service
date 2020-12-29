@@ -34,6 +34,8 @@ The script works as a launcher: after installing the necessary software, you can
 reconfigure resolvers and relays before each reactivation of the service or you can
 stop the service without deleting the data and then reactivate it faster without 
 having to install the requirements again and reconfigure DNS traffic.
+In the next version will be added the possibility to install and enable the script 
+as a real service at startup
 
 Usage:
 
@@ -45,7 +47,7 @@ sudo ./anon-service.sh
 ```
 
 ### Important: 
-If you want to update the script, first remove all
+If something goes wrong or you just want to update the script, first remove all
 files and settings using the appropriate option in the same script.
 
 
@@ -73,5 +75,8 @@ focused on security and privacy like Whomix or Tails.
 ## TROUBLESHOTTING AND WORKAROUND
 
 This script may not work properly if used on a not-fully updated system.
+
+Tor stucks before 100% and connection not works: try to increase time value 
+at the beginning of a script.
 
 Unbound package not found: update your system or install it before.
