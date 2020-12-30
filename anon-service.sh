@@ -426,6 +426,7 @@ iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports $_trans_port
 for _clearnet in $_non_tor; do
 iptables -A OUTPUT -d $_clearnet -j ACCEPT
 done
+sleep 3
 iptables -A OUTPUT -m owner --uid-owner $_tor_uid -j ACCEPT
 iptables -A OUTPUT -j DROP
 sleep 1
