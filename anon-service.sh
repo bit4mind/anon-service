@@ -180,6 +180,7 @@ echo "iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports \$_trans_por
 echo "for _clearnet in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
 echo "iptables -A OUTPUT -d \$_clearnet -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
+echo "sleep 3s" >> /etc/network/if-up.d/anon-service
 echo "iptables -A OUTPUT -m owner --uid-owner \$_tor_uid -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "iptables -A OUTPUT -j DROP" >> /etc/network/if-up.d/anon-service
 echo "sleep 1s" >> /etc/network/if-up.d/anon-service
@@ -274,7 +275,9 @@ case "$choose"
 in 1)
 touch $root/temp/distribution.txt
 ## Tor Project supported distro
-echo -e "bionic\nbullseye\nbuster\neoan\nfocal\ngroovy\njessie\nsid\nstretch\nxenial\n\n" > $root/temp/distribution.txt
+cd $root/temp/
+curl -L -O https://deb.torproject.org/torproject.org/dists > /dev/null 2>&1
+cat dists | sed -e 's/\(^.*\/">\)\(.*\)\(\/<\/a>.*$\)/\2/' | awk '!/</' > distribution.txt
 touch $root/temp/os.txt
 for target in $(cat $root/temp/distribution.txt)
 do
@@ -282,7 +285,7 @@ if grep -Fq "$target" $root/temp/apt.log; then
 echo $target > $root/temp/os.txt
 fi
 done
-os=$(cat $root/temp/os.txt | sed -e 's/^[ \t]*//')
+os=$(cat $root/temp/os.txt)
 if [[ "$os" != "focal" ]]; then
 echo "+++ Enabling $os repository +++";
 rm $repo > /dev/null 2>&1
@@ -302,7 +305,6 @@ echo " Sorry! Apparently your OS has not candidate in Tor Project repository.";
 echo " Please re-run the script and choose other options.";
 exit 1
 fi
-cd $root/temp/
 echo "+++ Downloading and importing signing key +++";
 wget -qO- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --import > /dev/null 2>&1
 gpg --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 | apt-key add - > /dev/null 2>&1
@@ -340,6 +342,7 @@ apt-get install -y tor > /dev/null 2>&1
 ;;
 3)
 echo "+++ OK! +++";
+touch $root/installed
 ;;
 *)
 echo "--- Are you serious? ---";
@@ -445,7 +448,7 @@ sed -i '702i\]' $root/dnscrypt-proxy.toml
 sleep 1
 ## Configuring Tor
 cp $tor $root/torrc
-echo "$root/notices.log" >> $root/torrc
+echo "Log notice file $root/notices.log" >> $root/torrc
 echo "VirtualAddrNetworkIPv4 10.192.0.0/10" >> $root/torrc
 echo "AutomapHostsOnResolve 1" >> $root/torrc
 echo "TransPort 9040 IsolateClientAddr IsolateClientProtocol IsolateDestAddr IsolateDestPort" >> $root/torrc
@@ -577,19 +580,19 @@ done
 for _iana in $_resv_iana; do
   iptables -t nat -A OUTPUT -d $_iana -j RETURN
 done
-sleep 7
 iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT
 iptables -A INPUT -i lo -j ACCEPT
 for _lan in $_non_tor; do
 iptables -A INPUT -s $_lan -j ACCEPT
 done
-sleep 6
+sleep 15
 iptables -A INPUT -j DROP
 iptables -A FORWARD -j DROP
 iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports $_trans_port
 for _clearnet in $_non_tor; do
 iptables -A OUTPUT -d $_clearnet -j ACCEPT
 done
+sleep 3
 iptables -A OUTPUT -m owner --uid-owner $_tor_uid -j ACCEPT
 iptables -A OUTPUT -j DROP
 sleep 1
@@ -666,7 +669,11 @@ service network-manager restart
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
-apt-get remove -y tor unbound > /dev/null 2>&1
+if [[ -s "$root/installed" ]]; then
+apt-get remove -y unbound > /dev/null 2>&1
+else
+apt-get remove -y unbound tor > /dev/null 2>&1
+fi
 apt-get clean > /dev/null
 apt-get -y autoremove > /dev/null 2>&1
 apt-get -y autoclean > /dev/null 2>&1
