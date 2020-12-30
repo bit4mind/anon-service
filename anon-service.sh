@@ -327,8 +327,7 @@ then
    echo "deb https://deb.torproject.org/torproject.org $codename main" | tee -a $repo > /dev/null
    echo "deb-src https://deb.torproject.org/torproject.org $codename main" | tee -a $repo > /dev/null
    apt-get update > /dev/null
-   apt-get install -y tor deb.torproject.org-keyring > /dev/null 2>&1
-   echo 
+   apt-get install -y tor deb.torproject.org-keyring > /dev/null 2>&1 
 else
    echo "+++ Installing Tor +++";
    apt-get install -y tor deb.torproject.org-keyring > /dev/null 2>&1
