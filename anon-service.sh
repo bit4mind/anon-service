@@ -402,7 +402,6 @@ systemctl disable tor > /dev/null 2>&1
 ### Configuring dnscrypt_proxy
 rm $root/dnscrypt-proxy.toml > /dev/null 2>&1
 cp $root/dnscrypt-proxy.toml.bak $root/dnscrypt-proxy.toml
-echo "";
 echo "==> Opening file contain public resolvers";
 xterm -T "Resolvers" -e "gedit $root/public-resolvers.md" &
 sleep 1
