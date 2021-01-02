@@ -82,3 +82,4 @@ focused on security and privacy like Whomix or Tails.
 ## TROUBLESHOTTING
 
 This script may not work properly if used on a not-fully updated system.
+
