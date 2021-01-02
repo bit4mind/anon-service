@@ -2,7 +2,7 @@ CHANGELOG
 
 All notable changes to this project will be documented in this file.
 
-Unreleased
+Released
 1.1 - 2020-01-02
 
 
@@ -21,3 +21,4 @@ Changed
     Window manager control
     Checking Tor Project for supoorted distros
     Checking connection to TOR network
+    No more xterm
