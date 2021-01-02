@@ -1,4 +1,6 @@
 # anon-service
+### WARNING: this is an old version! You should use the latest version! If you want to continue with this version (if necessary) update the DNSCrypt-proxy version number (line 32) and update line 127 with the supported distros present in the TOR project repository (https://deb.torproject.org/torproject.org/dists)
+
 Transparent proxy through Tor with DNSCrypt and Anonymized DNS feature enabled.
 
 From Wikipedia: Tor is free and open-source software for enabling anonymous
