@@ -79,10 +79,8 @@ dnscrypt makes spying, spoofing and man-in-the-middle attacks difficult.
 If you are looking for a strong anonymity solution, switch to Linux distributions 
 focused on security and privacy like Whomix or Tails.
 
-## TROUBLESHOTTING AND WORKAROUND
+## TROUBLESHOTTING
 
 This script may not work properly if used on a not-fully updated system.
 
 Unbound package not found: update your system or install it before.
-
-If this version does not working, try old release.
