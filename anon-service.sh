@@ -257,7 +257,7 @@ mv cpath $root/ > /dev/null 2>&1
 mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
-apt-get install -y curl wget psmisc xterm gedit apt-transport-https unbound > /dev/null
+apt-get install -y curl wget xterm psmisc gedit apt-transport-https unbound > /dev/null
 sleep 1
 clear
 echo "==> Which version of Tor do you prefer to use?";
@@ -436,7 +436,7 @@ echo -n "    Second relay for the second server: ";
 read -e relay4
 killall gedit > /dev/null 2>&1
 clear
-echo "==> Configuring other services"
+echo "==> Configuring other services";
 sed -i "1iforce_tcp = true" $root/dnscrypt-proxy.toml
 sed -i "2iserver_names = ['$server1', '$server2']" $root/dnscrypt-proxy.toml
 sed -i "s/127.0.0.1:53/127.0.0.1:10000/g; s/9.9.9.9/208.67.222.222/g; s/8.8.8.8/208.67.220.220/g; s/require_dnssec = false/require_dnssec = true/g; s/force_tcp = false/#force_tcp = false/g; s/\[anonymized_dns\]/\[anonymized_dns\]\nroutes = \[\n{ server_name='$server1', via=\[\'$relay1\', \'$relay2\'\] },\n{ server_name=\'$server2\', via=[\'$relay3\', \'$relay4\'] }\n\]/g; s/skip_incompatible = false/skip_incompatible = true/g" $root/dnscrypt-proxy.toml
@@ -531,12 +531,12 @@ service systemd-resolved restart
 service network-manager restart
 sleep 10
 chown -R $owner:$owner $root
-nohup xterm -T "Dnscrypt-proxy" -e su - $owner -c "./dnscrypt-proxy" > /dev/null 2>&1 &
+nohup su - $owner -c "./dnscrypt-proxy" > /dev/null 2>&1 &
 sleep 1
 rm $root/notices.log > /dev/null 2>&1
 touch $root/notices.log
 chown anon-service:anon-service $root/notices.log
-nohup xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
+nohup su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
 echo "==> Checking connection to Tor";
 SECONDS=0
 secs=30
@@ -663,7 +663,7 @@ echo "==> Removing anon-service files and settings from system";
 service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
-killall unbound tor dnscrypt-proxy xterm > /dev/null 2>&1
+killall unbound tor dnscrypt-proxy > /dev/null 2>&1
 if [[ -s "$root/resolved.bak" ]]; then
 cp $root/resolved.bak $resolved > /dev/null 2>&1
 service systemd-resolved restart
