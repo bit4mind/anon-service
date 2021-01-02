@@ -1,5 +1,4 @@
 # anon-service
-### WARNING: this is an old version! You should use the latest version! If you want to continue with this version (if necessary) update the DNSCrypt-proxy version number (line 32) and update line 127 with the supported distros present in the TOR project repository (https://deb.torproject.org/torproject.org/dists)
 
 Transparent proxy through Tor with DNSCrypt and Anonymized DNS feature enabled.
 
@@ -22,11 +21,11 @@ repository.
 
 
 
-
 ## REQUIREMENTS
 
-The script should work on many debian-based distros with network-manager installed and 
-the unbound package present in the repositories. Tested on Debian, Ubuntu, Mint.
+
+The script should work on many debian-based distros with network-manager installed
+and the unbound package present in the repositories. Tested on Debian, Ubuntu, Mint.
 
 
 
@@ -36,8 +35,9 @@ The script works as a launcher: after installing the necessary software, you can
 reconfigure resolvers and relays before each reactivation of the service or you can
 stop the service without deleting the data and then reactivate it faster without 
 having to install the requirements again and reconfigure DNS traffic.
-In the next version will be added the possibility to install and enable the script 
-as a real service at startup.
+You can install it to start automatically at boot: in this case you could restart
+service simply restarting your connection and continue to use the script for
+changing IP address, configuring dnscrypt servers and relays or removing all things.
 
 Usage:
 
@@ -49,10 +49,17 @@ sudo ./anon-service.sh
 ```
 
 ### Important: 
-If something goes wrong or you just want to update the script, first remove all
-files and settings using the appropriate option in the same script.
+If you want to update the script, first remove all files and settings using the 
+appropriate option in the same script.
+Note:
+If you install the script to start automatically at boot, be aware that the service 
+will start with a small delay after the host has established the connection to the 
+network. Before the service is fully loaded, the connection will not work: you can 
+check its status via syslog with the command
 
-
+```
+tail -f /var/log/syslog
+```
 ### WARNING
 
 This is NOT a solution that grants strong anonymity and the developers themselves 
@@ -72,13 +79,7 @@ dnscrypt makes spying, spoofing and man-in-the-middle attacks difficult.
 If you are looking for a strong anonymity solution, switch to Linux distributions 
 focused on security and privacy like Whomix or Tails.
 
-
-
-## TROUBLESHOTTING AND WORKAROUND
+## TROUBLESHOTTING
 
 This script may not work properly if used on a not-fully updated system.
 
-Tor stucks before 100% and connection not works: try to increase time value 
-at the beginning of a script.
-
-Unbound package not found: update your system or install it before.
