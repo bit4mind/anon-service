@@ -2,12 +2,12 @@
 
 # #####################################################################
 # anon-service.sh
-# version 1.09
+# version 1.1
 # 
 # Transparent proxy through Tor with DNSCrypt and Anonymized DNS 
 # feature enabled.
 #
-# Copyright (C) 2020 Bit4mind
+# Copyright (C) 2020-2021 Bit4mind
 #
 # GNU GENERAL PUBLIC LICENSE
 #
@@ -107,9 +107,6 @@ cp resolved.conf.temp $resolved
 chown root:root $resolved
 cp NetworkManager.conf $netman
 chown root:root $netman
-touch resolv.conf
-echo nameserver 127.0.0.1 > resolv.conf
-mv resolv.conf /etc/resolv.conf
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
 touch /etc/network/if-up.d/anon-service
 echo "#!/bin/sh" > /etc/network/if-up.d/anon-service
@@ -150,7 +147,6 @@ echo "fi" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
 echo "rm $root/notices.log > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> /etc/network/if-up.d/anon-service
-echo "_resv_iana=\"0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4 255.255.255.255/32\"" >> /etc/network/if-up.d/anon-service
 echo "_tor_uid=\"$(id -u debian-tor)\"" >> /etc/network/if-up.d/anon-service
 echo "_virt_addr=\"10.192.0.0/10\"" >> /etc/network/if-up.d/anon-service
 echo "_trans_port=\"9040\"" >> /etc/network/if-up.d/anon-service
@@ -164,16 +160,13 @@ echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53" >> 
 echo "for _clearnet in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -d \$_clearnet -j RETURN" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
-echo "for _iana in \$_resv_iana; do" >> /etc/network/if-up.d/anon-service
-echo "iptables -t nat -A OUTPUT -d \$_iana -j RETURN" >> /etc/network/if-up.d/anon-service
-echo "done" >> /etc/network/if-up.d/anon-service
-echo "sleep 8s" >> /etc/network/if-up.d/anon-service
+echo "sleep 5s" >> /etc/network/if-up.d/anon-service
 echo "iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "iptables -A INPUT -i lo -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "for _lan in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
 echo "iptables -A INPUT -s \$_lan -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
-echo "sleep 7s" >> /etc/network/if-up.d/anon-service
+echo "sleep 5s" >> /etc/network/if-up.d/anon-service
 echo "iptables -A INPUT -j DROP" >> /etc/network/if-up.d/anon-service
 echo "iptables -A FORWARD -j DROP" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports \$_trans_port" >> /etc/network/if-up.d/anon-service
@@ -215,10 +208,11 @@ fi
 service dnscrypt-proxy stop > /dev/null 2>&1
 sleep 3
 if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
+echo "";
 echo "==> Service is not running!"
-exit 1
+menu
 else
-echo " ";
+echo "";
 killall -HUP tor && curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 1 "Your IP address" | sed -e 's/<[^>]*>//g' | xargs
 sleep 7
 menu
@@ -231,14 +225,16 @@ fi
 touch /usr/bin/anon-service > /dev/null 2>&1
 cp $0 /usr/bin/anon-service > /dev/null 2>&1
 chmod +x /usr/bin/anon-service
-echo -e "\n\n";
+echo "";
 echo "==> Now you can run it simply typing \"sudo anon-service\" in your terminal";
 sleep 7
 menu
 ;;
 *)
+echo "";
 echo "==> Are you serious?"
-exit 1
+sleep 5
+menu
 esac
 }
 ##
@@ -252,9 +248,9 @@ sleep 7
 menu
 exit
 fi
-echo "";
+clear
 echo "==> Checking dependencies and preparing the system"
-#rm -rf $root > /dev/null 2>&1
+rm -rf $root > /dev/null 2>&1
 adduser -q --disabled-password --gecos "" $owner > /dev/null 2>&1
 usermod -u 999 $owner > /dev/null 2>&1
 mv cpath $root/ > /dev/null 2>&1
@@ -349,7 +345,8 @@ touch $root/installed
 ;;
 *)
 echo "==> Are you serious?";
-exit 1
+sleep 5
+menu
 esac
 touch $root/temp/arch.txt > /dev/null
 uname -a > $root/temp/arch.txt
@@ -370,7 +367,7 @@ cd $root
 rm -rf $root/temp > /dev/null 2>&1
 rm *.md > /dev/null 2>&1
 rm *.md* > /dev/null 2>&1
-echo "==> Downloading public resolvers list";
+echo "==> Downloading public DNS resolvers list";
 curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/public-resolvers.md > /dev/null 2>&1
 echo "==> Downloading anonymized DNS relays list";
 curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/relays.md > /dev/null 2>&1
@@ -443,12 +440,7 @@ clear
 echo "==> Configuring other services"
 sed -i "1iforce_tcp = true" $root/dnscrypt-proxy.toml
 sed -i "2iserver_names = ['$server1', '$server2']" $root/dnscrypt-proxy.toml
-sed -i 's/127.0.0.1:53/127.0.0.1:10000/g; s/9.9.9.9/208.67.222.222/g; s/8.8.8.8/208.67.220.220/g; s/require_dnssec = false/require_dnssec = true/g; s/force_tcp = false/#force_tcp = false/g; s/skip_incompatible = false/skip_incompatible = true/g' $root/dnscrypt-proxy.toml
-sed -i '699iroutes = \[' $root/dnscrypt-proxy.toml
-sed -i "700i{ server_name='$server1', via=['$relay1', '$relay2'] }," $root/dnscrypt-proxy.toml
-sed -i "701i{ server_name='$server2', via=['$relay3', '$relay4'] }" $root/dnscrypt-proxy.toml
-sed -i '702i\]' $root/dnscrypt-proxy.toml
-sleep 1
+sed -i "s/127.0.0.1:53/127.0.0.1:10000/g; s/9.9.9.9/208.67.222.222/g; s/8.8.8.8/208.67.220.220/g; s/require_dnssec = false/require_dnssec = true/g; s/force_tcp = false/#force_tcp = false/g; s/\[anonymized_dns\]/\[anonymized_dns\]\nroutes = \[\n{ server_name='$server1', via=\[\'$relay1\', \'$relay2\'\] },\n{ server_name=\'$server2\', via=[\'$relay3\', \'$relay4\'] }\n\]/g; s/skip_incompatible = false/skip_incompatible = true/g" $root/dnscrypt-proxy.toml
 ### Configuring Tor
 cp $tor $root/torrc
 echo "Log notice file $root/notices.log" >> $root/torrc
@@ -465,7 +457,6 @@ echo "domain-insecure: \"onion\"" >> $unbound
 echo "private-domain: \"onion\"" >> $unbound
 echo "do-not-query-localhost: no" >> $unbound 
 echo "interface: 127.0.0.1@53" >> $unbound
-#echo "rrset-roundrobin: yes" >> $unbound
 echo "local-zone: \"onion.\" transparent" >> $unbound
 echo "forward-zone:" >> $unbound
 echo "    name: \"onion\"" >> $unbound
@@ -473,7 +464,6 @@ echo "    forward-addr: 127.0.0.1@5353" >> $unbound
 echo "forward-zone:" >> $unbound
 echo "   name: \".\"" >> $unbound
 echo "   forward-addr: 127.0.0.1@10000" >> $unbound
-#echo "include: \"/etc/unbound/unbound.conf.d/*.conf\"" >> $unbound
 ### Disabling dnsmasq and configure Network-Manager and systemd-resolved
 cp $netman.bak $root/NetworkManager.conf.temp
 cd $root
@@ -524,17 +514,18 @@ service dnsmasq stop > /dev/null 2>&1
 service bind stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 killall dnsmasq bind > /dev/null 2>&1
-rm /etc/resolv.conf > /dev/null 2>&1 
 sleep 1
 cd $root
 service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
-rm /etc/resolv.conf > /dev/null 2>&1
+if ! grep -Fq "nameserver 127.0.0.1" /etc/resolv.conf; then
+rm /etc/resolv.conf > /dev/null 2>&1 
 echo "";
 echo "==> Please change your DNS system setting to 127.0.0.1 and then press ENTER";
 read REPLY
+fi
 clear
 echo "==> Starting anon-service";
 service systemd-resolved restart
@@ -549,20 +540,19 @@ chown anon-service:anon-service $root/notices.log
 nohup xterm -T "Tor" -e su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
 echo "==> Checking connection to Tor";
 SECONDS=0
-secs=39
+secs=30
 while (( SECONDS < secs ));
 do
 if (grep -Fq "100%" $root/notices.log ); then 
 break
 fi
+sleep 1
 done
 rm $root/notices.log > /dev/null 2>&1
 ### Configuring basic iptables rules
 ### Reference: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
 # Destinations you don't want routed through Tor
 _non_tor="127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
-# Other IANA reserved blocks (These are not processed by tor and dropped by default)
-_resv_iana="0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4 255.255.255.255/32"
 # The UID that Tor runs as (varies from system to system)
 _tor_uid="$(id -u debian-tor)"
 # Tor's VirtualAddrNetworkIPv4
@@ -579,22 +569,20 @@ iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53
 for _clearnet in $_non_tor; do
 iptables -t nat -A OUTPUT -d $_clearnet -j RETURN
 done
-for _iana in $_resv_iana; do
-  iptables -t nat -A OUTPUT -d $_iana -j RETURN
-done
+sleep 5
 iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT
 iptables -A INPUT -i lo -j ACCEPT
 for _lan in $_non_tor; do
 iptables -A INPUT -s $_lan -j ACCEPT
 done
-sleep 15
+sleep 5
 iptables -A INPUT -j DROP
 iptables -A FORWARD -j DROP
-iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports $_trans_port
 for _clearnet in $_non_tor; do
 iptables -A OUTPUT -d $_clearnet -j ACCEPT
 done
 sleep 3
+iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports $_trans_port
 iptables -A OUTPUT -m owner --uid-owner $_tor_uid -j ACCEPT
 sleep 2
 iptables -A OUTPUT -j DROP
@@ -603,22 +591,21 @@ iptables -P FORWARD DROP
 iptables -P INPUT DROP
 iptables -P OUTPUT DROP
 unbound &
-echo -e "\n";
 ### Checking services
 if ! pgrep -x "tor" > /dev/null; then
 echo "==> Sorry! No connection to TOR...Please, report this issue to the project";
 sleep 7
-cleanall
+shutdown_service
 fi
 if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
 echo "==> Sorry! Dnscrypt-proxy isn't running...Please, report this issue to the project";
 sleep 7
-cleanall
+shutdown_service
 fi
 if ! pgrep -x "unbound" > /dev/null; then
 echo "==> Sorry! Unbound isn't running...Please, report this issue to the project";
 sleep 7
-cleanall
+shutdown_service
 else
 echo "==> Congratulations! Your system is configurated to use Tor and DNSCrypt";
 sleep 5
@@ -633,7 +620,6 @@ clear
 service dnscrypt-proxy stop > /dev/null 2>&1
 sleep 3
 if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
-echo "==> Service is not running!";
 echo "==> Restoring original files"; 
 sleep 7
 else
