@@ -519,7 +519,7 @@ service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
-if ! grep -Fq "nameserver 127.0.0.1" /etc/resolv.conf; then
+if ! grep -Fq "nameserver 127.0.0.1" /etc/resolv.conf > /dev/null 2>&1; then
 rm /etc/resolv.conf > /dev/null 2>&1 
 echo "";
 echo "==> Please change your DNS system setting to 127.0.0.1 and then press ENTER";
@@ -595,16 +595,19 @@ if ! pgrep -x "tor" > /dev/null; then
 echo "==> Sorry! No connection to TOR...Please, report this issue to the project";
 sleep 7
 shutdown_service
+menu
 fi
 if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
 echo "==> Sorry! Dnscrypt-proxy isn't running...Please, report this issue to the project";
 sleep 7
 shutdown_service
+menu
 fi
 if ! pgrep -x "unbound" > /dev/null; then
 echo "==> Sorry! Unbound isn't running...Please, report this issue to the project";
 sleep 7
 shutdown_service
+menu
 else
 echo "==> Congratulations! Your system is configurated to use Tor and DNSCrypt";
 sleep 5
