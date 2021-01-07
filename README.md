@@ -63,7 +63,7 @@ tail -f /var/log/syslog
 ### WARNING
 
 This is NOT a solution that grants strong anonymity and the developers themselves 
-do not recommend using tor as a trasparent proxy
+do not recommend using tor as a transparent proxy
 (https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy).
 When you browse the web even if you do not use personal data and hide your IP address,
 traces are left that can uniquely identify your machine such as the hostname and mac 
