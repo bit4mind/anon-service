@@ -147,7 +147,7 @@ echo "fi" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
 echo "rm $root/notices.log > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> /etc/network/if-up.d/anon-service
-echo "_tor_uid=\"$(id -u debian-tor)\"" >> /etc/network/if-up.d/anon-service
+echo "_user_uid=\"999\"" >> /etc/network/if-up.d/anon-service
 echo "_virt_addr=\"10.192.0.0/10\"" >> /etc/network/if-up.d/anon-service
 echo "_trans_port=\"9040\"" >> /etc/network/if-up.d/anon-service
 echo "iptables -F" >> /etc/network/if-up.d/anon-service
@@ -155,7 +155,7 @@ echo "iptables -t nat -F" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -d \$_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports \$_trans_port" >> /etc/network/if-up.d/anon-service
 echo "iptables -A OUTPUT -m state --state INVALID -j DROP" >> /etc/network/if-up.d/anon-service
 echo "iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "iptables -t nat -A OUTPUT -m owner --uid-owner \$_tor_uid -j RETURN" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -A OUTPUT -m owner --uid-owner \$_user_uid -j RETURN" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53" >> /etc/network/if-up.d/anon-service
 echo "for _clearnet in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -d \$_clearnet -j RETURN" >> /etc/network/if-up.d/anon-service
@@ -174,7 +174,7 @@ echo "for _clearnet in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
 echo "iptables -A OUTPUT -d \$_clearnet -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
 echo "sleep 3s" >> /etc/network/if-up.d/anon-service
-echo "iptables -A OUTPUT -m owner --uid-owner \$_tor_uid -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -m owner --uid-owner \$_user_uid -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "sleep 2s" >> /etc/network/if-up.d/anon-service
 echo "iptables -A OUTPUT -j DROP" >> /etc/network/if-up.d/anon-service
 echo "sleep 1s" >> /etc/network/if-up.d/anon-service
@@ -553,7 +553,7 @@ rm $root/notices.log > /dev/null 2>&1
 # Destinations you don't want routed through Tor
 _non_tor="127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
 # The UID that Tor runs as (varies from system to system)
-_tor_uid="$(id -u debian-tor)"
+_user_uid="999"
 # Tor's VirtualAddrNetworkIPv4
 _virt_addr="10.192.0.0/10"
 # Tor's TransPort
@@ -563,7 +563,7 @@ iptables -t nat -F
 iptables -t nat -A OUTPUT -d $_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports $_trans_port
 iptables -A OUTPUT -m state --state INVALID -j DROP
 iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-iptables -t nat -A OUTPUT -m owner --uid-owner $_tor_uid -j RETURN
+iptables -t nat -A OUTPUT -m owner --uid-owner $_user_uid -j RETURN
 iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53
 for _clearnet in $_non_tor; do
 iptables -t nat -A OUTPUT -d $_clearnet -j RETURN
@@ -582,7 +582,7 @@ iptables -A OUTPUT -d $_clearnet -j ACCEPT
 done
 sleep 3
 iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports $_trans_port
-iptables -A OUTPUT -m owner --uid-owner $_tor_uid -j ACCEPT
+iptables -A OUTPUT -m owner --uid-owner $_user_uid -j ACCEPT
 sleep 2
 iptables -A OUTPUT -j DROP
 sleep 1
