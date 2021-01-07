@@ -3,7 +3,7 @@ CHANGELOG
 All notable changes to this project will be documented in this file.
 
 Released
-1.1 - 2020-01-02
+1.1 - 2021-01-02
 
 
 Added
