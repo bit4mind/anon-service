@@ -1,6 +1,6 @@
 # anon-service
 
-Transparent proxy through Tor with DNSCrypt and Anonymized DNS feature enabled.
+Transparent proxy through Tor with optionally DNSCrypt and Anonymized DNS feature enabled.
 
 From Wikipedia: Tor is free and open-source software for enabling anonymous
 communication by directing Internet traffic through a free, worldwide, volunteer
@@ -9,10 +9,9 @@ conceal a user's location and usage from anyone conducting network surveillance
 or traffic analysis. Using Tor makes it more difficult to trace Internet
 activity to the user: this includes "visits to Web sites, online posts, instant 
 messages, and other communication forms".
-
 The task of this script is to redirect outgoing connections through "The Onion 
-Router" network and to provide encryption/authentication to DNS traffic in the 
-clearnet via dnscrycpt/DNSSEC, leaving the resolution of onion domains to the 
+Router" network and optionally to provide encryption/authentication to DNS traffic 
+in the clearnet via dnscrycpt/DNSSEC, leaving the resolution of onion domains to the 
 Tor DNS resolvers.
 All applications will use the TOR network even if they do not support SOCKS.
 The script supports anonymized DNS feature and is able to find the correct 
@@ -60,6 +59,10 @@ check its status via syslog with the command
 ```
 tail -f /var/log/syslog
 ```
+
+Note that the last type of trasparent proxy used will be configured at startup.
+
+
 ### WARNING
 
 This is NOT a solution that grants strong anonymity and the developers themselves 
