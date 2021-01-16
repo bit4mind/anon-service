@@ -52,7 +52,7 @@ echo "              ▒██████▒▒░▒████▒░██▓
 echo "                    ░           ░           ░       ░ by bit4mind  ";
 echo " ";
 echo "   0. Check dependencies and download upgraded services";
-echo "   1. Set servers/relays for anonymized DNS feature and configure other services";
+echo "   1. Choose transparent proxy type and configure related services";
 echo "   2. Start/Restart anon-service";
 echo "   3. Execute all tasks above";
 echo "   4. Close this window";
@@ -91,7 +91,7 @@ fi
 wmctrl -c :ACTIVE:
 ;;
 5)
-if [ ! -s "$root/dnscrypt-proxy.toml" ]; then
+if [ ! -s "$root/stp-service)" ]; then
 echo "";
 echo "==> Sorry! Your system is not ready to start the service...";
 echo "==> Please, check if you have installed the necessary files";
@@ -131,8 +131,11 @@ echo "service dnscrypt-proxy stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon
 echo "service unbound stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "killall unbound tor dnscrypt-proxy > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "chown -R $owner:$owner $root" >> /etc/network/if-up.d/anon-service
+selected_service=$(cat $root/stp-service)
+if (( $selected_service == 1 )); then
 echo "nohup su - $owner -c \"./dnscrypt-proxy\" > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
 echo "sleep 1s" >> /etc/network/if-up.d/anon-service
+fi
 echo "rm $root/notices.log > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "touch $root/notices.log" >> /etc/network/if-up.d/anon-service
 echo "chown anon-service:anon-service $root/notices.log" >> /etc/network/if-up.d/anon-service
@@ -156,7 +159,11 @@ echo "iptables -t nat -A OUTPUT -d \$_virt_addr -p tcp -m tcp --tcp-flags FIN,SY
 echo "iptables -A OUTPUT -m state --state INVALID -j DROP" >> /etc/network/if-up.d/anon-service
 echo "iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -m owner --uid-owner \$_user_uid -j RETURN" >> /etc/network/if-up.d/anon-service
+if (( $selected_service == 0 )); then
 echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53" >> /etc/network/if-up.d/anon-service
+else
+echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 5353" >> /etc/network/if-up.d/anon-service
+fi
 echo "for _clearnet in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -d \$_clearnet -j RETURN" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
@@ -181,7 +188,9 @@ echo "sleep 1s" >> /etc/network/if-up.d/anon-service
 echo "iptables -P FORWARD DROP" >> /etc/network/if-up.d/anon-service
 echo "iptables -P INPUT DROP" >> /etc/network/if-up.d/anon-service
 echo "iptables -P OUTPUT DROP" >> /etc/network/if-up.d/anon-service
+if (( $selected_service == 1 )); then
 echo "unbound" >> /etc/network/if-up.d/anon-service
+fi
 echo "echo \"+++ anon-service started +++\"" >> /etc/network/if-up.d/anon-service
 chown root:root /etc/network/if-up.d/anon-service
 chmod 755 /etc/network/if-up.d/anon-service
@@ -205,9 +214,9 @@ cleanall
 if [ -s "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
-service dnscrypt-proxy stop > /dev/null 2>&1
-sleep 3
-if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
+#service dnscrypt-proxy stop > /dev/null 2>&1
+#sleep 3
+if ! pgrep -x "tor" > /dev/null; then
 echo "";
 echo "==> Service is not running!"
 menu
@@ -399,6 +408,23 @@ fi
 ### Disable tor and unbound starting at boot time
 systemctl disable unbound > /dev/null 2>&1
 systemctl disable tor > /dev/null 2>&1
+clear
+echo "==> Which type of transparent proxy do you prefer to use?";
+echo "      1.Standard transparent proxy";
+echo "      2.Trasparent proxy with DNSCrypt and Anonymized DNS feature";
+echo " "
+echo -n  " Choose: ";
+read -e choose
+case "$choose" in 
+1)
+rm $root/stp-service > /dev/null 2>&1
+touch $root/stp-service
+echo "1" > $root/stp-service
+;;
+2)
+rm $root/stp-service > /dev/null 2>&1
+touch $root/stp-service
+echo "0" > $root/stp-service 
 ### Configuring dnscrypt_proxy
 rm $root/dnscrypt-proxy.toml > /dev/null 2>&1
 cp $root/dnscrypt-proxy.toml.bak $root/dnscrypt-proxy.toml
@@ -440,13 +466,6 @@ echo "==> Configuring other services";
 sed -i "1iforce_tcp = true" $root/dnscrypt-proxy.toml
 sed -i "2iserver_names = ['$server1', '$server2']" $root/dnscrypt-proxy.toml
 sed -i "s/127.0.0.1:53/127.0.0.1:10000/g; s/9.9.9.9/208.67.222.222/g; s/8.8.8.8/208.67.220.220/g; s/require_dnssec = false/require_dnssec = true/g; s/force_tcp = false/#force_tcp = false/g; s/\[anonymized_dns\]/\[anonymized_dns\]\nroutes = \[\n{ server_name='$server1', via=\[\'$relay1\', \'$relay2\'\] },\n{ server_name=\'$server2\', via=[\'$relay3\', \'$relay4\'] }\n\]/g; s/skip_incompatible = false/skip_incompatible = true/g" $root/dnscrypt-proxy.toml
-### Configuring Tor
-cp $tor $root/torrc
-echo "Log notice file $root/notices.log" >> $root/torrc
-echo "VirtualAddrNetworkIPv4 10.192.0.0/10" >> $root/torrc
-echo "AutomapHostsOnResolve 1" >> $root/torrc
-echo "TransPort 9040 IsolateClientAddr IsolateClientProtocol IsolateDestAddr IsolateDestPort" >> $root/torrc
-echo "DNSPort 5353" >> $root/torrc
 ### Configuring unbound
 unbound-anchor > /dev/null 2>&1
 sleep 1
@@ -463,6 +482,20 @@ echo "    forward-addr: 127.0.0.1@5353" >> $unbound
 echo "forward-zone:" >> $unbound
 echo "   name: \".\"" >> $unbound
 echo "   forward-addr: 127.0.0.1@10000" >> $unbound
+;;
+*)
+echo "";
+echo "==> Are you serious?"
+sleep 5
+configure
+esac
+### Configuring Tor
+cp $tor $root/torrc
+echo "Log notice file $root/notices.log" >> $root/torrc
+echo "VirtualAddrNetworkIPv4 10.192.0.0/10" >> $root/torrc
+echo "AutomapHostsOnResolve 1" >> $root/torrc
+echo "TransPort 9040 IsolateClientAddr IsolateClientProtocol IsolateDestAddr IsolateDestPort" >> $root/torrc
+echo "DNSPort 5353" >> $root/torrc
 ### Disabling dnsmasq and configure Network-Manager and systemd-resolved
 cp $netman.bak $root/NetworkManager.conf.temp
 cd $root
@@ -482,7 +515,7 @@ cd $(cat $root/cpath)
 ##
 start_service(){
 ### Checking for required files
-if [ ! -s "$root/dnscrypt-proxy.toml" ]; then
+if [ ! -s "$root/stp-service" ]; then
 echo "";
 echo "==> Sorry! Your system is not ready to start the service...";
 echo "==> Please, check if you have installed the necessary files";
@@ -531,6 +564,9 @@ service systemd-resolved restart
 service network-manager restart
 sleep 10
 chown -R $owner:$owner $root
+active_service=$(cat $root/stp-service)
+case $active_service in
+"0")
 nohup su - $owner -c "./dnscrypt-proxy" > /dev/null 2>&1 &
 sleep 1
 rm $root/notices.log > /dev/null 2>&1
@@ -612,6 +648,75 @@ else
 echo "==> Congratulations! Your system is configurated to use Tor and DNSCrypt";
 sleep 5
 fi
+;;
+"1")
+rm $root/notices.log > /dev/null 2>&1
+touch $root/notices.log
+chown anon-service:anon-service $root/notices.log
+nohup su - $owner -c "tor -f $root/torrc" > /dev/null 2>&1 &
+echo "==> Checking connection to Tor";
+SECONDS=0
+secs=30
+while (( SECONDS < secs ));
+do
+if (grep -Fq "100%" $root/notices.log ); then 
+break
+fi
+sleep 1
+done
+rm $root/notices.log > /dev/null 2>&1
+### Configuring basic iptables rules
+### Reference: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
+# Destinations you don't want routed through Tor
+_non_tor="127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
+# The UID that Tor runs as (varies from system to system)
+_user_uid="999"
+# Tor's VirtualAddrNetworkIPv4
+_virt_addr="10.192.0.0/10"
+# Tor's TransPort
+_trans_port="9040"
+iptables -F
+iptables -t nat -F
+iptables -t nat -A OUTPUT -d $_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports $_trans_port
+iptables -A OUTPUT -m state --state INVALID -j DROP
+iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -t nat -A OUTPUT -m owner --uid-owner $_user_uid -j RETURN
+iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 5353
+for _clearnet in $_non_tor; do
+iptables -t nat -A OUTPUT -d $_clearnet -j RETURN
+done
+sleep 5
+iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT
+iptables -A INPUT -i lo -j ACCEPT
+for _lan in $_non_tor; do
+iptables -A INPUT -s $_lan -j ACCEPT
+done
+sleep 5
+iptables -A INPUT -j DROP
+iptables -A FORWARD -j DROP
+for _clearnet in $_non_tor; do
+iptables -A OUTPUT -d $_clearnet -j ACCEPT
+done
+sleep 3
+iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports $_trans_port
+iptables -A OUTPUT -m owner --uid-owner $_user_uid -j ACCEPT
+sleep 2
+iptables -A OUTPUT -j DROP
+sleep 1
+iptables -P FORWARD DROP
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+### Checking services
+if ! pgrep -x "tor" > /dev/null; then
+echo "==> Sorry! No connection to TOR...Please, report this issue to the project";
+sleep 7
+shutdown_service
+menu
+else
+echo "==> Congratulations! Your system is configurated to use Tor";
+sleep 5
+fi
+esac
 cd $(cat $root/cpath)
 }
 ##
@@ -621,7 +726,7 @@ shutdown_service(){
 clear
 service dnscrypt-proxy stop > /dev/null 2>&1
 sleep 3
-if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
+if ! pgrep -x "tor" > /dev/null; then
 echo "==> Restoring original files"; 
 sleep 7
 else
