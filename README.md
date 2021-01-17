@@ -60,8 +60,8 @@ check its status via syslog with the command
 tail -f /var/log/syslog
 ```
 
-Note that the last type of trasparent proxy used will be configured at startup.
-
+Note that, if you enable service to start automatically at boot, will be configured
+the last type of trasparent proxy used.
 
 ### WARNING
 
