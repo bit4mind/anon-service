@@ -4,8 +4,8 @@
 # anon-service.sh
 # version 1.1
 # 
-# Transparent proxy through Tor with DNSCrypt and Anonymized DNS 
-# feature enabled.
+# Transparent proxy through Tor with DNSCrypt and optionally Anonymized 
+# DNS feature enabled.
 #
 # Copyright (C) 2020-2021 Bit4mind
 #
@@ -508,6 +508,55 @@ chown $USER:$USER resolved.conf.temp
 sed -i 's/^DNSStubListener=yes/#&/' resolved.conf.temp
 echo "DNSStubListener=no" >> resolved.conf.temp
 fi
+rm $root/iptables_rules.sh
+touch $root/iptables_rules.sh
+### Configuring basic iptables rules
+### Reference: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
+echo "#!/bin/bash" > $root/iptables_rules.sh
+# Destinations you don't want routed through Tor
+echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> $root/iptables_rules.sh
+# The UID that Tor runs as (varies from system to system)
+echo "_user_uid=\"999\"" >> $root/iptables_rules.sh
+# Tor's VirtualAddrNetworkIPv4
+echo "_virt_addr=\"10.192.0.0/10\"" >> $root/iptables_rules.sh
+# Tor's TransPort
+echo "_trans_port=\"9040\"" >> $root/iptables_rules.sh
+echo "iptables -F" >> $root/iptables_rules.sh
+echo "iptables -t nat -F" >> $root/iptables_rules.sh
+echo "iptables -t nat -A OUTPUT -d \$_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports \$_trans_port" >> $root/iptables_rules.sh
+echo "iptables -A OUTPUT -m state --state INVALID -j DROP" >> $root/iptables_rules.sh
+echo "iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT" >> $root/iptables_rules.sh
+echo "iptables -t nat -A OUTPUT -m owner --uid-owner \$_user_uid -j RETURN" >> $root/iptables_rules.sh
+if ( grep "1" $root/stp-service ); then
+echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 5353" >> $root/iptables_rules.sh
+else
+echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53" >> $root/iptables_rules.sh
+fi
+echo "for _clearnet in \$_non_tor; do" >> $root/iptables_rules.sh
+echo "iptables -t nat -A OUTPUT -d \$_clearnet -j RETURN" >> $root/iptables_rules.sh
+echo "done" >> $root/iptables_rules.sh
+echo "sleep 5" >> $root/iptables_rules.sh
+echo "iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT" >> $root/iptables_rules.sh
+echo "iptables -A INPUT -i lo -j ACCEPT" >> $root/iptables_rules.sh
+echo "for _lan in \$_non_tor; do" >> $root/iptables_rules.sh
+echo "iptables -A INPUT -s \$_lan -j ACCEPT" >> $root/iptables_rules.sh
+echo "done" >> $root/iptables_rules.sh
+echo "sleep 5" >> $root/iptables_rules.sh
+echo "iptables -A INPUT -j DROP" >> $root/iptables_rules.sh
+echo "iptables -A FORWARD -j DROP" >> $root/iptables_rules.sh
+echo "for _clearnet in \$_non_tor; do" >> $root/iptables_rules.sh
+echo "iptables -A OUTPUT -d \$_clearnet -j ACCEPT" >> $root/iptables_rules.sh
+echo "done" >> $root/iptables_rules.sh
+echo "sleep 3" >> $root/iptables_rules.sh
+echo "iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports \$_trans_port" >> $root/iptables_rules.sh
+echo "iptables -A OUTPUT -m owner --uid-owner \$_user_uid -j ACCEPT" >> $root/iptables_rules.sh
+echo "sleep 2" >> $root/iptables_rules.sh
+echo "iptables -A OUTPUT -j DROP" >> $root/iptables_rules.sh
+echo "sleep 1" >> $root/iptables_rules.sh
+echo "iptables -P FORWARD DROP" >> $root/iptables_rules.sh
+echo "iptables -P INPUT DROP" >> $root/iptables_rules.sh
+echo "iptables -P OUTPUT DROP" >> $root/iptables_rules.sh
+chmod +x $root/iptables_rules.sh
 cd $(cat $root/cpath)
 }
 ##
@@ -584,47 +633,8 @@ fi
 sleep 1
 done
 rm $root/notices.log > /dev/null 2>&1
-### Configuring basic iptables rules
-### Reference: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
-# Destinations you don't want routed through Tor
-_non_tor="127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
-# The UID that Tor runs as (varies from system to system)
-_user_uid="999"
-# Tor's VirtualAddrNetworkIPv4
-_virt_addr="10.192.0.0/10"
-# Tor's TransPort
-_trans_port="9040"
-iptables -F
-iptables -t nat -F
-iptables -t nat -A OUTPUT -d $_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports $_trans_port
-iptables -A OUTPUT -m state --state INVALID -j DROP
-iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-iptables -t nat -A OUTPUT -m owner --uid-owner $_user_uid -j RETURN
-iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53
-for _clearnet in $_non_tor; do
-iptables -t nat -A OUTPUT -d $_clearnet -j RETURN
-done
-sleep 5
-iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT
-iptables -A INPUT -i lo -j ACCEPT
-for _lan in $_non_tor; do
-iptables -A INPUT -s $_lan -j ACCEPT
-done
-sleep 5
-iptables -A INPUT -j DROP
-iptables -A FORWARD -j DROP
-for _clearnet in $_non_tor; do
-iptables -A OUTPUT -d $_clearnet -j ACCEPT
-done
-sleep 3
-iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports $_trans_port
-iptables -A OUTPUT -m owner --uid-owner $_user_uid -j ACCEPT
-sleep 2
-iptables -A OUTPUT -j DROP
-sleep 1
-iptables -P FORWARD DROP
-iptables -P INPUT DROP
-iptables -P OUTPUT DROP
+cd $root
+./iptables_rules.sh
 unbound &
 ### Checking services
 if ! pgrep -x "tor" > /dev/null; then
@@ -665,47 +675,8 @@ fi
 sleep 1
 done
 rm $root/notices.log > /dev/null 2>&1
-### Configuring basic iptables rules
-### Reference: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
-# Destinations you don't want routed through Tor
-_non_tor="127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16"
-# The UID that Tor runs as (varies from system to system)
-_user_uid="999"
-# Tor's VirtualAddrNetworkIPv4
-_virt_addr="10.192.0.0/10"
-# Tor's TransPort
-_trans_port="9040"
-iptables -F
-iptables -t nat -F
-iptables -t nat -A OUTPUT -d $_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports $_trans_port
-iptables -A OUTPUT -m state --state INVALID -j DROP
-iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
-iptables -t nat -A OUTPUT -m owner --uid-owner $_user_uid -j RETURN
-iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 5353
-for _clearnet in $_non_tor; do
-iptables -t nat -A OUTPUT -d $_clearnet -j RETURN
-done
-sleep 5
-iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT
-iptables -A INPUT -i lo -j ACCEPT
-for _lan in $_non_tor; do
-iptables -A INPUT -s $_lan -j ACCEPT
-done
-sleep 5
-iptables -A INPUT -j DROP
-iptables -A FORWARD -j DROP
-for _clearnet in $_non_tor; do
-iptables -A OUTPUT -d $_clearnet -j ACCEPT
-done
-sleep 3
-iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports $_trans_port
-iptables -A OUTPUT -m owner --uid-owner $_user_uid -j ACCEPT
-sleep 2
-iptables -A OUTPUT -j DROP
-sleep 1
-iptables -P FORWARD DROP
-iptables -P INPUT DROP
-iptables -P OUTPUT DROP
+cd $root
+./iptables_rules.sh
 ### Checking services
 if ! pgrep -x "tor" > /dev/null; then
 echo "==> Sorry! No connection to TOR...Please, report this issue to the project";
