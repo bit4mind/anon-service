@@ -60,7 +60,7 @@ check its status via syslog with the command
 tail -f /var/log/syslog
 ```
 
-Note that, if you enable service to start automatically at boot, will be configured
+If you enable service to start automatically at boot will be configured
 the last type of trasparent proxy used.
 
 ### WARNING
