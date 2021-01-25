@@ -103,8 +103,8 @@ if [ -s "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
 cd $root
-cp resolved.conf.temp $resolved
-chown root:root $resolved
+cp resolved.conf.temp $resolved > /dev/null 2>&1
+chown root:root $resolved > /dev/null 2>&1
 cp NetworkManager.conf $netman
 chown root:root $netman
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
@@ -373,7 +373,7 @@ echo "==> Downloading anonymized DNS relays list";
 curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/relays.md > /dev/null 2>&1
 ### Backup systemd-resolved
 if [ ! -s "$root/resolved.bak" ]; then
-cp $resolved $root/resolved.bak
+cp $resolved $root/resolved.bak > /dev/null 2>&1
 fi
 ### Backup NetworkManager.conf
 if [ ! -s "$netman.bak" ]; then
@@ -469,8 +469,8 @@ cd $root
 chown $USER:$USER NetworkManager.conf.temp
 sed -i 's/^dns=dnsmasq/#&/' NetworkManager.conf.temp
 sed '/\[main\]/a dns=default' NetworkManager.conf.temp > NetworkManager.conf
-if [[ -s "$resolved" ]]; then
-cp $resolved $root/resolved.conf.temp
+if [[ -s "$root/resolved.bak" ]]; then
+cp $root/resolved.bak $root/resolved.conf.temp
 chown $USER:$USER resolved.conf.temp
 sed -i 's/^DNSStubListener=yes/#&/' resolved.conf.temp
 echo "DNSStubListener=no" >> resolved.conf.temp
@@ -505,8 +505,8 @@ iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
 ### Configure Network-Manager
 cd $root
-cp resolved.conf.temp $resolved 
-chown root:root $resolved
+cp resolved.conf.temp $resolved > /dev/null 2>&1
+chown root:root $resolved > /dev/null 2>&1
 cp NetworkManager.conf $netman
 chown root:root $netman
 service dnsmasq stop > /dev/null 2>&1
