@@ -382,7 +382,7 @@ echo "==> Downloading anonymized DNS relays list";
 curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/relays.md > /dev/null 2>&1
 ### Backup systemd-resolved
 if [ ! -s "$root/resolved.bak" ]; then
-cp $resolved $root/resolved.bak
+cp $resolved $root/resolved.bak > /dev/null 2>&1
 fi
 ### Backup NetworkManager.conf
 if [ ! -s "$netman.bak" ]; then
@@ -497,13 +497,14 @@ echo "AutomapHostsOnResolve 1" >> $root/torrc
 echo "TransPort 9040 IsolateClientAddr IsolateClientProtocol IsolateDestAddr IsolateDestPort" >> $root/torrc
 echo "DNSPort 5353" >> $root/torrc
 ### Disabling dnsmasq and configure Network-Manager and systemd-resolved
+rm $root/NetworkManager.conf.temp > /dev/null 2>&1
 cp $netman.bak $root/NetworkManager.conf.temp
 cd $root
 chown $USER:$USER NetworkManager.conf.temp
 sed -i 's/^dns=dnsmasq/#&/' NetworkManager.conf.temp
 sed '/\[main\]/a dns=default' NetworkManager.conf.temp > NetworkManager.conf
-if [[ -s "$resolved" ]]; then
-cp $resolved $root/resolved.conf.temp
+if [[ -s "$root/resolved.bak" ]]; then
+cp $root/resolved.bak $root/resolved.conf.temp
 chown $USER:$USER resolved.conf.temp
 sed -i 's/^DNSStubListener=yes/#&/' resolved.conf.temp
 echo "DNSStubListener=no" >> resolved.conf.temp
