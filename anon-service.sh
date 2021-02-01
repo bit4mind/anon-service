@@ -29,7 +29,7 @@ export root=/home/anon-service
 owner=anon-service
 repo=/etc/apt/sources.list.d/tor.list
 ## DNSCrypt-proxy release
-dnscrel="2.0.44"
+dnscrel="2.0.45"
 ## If necessary, change the path according to your system
 export netman=/etc/NetworkManager/NetworkManager.conf
 export resolved=/etc/systemd/resolved.conf
@@ -410,8 +410,8 @@ systemctl disable unbound > /dev/null 2>&1
 systemctl disable tor > /dev/null 2>&1
 clear
 echo "==> Which type of transparent proxy do you prefer to use?";
-echo "      1.Standard transparent proxy";
-echo "      2.Trasparent proxy with DNSCrypt and Anonymized DNS feature";
+echo "      1. Standard transparent proxy";
+echo "      2. Trasparent proxy with DNSCrypt and Anonymized DNS feature";
 echo " "
 echo -n  " Choose: ";
 read -e choose
@@ -509,7 +509,7 @@ chown $USER:$USER resolved.conf.temp
 sed -i 's/^DNSStubListener=yes/#&/' resolved.conf.temp
 echo "DNSStubListener=no" >> resolved.conf.temp
 fi
-rm $root/iptables_rules.sh
+rm $root/iptables_rules.sh > /dev/null 2>&1
 touch $root/iptables_rules.sh
 ### Configuring basic iptables rules
 ### Reference: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
