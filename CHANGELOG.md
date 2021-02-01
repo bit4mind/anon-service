@@ -8,6 +8,7 @@ UnReleased
 Added
 
     Transparent proxy without DNSCrypt option
+    Restore original files automatically at shutdown
     
 
 Changed
