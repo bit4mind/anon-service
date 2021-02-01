@@ -29,7 +29,7 @@ export root=/home/anon-service
 owner=anon-service
 repo=/etc/apt/sources.list.d/tor.list
 ## DNSCrypt-proxy release
-dnscrel="2.0.44"
+dnscrel="2.0.45"
 ## If necessary, change the path according to your system
 netman=/etc/NetworkManager/NetworkManager.conf
 resolved=/etc/systemd/resolved.conf
