@@ -31,8 +31,8 @@ repo=/etc/apt/sources.list.d/tor.list
 ## DNSCrypt-proxy release
 dnscrel="2.0.44"
 ## If necessary, change the path according to your system
-netman=/etc/NetworkManager/NetworkManager.conf
-resolved=/etc/systemd/resolved.conf
+export netman=/etc/NetworkManager/NetworkManager.conf
+export resolved=/etc/systemd/resolved.conf
 tor=/etc/tor/torrc
 unbound=/etc/unbound/unbound.conf
 
@@ -597,7 +597,6 @@ service bind stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 killall dnsmasq bind > /dev/null 2>&1
 sleep 1
-cd $root
 service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
@@ -614,6 +613,26 @@ service systemd-resolved restart
 service network-manager restart
 sleep 10
 chown -R $owner:$owner $root
+## Restore original files automatically at shutdown
+if ! pgrep -x "restoring_orig.sh" > /dev/null; then
+rm restoring_orig.sh > /dev/null 2>&1 
+touch restoring_orig.sh
+echo "#!/bin/bash" > restoring_orig.sh
+echo "restoring_script() {" >> restoring_orig.sh 
+echo "if [ ! -f /etc/network/if-up.d/anon-service ]; then" >> restoring_orig.sh
+echo "cp $root/resolved.bak $resolved" >> restoring_orig.sh
+echo "cp $netman.bak $netman" >> restoring_orig.sh
+echo "fi" >> restoring_orig.sh
+echo "exit" >> restoring_orig.sh
+echo "}" >> restoring_orig.sh
+echo "while :" >> restoring_orig.sh
+echo "do" >> restoring_orig.sh
+echo "trap restoring_script SIGINT SIGTERM" >> restoring_orig.sh
+echo "done" >> restoring_orig.sh
+chmod +x restoring_orig.sh
+xterm -e nohup ./restoring_orig.sh
+fi
+## Start selected transparent proxy
 active_service=$(cat $root/stp-service)
 case $active_service in
 "0")
