@@ -30,10 +30,12 @@ and the unbound package present in the repositories. Tested on Debian, Ubuntu, M
 
 ## HOW IT WORKS
 
-The script works as a launcher: after installing the necessary software, you can 
-reconfigure resolvers and relays before each reactivation of the service or you can
-stop the service without deleting the data and then reactivate it faster without 
-having to install the requirements again and reconfigure DNS traffic.
+The script works as a launcher: after installing the necessary software, you can select
+the transparent proxy type or reconfigure resolvers/relays before each 
+reactivation of the service; you can stop the service without deleting the data
+and then reactivate it faster.
+You can change ip through the dedicated option or simply by restarting the service
+(more effective).
 You can install it to start automatically at boot: in this case you could restart
 service simply restarting your connection and continue to use the script for
 changing IP address, configuring dnscrypt servers and relays or removing all things.
