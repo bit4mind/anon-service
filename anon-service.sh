@@ -307,7 +307,7 @@ echo "==> Downloading and importing signing key";
 wget -qO- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --import > /dev/null 2>&1
 gpg --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 | apt-key add - > /dev/null 2>&1
 sleep 1
-chown -R $USER:$USER /home/*/.gnupg/
+chown -R $USER:$USER /home/$USER/.gnupg/
 cd
 echo "==> Checking repository"; 
 apt-get update > $root/temp/apt.log 
