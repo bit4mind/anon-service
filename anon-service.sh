@@ -628,6 +628,7 @@ echo "}" >> restoring_orig.sh
 echo "while :" >> restoring_orig.sh
 echo "do" >> restoring_orig.sh
 echo "trap restoring_script SIGINT SIGTERM" >> restoring_orig.sh
+echo "sleep 3" >> restoring_orig.sh
 echo "done" >> restoring_orig.sh
 chmod +x restoring_orig.sh
 xterm -e nohup ./restoring_orig.sh
