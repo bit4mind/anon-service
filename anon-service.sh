@@ -282,7 +282,7 @@ touch $root/temp/distribution.txt
 ### Tor Project supported distro
 cd $root/temp/
 curl -L -O https://deb.torproject.org/torproject.org/dists > /dev/null 2>&1
-cat dists | sed -e 's/\(^.*\/">\)\(.*\)\(\/<\/a>.*$\)/\2/' | awk '!/</' > distribution.txt
+cat dists | sed -e 's/\(^.*\/">\)\(.*\)\(\/<\/a>.*$\)/\2/; /^stable/d; /^oldstable/d; /^oldoldstable/d; /^unstable/d; /^testing/d; /^proposed-updates/d; /^tor-/d' | awk '!/</' > distribution.txt
 touch $root/temp/os.txt
 for target in $(cat $root/temp/distribution.txt)
 do
@@ -291,32 +291,32 @@ echo $target > $root/temp/os.txt
 fi
 done
 os=$(cat $root/temp/os.txt | sed -e 's/^[ \t]*//')
-if [[ "$os" != "focal" ]]; then
 echo "";
+if [[ "$os" == " " ]]; then
+echo "==> Sorry! Apparently your OS hasn't candidate in Tor Project";
+echo "==> repo...Please, re-run the script and choose other options";
+exit 1
+fi
+if curl --head --silent --fail https://deb.torproject.org/torproject.org/dists/$os/main/binary-i386/ > /dev/null 2>&1;
+then
 echo "==> Enabling $os repository";
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
 touch $repo
 echo "deb https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
 echo "deb-src https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
-elif [[ "$os" == "focal" ]]; then
+else
 echo "==> Enabling $os repository"
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
 touch $repo
 echo "deb [arch=amd64] https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
 echo "deb-src [arch=amd64] https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
-else
-echo "";
-echo "==> Sorry! Apparently your OS hasn't candidate in Tor Project";
-echo "==> repo...Please, re-run the script and choose other options";
-exit 1
 fi
 echo "==> Downloading and importing signing key";
 wget -qO- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --import > /dev/null 2>&1
-gpg --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 | apt-key add - > /dev/null 2>&1
+gpg --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 > /dev/null 2>&1 | apt-key add - > /dev/null 2>&1
 sleep 1
-chown -R $USER:$USER /home/$USER/.gnupg/
 cd
 echo "==> Checking repository"; 
 apt-get update > $root/temp/apt.log 
@@ -614,7 +614,7 @@ service network-manager restart
 sleep 10
 chown -R $owner:$owner $root
 ## Restore original files automatically at shutdown
-if ! pgrep -x "restoring_orig.sh" > /dev/null; then
+if ! pgrep -f "restoring_orig.sh"  > /dev/null; then
 rm restoring_orig.sh > /dev/null 2>&1 
 touch restoring_orig.sh
 echo "#!/bin/bash" > restoring_orig.sh
@@ -628,7 +628,7 @@ echo "}" >> restoring_orig.sh
 echo "while :" >> restoring_orig.sh
 echo "do" >> restoring_orig.sh
 echo "trap restoring_script SIGINT SIGTERM" >> restoring_orig.sh
-echo "sleep 3" >> restoring_orig.sh
+echo "sleep 1" >> restoring_orig.sh
 echo "done" >> restoring_orig.sh
 chmod +x restoring_orig.sh
 xterm -e nohup ./restoring_orig.sh
@@ -729,7 +729,7 @@ rm $root/tor.txt > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
-killall unbound tor dnscrypt-proxy > /dev/null 2>&1
+killall unbound tor dnscrypt-proxy restoring_orig.sh > /dev/null 2>&1
 cp $root/resolved.bak $resolved > /dev/null 2>&1
 cp $netman.bak $netman > /dev/null 2>&1
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
@@ -763,7 +763,7 @@ echo "==> Removing anon-service files and settings from system";
 service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
-killall unbound tor dnscrypt-proxy > /dev/null 2>&1
+killall unbound tor dnscrypt-proxy restoring_orig.sh > /dev/null 2>&1
 if [[ -s "$root/resolved.bak" ]]; then
 cp $root/resolved.bak $resolved > /dev/null 2>&1
 service systemd-resolved restart
@@ -829,6 +829,7 @@ ping -c1 opendns.com > conn.txt 2>&1
 if ( grep -q "icmp_seq=1" conn.txt ); then
 clear
 rm conn.txt > /dev/null 2>&1
+echo "Please be patient...";
 apt-get update > /dev/null
 apt-get install -y wmctrl > /dev/null
 sleep 1
