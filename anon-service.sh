@@ -2,9 +2,9 @@
 
 # #####################################################################
 # anon-service.sh
-# version 1.1
+# version 1.2
 # 
-# Transparent proxy through Tor with DNSCrypt and optionally Anonymized 
+# Transparent proxy through Tor and optionally DNSCrypt with Anonymized 
 # DNS feature enabled.
 #
 # Copyright (C) 2020-2021 Bit4mind
