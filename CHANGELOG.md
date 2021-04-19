@@ -3,12 +3,13 @@ CHANGELOG
 All notable changes to this project will be documented in this file.
 
 UnReleased
-1.2 - 2021-??-??
+1.2 - 2021-04-19
 
 Added
 
     Transparent proxy without DNSCrypt option
     Restore original files automatically at shutdown
+    More input controls
     
 
 Changed
