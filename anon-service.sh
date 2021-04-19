@@ -103,8 +103,8 @@ menu
 return 1
 fi
 cd $root
-cp resolved.conf.temp $resolved
-chown root:root $resolved
+cp resolved.conf.temp $resolved > /dev/null 2>&1
+chown root:root $resolved > /dev/null 2>&1
 cp NetworkManager.conf $netman
 chown root:root $netman
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
@@ -633,8 +633,8 @@ iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
 ### Configure Network-Manager
 cd $root
-cp resolved.conf.temp $resolved 
-chown root:root $resolved
+cp resolved.conf.temp $resolved > /dev/null 2>&1
+chown root:root $resolved > /dev/null 2>&1
 cp NetworkManager.conf $netman
 chown root:root $netman
 service dnsmasq stop > /dev/null 2>&1

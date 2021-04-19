@@ -2,7 +2,7 @@ CHANGELOG
 
 All notable changes to this project will be documented in this file.
 
-Released
+UnReleased
 1.2 - 2021-04-19
 
 Added
