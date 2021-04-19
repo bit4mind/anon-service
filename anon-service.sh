@@ -85,22 +85,22 @@ start_service
 menu
 ;;
 4)
-if [ -s "cpath" ]; then
+if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
 wmctrl -c :ACTIVE:
 ;;
 5)
-if [ ! -s "$root/stp-service)" ]; then
+if [ -f "cpath" ]; then
+mv cpath $root/ > /dev/null 2>&1
+fi
+if [ ! -f "$root/stp-service" ]; then
 echo "";
 echo "==> Sorry! Your system is not ready to start the service...";
 echo "==> Please, check if you have installed the necessary files";
 sleep 7
 menu
-exit
-fi
-if [ -s "cpath" ]; then
-mv cpath $root/ > /dev/null 2>&1
+return 1
 fi
 cd $root
 cp resolved.conf.temp $resolved
@@ -198,10 +198,11 @@ chmod +x /etc/network/if-up.d/anon-service
 echo "";
 echo "==> Now you are ready to go! If you haven't set 127.0.0.1 in your DNS"; 
 echo "==> setting, do it and restart your connection or reboot your system.";
-exit 0
+echo "";
+exit
 ;;
 6)
-if [ -s "cpath" ]; then
+if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
 shutdown_service
@@ -211,7 +212,7 @@ menu
 cleanall
 ;;
 8)
-if [ -s "cpath" ]; then
+if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
 #service dnscrypt-proxy stop > /dev/null 2>&1
@@ -219,6 +220,7 @@ fi
 if ! pgrep -x "tor" > /dev/null; then
 echo "";
 echo "==> Service is not running!"
+sleep 3
 menu
 else
 echo "";
@@ -228,7 +230,7 @@ menu
 fi
 ;;
 9)
-if [ -s "cpath" ]; then
+if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
 touch /usr/bin/anon-service > /dev/null 2>&1
@@ -255,7 +257,7 @@ echo "";
 echo "==> Please, firstly remove all files and settings via dedicated option";
 sleep 7
 menu
-exit
+return 1
 fi
 clear
 echo "==> Checking dependencies and preparing the system"
@@ -394,16 +396,16 @@ cd $(cat $root/cpath)
 ## CONFIGURING SERVICES
 ##
 configure(){
+if [ -f "cpath" ]; then
+mv cpath $root/ > /dev/null 2>&1
+fi
 if [ ! -s "$root/dnscrypt-proxy.toml.bak" ]; then
 echo "";
 echo "==> Sorry! Your system is not ready to complete this action";
 echo "==> Please, check if you have installed the necessary files";
 sleep 7
 menu
-exit
-fi
-if [ -s "cpath" ]; then
-mv cpath $root/ > /dev/null 2>&1
+return 1
 fi
 ### Disable tor and unbound starting at boot time
 systemctl disable unbound > /dev/null 2>&1
@@ -435,31 +437,74 @@ clear
 echo "==> Please enter the name of the first resolver to use, only ipv4!";
 echo -n "    First server: ";
 read -e server1
-echo " ";
+echo "";
+if ! grep "\<$server1\>" $root/public-resolvers.md > /dev/null; then
+echo "==> Server not found! Please retry";
+killall gedit > /dev/null 2>&1
+sleep 3
+configure
+return 1
+fi
 echo "==> Please enter the name of the second resolver to use, only ipv4!";
 echo -n "    Second server: ";
 read -e server2
+if ! grep "\<$server2\>" $root/public-resolvers.md > /dev/null; then
+echo "==> Server not found! Please retry";
+killall gedit > /dev/null 2>&1
+sleep 3
+configure
+return 1
+fi
 echo "==> Opening file contain relays";
 killall gedit > /dev/null 2>&1
 xterm -T "Relay" -e "gedit $root/relays.md" &
 clear
 echo "==> Carefully choose relays/servers so that they are run by different entities!";
-echo " ";
+echo "";
 echo "==> Please enter the name of the first realy to use!";
 echo -n "    First relay for the first server: ";
 read -e relay1
-echo " ";
+echo "";
+if ! grep "\<$relay1\>" $root/relays.md > /dev/null; then
+echo "==> Relay not found! Please retry";
+killall gedit > /dev/null 2>&1
+sleep 3
+configure
+return 1
+fi
 echo "==> Please enter the name of the second relay to use!";
 echo -n "    Second relay for the first server: ";
 read -e relay2
-echo " ";
+echo "";
+if ! grep "\<$relay2\>" $root/relays.md > /dev/null; then
+echo "==> Relay not found! Please retry";
+killall gedit > /dev/null 2>&1
+sleep 3
+configure
+return 1
+fi
 echo "==> Please enter the name of the third resolver to use!";
 echo -n "    First relay for the second server: ";
 read -e relay3
-echo " ";
+echo "";
+if ! grep "\<$relay3\>" $root/relays.md > /dev/null; then
+echo "==> Relay not found! Please retry";
+killall gedit > /dev/null 2>&1
+sleep 3
+configure
+return 1
+fi
 echo "==> Please enter the name of the fourth resolver to use!";
 echo -n "    Second relay for the second server: ";
 read -e relay4
+echo "";
+if ! grep "\<$relay4\>" $root/relays.md > /dev/null; then
+echo "==> Relay not found! Please retry";
+killall gedit > /dev/null 2>&1
+sleep 3
+configure
+return 1
+fi
 killall gedit > /dev/null 2>&1
 clear
 echo "==> Configuring other services";
@@ -571,9 +616,9 @@ echo "==> Sorry! Your system is not ready to start the service...";
 echo "==> Please, check if you have installed the necessary files";
 sleep 7
 menu
-exit
+return 1
 fi
-if [ -s "cpath" ]; then
+if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
 ### Firewall flush
@@ -663,18 +708,21 @@ echo "==> Sorry! No connection to TOR...Please, report this issue to the project
 sleep 7
 shutdown_service
 menu
+return 1
 fi
 if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
 echo "==> Sorry! Dnscrypt-proxy isn't running...Please, report this issue to the project";
 sleep 7
 shutdown_service
 menu
+return 1
 fi
 if ! pgrep -x "unbound" > /dev/null; then
 echo "==> Sorry! Unbound isn't running...Please, report this issue to the project";
 sleep 7
 shutdown_service
 menu
+return 1
 else
 echo "==> Congratulations! Your system is configurated to use Tor and DNSCrypt";
 sleep 5
@@ -704,6 +752,7 @@ echo "==> Sorry! No connection to TOR...Please, report this issue to the project
 sleep 7
 shutdown_service
 menu
+return 1
 else
 echo "==> Congratulations! Your system is configurated to use Tor";
 sleep 5
