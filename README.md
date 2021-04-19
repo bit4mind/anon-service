@@ -79,8 +79,6 @@ Everywhere, useful to avoid some attacks and tracking methods.
 However you could still use Tor browser (without DNSCrypt/DNSSEC) even while the
 service is running, but this scenario is also not recommended
 (https://trac.torproject.org/projects/tor/wiki/doc/TorifyHOWTO#ToroverTor).
-The real benefit of using this script is to offer security on the transportation 
-layer and source validation via DNSSEC validation cache.
 If you are looking for a strong anonymity solution, switch to Linux distributions 
 focused on security and privacy like Whomix or Tails.
 
