@@ -39,29 +39,29 @@ unbound=/etc/unbound/unbound.conf
 
 menu(){
 clear
-echo "                    ▄▄▄      ███▄    █ ▒█████   ███▄    █          ";
-echo "                   ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          ";
-echo "                   ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         ";
-echo "                   ░██▄▄▄▄██▓██▒  ▐▌██▒██   ██░▓██▒  ▐▌██▒         ";
-echo "                    ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         ";
-echo "                ██████ ▓█████  ██▀███░  ██▒ ░ █▓ ██▓ ▄████▄ ▓█████ ";
-echo "              ▒██    ▒ ▓█   ▀ ▓██ ▒ ██▒▓██░   █▒▓██▒▒██▀ ▀█ ▓█   ▀ ";
-echo "              ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██  █▒░▒██▒▒▓█    ▄▒███   ";
-echo "                ▒   ██▒▒▓█  ▄ ▒██▀▀█▄    ▒██ █░░░██░▒▓▓▄ ▄██▒▓█  ▄ ";
-echo "              ▒██████▒▒░▒████▒░██▓ ▒██▒   ▒▀█░  ░██░▒ ▓███▀ ░▒████▒";
-echo "                    ░           ░           ░       ░ by bit4mind  ";
+printf '%s\n' "                    ▄▄▄      ███▄    █ ▒█████   ███▄    █          "
+printf '%s\n' "                   ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          "
+printf '%s\n' "                   ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         "
+printf '%s\n' "                   ░██▄▄▄▄██▓██▒  ▐▌██▒██   ██░▓██▒  ▐▌██▒         "
+printf '%s\n' "                    ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         "
+printf '%s\n' "                ██████ ▓█████  ██▀███░  ██▒ ░ █▓ ██▓ ▄████▄ ▓█████ "
+printf '%s\n' "              ▒██    ▒ ▓█   ▀ ▓██ ▒ ██▒▓██░   █▒▓██▒▒██▀ ▀█ ▓█   ▀ "
+printf '%s\n' "              ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██  █▒░▒██▒▒▓█    ▄▒███   "
+printf '%s\n' "                ▒   ██▒▒▓█  ▄ ▒██▀▀█▄    ▒██ █░░░██░▒▓▓▄ ▄██▒▓█  ▄ "
+printf '%s\n' "              ▒██████▒▒░▒████▒░██▓ ▒██▒   ▒▀█░  ░██░▒ ▓███▀ ░▒████▒"
+printf '%s\n' "                    ░           ░           ░       ░ by bit4mind  "
 echo " ";
-echo "   0. Check dependencies and download upgraded services";
-echo "   1. Choose transparent proxy type and configure related services";
-echo "   2. Start/Restart anon-service";
-echo "   3. Execute all tasks above";
-echo "   4. Close this window";
-echo "   5. Enable service to start automatically at boot";
-echo "   6. Stop anon-service/Restore original files without removing anon-service";
-echo "   7. Exit removing anon-service files and settings from system";
+printf '%s\n' "   0. Check dependencies and download upgraded services"
+printf '%s\n' "   1. Choose transparent proxy type and configure related services"
+printf '%s\n' "   2. Start/Restart anon-service (if restart this will change your IP address)"
+printf '%s\n' "   3. Execute all tasks above"
+printf '%s\n' "   4. Close this window"
+printf '%s\n' "   5. Enable service to start automatically at boot"
+printf '%s\n' "   6. Stop anon-service/Restore original files without removing anon-service"
+printf '%s\n' "   7. Exit removing anon-service files and settings from system"
 echo -en "\033[38;2;0;100;0m    Misc\033[0m\n";
-echo "   8. Change IP address";
-echo "   9. Install this script";
+printf '%s\n' "   8. Change IP address"
+printf '%s\n' "   9. Install this script"
 echo " ";
 echo -n "  Choose: ";
 read -e task
@@ -88,7 +88,15 @@ menu
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
+if hash wmctrl 2>/dev/null; then
 wmctrl -c :ACTIVE:
+else
+echo "==> Sorry! Your system is not ready to complete this action";
+echo "==> Please, check if you have installed the necessary files";
+sleep 7
+menu
+return 1
+fi
 ;;
 5)
 if [ -f "cpath" ]; then
@@ -268,7 +276,7 @@ mv cpath $root/ > /dev/null 2>&1
 mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
-apt-get install -y curl wget xterm psmisc gedit apt-transport-https unbound > /dev/null
+apt-get install -y curl wget xterm psmisc wmctrl gedit apt-transport-https unbound > /dev/null
 sleep 1
 clear
 echo "==> Which version of Tor do you prefer to use?";
@@ -673,7 +681,7 @@ echo "}" >> restoring_orig.sh
 echo "while :" >> restoring_orig.sh
 echo "do" >> restoring_orig.sh
 echo "trap restoring_script SIGINT SIGTERM" >> restoring_orig.sh
-echo "sleep 1" >> restoring_orig.sh
+echo "sleep 7" >> restoring_orig.sh
 echo "done" >> restoring_orig.sh
 chmod +x restoring_orig.sh
 xterm -e nohup ./restoring_orig.sh
@@ -868,22 +876,17 @@ exit 1
 fi
 pwd > cpath
 ### Checking for required files
-if [ -s $root/dnscrypt-proxy.toml ]; then
-wmctrl -r ':ACTIVE:' -e 0,0,0,840,530 && sleep 1
-wmctrl -r ':ACTIVE:' -e 0,0,0,841,531 && menu
+if [ -s $root/dnscrypt-proxy.toml.bak ]; then
+menu
 else
-### Checking for network connection and installing wmctrl
+### Checking for network connection
 rm conn.txt > /dev/null 2>&1
 ping -c1 opendns.com > conn.txt 2>&1
 if ( grep -q "icmp_seq=1" conn.txt ); then
 clear
 rm conn.txt > /dev/null 2>&1
-echo "Please be patient...";
-apt-get update > /dev/null
-apt-get install -y wmctrl > /dev/null
 sleep 1
-wmctrl -r ':ACTIVE:' -e 0,0,0,840,530 && sleep 1
-wmctrl -r ':ACTIVE:' -e 0,0,0,841,531 && menu
+menu
 else
 rm conn.txt > /dev/null 2>&1
 rm cpath > /dev/null 2>&1
