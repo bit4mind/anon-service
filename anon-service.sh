@@ -581,7 +581,7 @@ echo "iptables -t nat -A OUTPUT -d \$_virt_addr -p tcp -m tcp --tcp-flags FIN,SY
 echo "iptables -A OUTPUT -m state --state INVALID -j DROP" >> $root/iptables_rules.sh
 echo "iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT" >> $root/iptables_rules.sh
 echo "iptables -t nat -A OUTPUT -m owner --uid-owner \$_user_uid -j RETURN" >> $root/iptables_rules.sh
-if ( grep "1" $root/stp-service ); then
+if ( grep -Fq "1" $root/stp-service); then
 echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 5353" >> $root/iptables_rules.sh
 else
 echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53" >> $root/iptables_rules.sh
