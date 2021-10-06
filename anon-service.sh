@@ -60,7 +60,7 @@ printf '%s\n' "   5. Enable service to start automatically at boot"
 printf '%s\n' "   6. Stop anon-service/Restore original files without removing anon-service"
 printf '%s\n' "   7. Exit removing anon-service files and settings from system"
 echo -en "\033[38;2;0;100;0m    Misc\033[0m\n";
-printf '%s\n' "   8. Change IP address"
+printf '%s\n' "   8. Edit torrc file"
 printf '%s\n' "   9. Install this script"
 echo " ";
 echo -n "  Choose: ";
@@ -223,16 +223,17 @@ cleanall
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
-#service dnscrypt-proxy stop > /dev/null 2>&1
-#sleep 3
-if ! pgrep -x "tor" > /dev/null; then
+if [ ! -s "$root/torrc" ]; then
 echo "";
-echo "==> Service is not running!"
-sleep 3
+echo "==> Sorry! Your system is not ready to complete this action";
+echo "==> Please, check if you have installed the necessary files";
+sleep 7
 menu
+return 1
 else
 echo "";
-killall -HUP tor && curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 1 "Your IP address" | sed -e 's/<[^>]*>//g' | xargs
+xterm -T "Torrc" -e "gedit $root/torrc" > /dev/null 2>&1 
+echo "==> Please restart the service to apply changes";
 sleep 7
 menu
 fi
@@ -331,7 +332,7 @@ cd
 echo "==> Checking repository"; 
 apt-get update > $root/temp/apt.log 
 sleep 1
-if ( grep "torproject.org $os Release" $root/temp/apt.log )
+if ( grep "torproject.org $os Release" $root/temp/apt.log > /dev/null 2>&1)
 then
    echo "";
    echo "==> Sorry! The script can't obtain the correct codename for your OS...";

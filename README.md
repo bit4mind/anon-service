@@ -34,11 +34,10 @@ The script works as a launcher: after installing the necessary software, you can
 the transparent proxy type or reconfigure resolvers/relays before each 
 reactivation of the service; you can stop the service without deleting the data
 and then reactivate it faster.
-You can change your IP address through the dedicated option or simply by restarting the 
-service (more effective).
+Editing torrc file you can customize your tor configuration (https://tor.void.gr/docs/tor-manual.html.en).
 You can install it to start automatically at boot: in this case you could restart
 service simply restarting your connection and continue to use the script for
-changing IP address, configuring dnscrypt servers and relays or removing all things.
+editing torrc file, configuring dnscrypt servers and relays or removing all things.
 
 Usage:
 
@@ -89,4 +88,3 @@ the configuration files, then reinstall it and reconfigure the service through t
 dedicated option in the script (1).
 
 This script may not work properly if used on a not-fully updated system.
-

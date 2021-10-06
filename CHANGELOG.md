@@ -3,6 +3,20 @@ CHANGELOG
 All notable changes to this project will be documented in this file.
 
 Released
+1.3 - 2021-10-06
+
+Added
+
+    Edit torrc file option
+    
+
+Changed
+
+    Eighth option (8) in main menu
+    
+
+
+Released
 1.2 - 2021-04-19
 
 Added
