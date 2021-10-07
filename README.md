@@ -34,10 +34,10 @@ The script works as a launcher: after installing the necessary software, you can
 the transparent proxy type or reconfigure resolvers/relays before each 
 reactivation of the service; you can stop the service without deleting the data
 and then reactivate it faster.
-Editing torrc file you can customize your tor configuration (https://tor.void.gr/docs/tor-manual.html.en).
 You can install it to start automatically at boot: in this case you could restart
 service simply restarting your connection and continue to use the script for
 editing torrc file, configuring dnscrypt servers and relays or removing all things.
+Editing torrc file you can customize your tor configuration (https://tor.void.gr/docs/tor-manual.html.en).
 
 Usage:
 
