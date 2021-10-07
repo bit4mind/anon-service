@@ -2,7 +2,7 @@
 
 # #####################################################################
 # anon-service.sh
-# version 1.2
+# version 1.3
 # 
 # Transparent proxy through Tor and optionally DNSCrypt with Anonymized 
 # DNS feature enabled.
@@ -232,7 +232,7 @@ menu
 return 1
 else
 echo "";
-xterm -T "Torrc" -e "gedit $root/torrc" > /dev/null 2>&1 
+xterm -T "Torrc" -e "leafpad $root/torrc" > /dev/null 2>&1 
 echo "==> Please restart the service to apply changes";
 sleep 7
 menu
@@ -277,7 +277,7 @@ mv cpath $root/ > /dev/null 2>&1
 mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
-apt-get install -y curl wget xterm psmisc wmctrl gedit apt-transport-https unbound > /dev/null
+apt-get install -y curl wget xterm psmisc wmctrl leafpad apt-transport-https unbound > /dev/null
 sleep 1
 clear
 echo "==> Which version of Tor do you prefer to use?";
@@ -440,7 +440,7 @@ echo "0" > $root/stp-service
 rm $root/dnscrypt-proxy.toml > /dev/null 2>&1
 cp $root/dnscrypt-proxy.toml.bak $root/dnscrypt-proxy.toml
 echo "==> Opening file contain public resolvers";
-xterm -T "Resolvers" -e "gedit $root/public-resolvers.md" &
+xterm -T "Resolvers" -e "leafpad $root/public-resolvers.md" &
 sleep 1
 clear
 echo "==> Please enter the name of the first resolver to use, only ipv4!";
@@ -449,7 +449,7 @@ read -e server1
 echo "";
 if ! grep "\<$server1\>" $root/public-resolvers.md > /dev/null; then
 echo "==> Server not found! Please retry";
-killall gedit > /dev/null 2>&1
+killall leafpad > /dev/null 2>&1
 sleep 3
 configure
 return 1
@@ -459,14 +459,14 @@ echo -n "    Second server: ";
 read -e server2
 if ! grep "\<$server2\>" $root/public-resolvers.md > /dev/null; then
 echo "==> Server not found! Please retry";
-killall gedit > /dev/null 2>&1
+killall leafpad > /dev/null 2>&1
 sleep 3
 configure
 return 1
 fi
 echo "==> Opening file contain relays";
-killall gedit > /dev/null 2>&1
-xterm -T "Relay" -e "gedit $root/relays.md" &
+killall leafpad > /dev/null 2>&1
+xterm -T "Relay" -e "leafpad $root/relays.md" &
 clear
 echo "==> Carefully choose relays/servers so that they are run by different entities!";
 echo "";
@@ -476,7 +476,7 @@ read -e relay1
 echo "";
 if ! grep "\<$relay1\>" $root/relays.md > /dev/null; then
 echo "==> Relay not found! Please retry";
-killall gedit > /dev/null 2>&1
+killall leafpad > /dev/null 2>&1
 sleep 3
 configure
 return 1
@@ -487,7 +487,7 @@ read -e relay2
 echo "";
 if ! grep "\<$relay2\>" $root/relays.md > /dev/null; then
 echo "==> Relay not found! Please retry";
-killall gedit > /dev/null 2>&1
+killall leafpad > /dev/null 2>&1
 sleep 3
 configure
 return 1
@@ -498,7 +498,7 @@ read -e relay3
 echo "";
 if ! grep "\<$relay3\>" $root/relays.md > /dev/null; then
 echo "==> Relay not found! Please retry";
-killall gedit > /dev/null 2>&1
+killall leafpad > /dev/null 2>&1
 sleep 3
 configure
 return 1
@@ -509,12 +509,12 @@ read -e relay4
 echo "";
 if ! grep "\<$relay4\>" $root/relays.md > /dev/null; then
 echo "==> Relay not found! Please retry";
-killall gedit > /dev/null 2>&1
+killall leafpad > /dev/null 2>&1
 sleep 3
 configure
 return 1
 fi
-killall gedit > /dev/null 2>&1
+killall leafpad > /dev/null 2>&1
 clear
 echo "==> Configuring other services";
 sed -i "1iforce_tcp = true" $root/dnscrypt-proxy.toml
