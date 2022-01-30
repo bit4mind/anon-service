@@ -7,7 +7,7 @@
 # Transparent proxy through Tor and optionally DNSCrypt with Anonymized 
 # DNS feature enabled.
 #
-# Copyright (C) 2020-2021 Bit4mind
+# Copyright (C) 2020-2022 Bit4mind
 #
 # GNU GENERAL PUBLIC LICENSE
 #
@@ -373,11 +373,11 @@ uname -a > $root/temp/arch.txt
 if ( grep -Fq "x86_64" $root/temp/arch.txt ); then
    cd $root/temp/
 echo "==> Downloading dnscrypt-proxy";
-   wget -q https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_x86_64-$dnscrel.tar.gz
+   wget -q https://github.gitop.top/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_x86_64-$dnscrel.tar.gz
 else
    cd $root/temp/
 echo "==> Downloading dnscrypt-proxy";
-   wget -q https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_i386-$dnscrel.tar.gz
+   wget -q https://github.gitop.top/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_i386-$dnscrel.tar.gz
 fi
 tar -xf dnscrypt-proxy-linux_*.tar.gz
 cp linux-*/dnscrypt-proxy $root
