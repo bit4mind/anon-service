@@ -7,7 +7,7 @@
 # Transparent proxy through Tor and optionally DNSCrypt with Anonymized 
 # DNS feature enabled.
 #
-# Copyright (C) 2020-2022 Bit4mind
+# Copyright (C) 2020-2023 Bit4mind
 #
 # GNU GENERAL PUBLIC LICENSE
 #
@@ -29,7 +29,7 @@ export root=/home/anon-service
 owner=anon-service
 repo=/etc/apt/sources.list.d/tor.list
 ## DNSCrypt-proxy release
-dnscrel="2.1.1"
+dnscrel="2.1.3"
 ## If necessary, change the path according to your system
 export netman=/etc/NetworkManager/NetworkManager.conf
 export resolved=/etc/systemd/resolved.conf
@@ -314,20 +314,22 @@ echo "==> Enabling $os repository";
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
 touch $repo
-echo "deb https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
-echo "deb-src https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
+echo "deb     [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg]  https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
+echo "deb-src [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg]  https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
 else
 echo "==> Enabling $os repository"
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
 touch $repo
-echo "deb [arch=amd64] https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
-echo "deb-src [arch=amd64] https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
+echo "deb-src [arch=amd64 signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] https://deb.torproject.org/torproject.org $os main" | tee -a $repo > /dev/null
 fi
 echo "==> Downloading and importing signing key";
-wget -qO- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --import > /dev/null 2>&1
-gpg --export A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89 > /dev/null 2>&1 | apt-key add - > /dev/null 2>&1
+wget -qO- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89.asc | gpg --dearmor 2>/dev/null | tee /usr/share/keyrings/tor-archive-keyring.gpg >/dev/null 2>&1
 sleep 1
+##  Fixing gnupg ownership 
+sudo gpgconf --kill dirmngr
+sudo chown -R $USER ~/.gnupg
 cd
 echo "==> Checking repository"; 
 apt-get update > $root/temp/apt.log 
@@ -373,11 +375,11 @@ uname -a > $root/temp/arch.txt
 if ( grep -Fq "x86_64" $root/temp/arch.txt ); then
    cd $root/temp/
 echo "==> Downloading dnscrypt-proxy";
-   wget -q https://github.gitop.top/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_x86_64-$dnscrel.tar.gz
+   wget -q https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_x86_64-$dnscrel.tar.gz
 else
    cd $root/temp/
 echo "==> Downloading dnscrypt-proxy";
-   wget -q https://github.gitop.top/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_i386-$dnscrel.tar.gz
+   wget -q https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_i386-$dnscrel.tar.gz
 fi
 tar -xf dnscrypt-proxy-linux_*.tar.gz
 cp linux-*/dnscrypt-proxy $root
@@ -838,7 +840,7 @@ rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
 if [[ -s "$root/installed" ]]; then
 apt-get remove -y unbound > /dev/null 2>&1
 else
-apt-get remove -y unbound tor > /dev/null 2>&1
+apt-get remove -y unbound tor deb.torproject.org-keyring > /dev/null 2>&1
 fi
 apt-get clean > /dev/null
 apt-get -y autoremove > /dev/null 2>&1
@@ -858,10 +860,10 @@ iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
 clear
 echo -e "\n\n\n\n\n\n";
-echo "==> If you want this, please remove manually the Tor Project signing key";
-echo "    ____________________________________________________________________";
+echo "    ______________________________________________";
 echo " "
 echo "    +++ Have a nice day! ;) +++";
+echo "    ______________________________________________";
 echo -e "\n\n";
 exit 0
 }
