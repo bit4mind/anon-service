@@ -2,7 +2,7 @@
 
 # #####################################################################
 # anon-service.sh
-# version 1.3
+# version 2.0
 # 
 # Transparent proxy through Tor and optionally DNSCrypt with Anonymized 
 # DNS feature enabled.
