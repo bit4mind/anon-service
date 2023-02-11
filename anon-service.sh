@@ -29,7 +29,7 @@ export root=/home/anon-service
 owner=anon-service
 repo=/etc/apt/sources.list.d/tor.list
 ## DNSCrypt-proxy release
-dnscrel="2.1.3"
+dnscrel="2.1.4"
 ## If necessary, change the path according to your system
 export netman=/etc/NetworkManager/NetworkManager.conf
 export resolved=/etc/systemd/resolved.conf
@@ -53,11 +53,11 @@ printf '%s\n' "                    ░           ░           ░       ░ by 
 echo " ";
 printf '%s\n' "   0. Check dependencies and download upgraded services"
 printf '%s\n' "   1. Choose transparent proxy type and configure related services"
-printf '%s\n' "   2. Start/Restart anon-service (if restart this will change your IP address)"
+printf '%s\n' "   2. Start/Restart service (if restart this will change your IP address)"
 printf '%s\n' "   3. Execute all tasks above"
 printf '%s\n' "   4. Close this window"
 printf '%s\n' "   5. Enable service to start automatically at boot"
-printf '%s\n' "   6. Stop anon-service/Restore original files without removing anon-service"
+printf '%s\n' "   6. Stop service without removing files and settings"
 printf '%s\n' "   7. Exit removing anon-service files and settings from system"
 echo -en "\033[38;2;0;100;0m    Misc\033[0m\n";
 printf '%s\n' "   8. Edit torrc file"
@@ -466,6 +466,7 @@ sleep 3
 configure
 return 1
 fi
+clear
 echo "==> Opening file contain relays";
 killall leafpad > /dev/null 2>&1
 xterm -T "Relay" -e "leafpad $root/relays.md" &
