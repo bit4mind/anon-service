@@ -30,7 +30,7 @@ owner=anon-service
 version="2.0"
 repo=/etc/apt/sources.list.d/tor.list
 ## DNSCrypt-proxy release
-dnscrel="2.1.3"
+dnscrel="2.1.4"
 ## If necessary, change the path according to your system
 export netman=/etc/NetworkManager/NetworkManager.conf
 export resolved=/etc/systemd/resolved.conf
@@ -54,12 +54,12 @@ printf '%s\n' "                    ░           ░           ░       ░ by 
 echo " ";
 printf '%s\n' "   0. Check dependencies and download upgraded services"
 printf '%s\n' "   1. Choose transparent proxy type and configure related services"
-printf '%s\n' "   2. Start/Restart anon-service (if restart this will change your IP address)"
+printf '%s\n' "   2. Start/Restart service (if restart this will change your IP address)"
 printf '%s\n' "   3. Execute all tasks above"
 printf '%s\n' "   4. Close this window"
 printf '%s\n' "   5. Enable service to start automatically at boot"
-printf '%s\n' "   6. Stop anon-service/Restore original files without removing anon-service"
-printf '%s\n' "   7. Exit removing anon-service files and settings from system"
+printf '%s\n' "   6. Stop service without removing files and setting"
+printf '%s\n' "   7. Exit removing service files and settings from system"
 echo -en "\033[38;2;0;100;0m    Misc\033[0m\n";
 printf '%s\n' "   8. Edit torrc file"
 printf '%s\n' "   9. Install this script"
@@ -68,6 +68,7 @@ echo -n "  Choose: ";
 read -e task
 case "$task" in  
 0)
+## Detect if X runs
 if ! timeout 1s xset q &>/dev/null; then
 echo " ";
 echo "==> No X server detected. Try to use command line option instead." >&2
@@ -158,7 +159,7 @@ if [ -s "$root" ]; then
 echo "";
 echo "==> Please, firstly remove all files and settings via dedicated option";
 sleep 7
-if [[ "$#" -eq "0" ]] || [[ "$1" == "--menu" ]]; then
+if [ -e "$root/menu" ]; then
 menu
 return 1
 else 
@@ -174,7 +175,7 @@ mv cpath $root/ > /dev/null 2>&1
 mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
-if [[ "$1" == "--configure" ]]; then
+if [ -e "$root/configure" ]; then
 apt-get install -y curl wget psmisc nano apt-transport-https unbound > /dev/null
 else
 apt-get install -y curl wget xterm psmisc wmctrl leafpad apt-transport-https unbound > /dev/null
@@ -316,7 +317,7 @@ echo "";
 echo "==> Sorry! Your system is not ready to complete this action";
 echo "==> Please, check if you have installed the necessary files";
 sleep 7
-if [[ "$#" -eq 0 ]] || [[ "$1" == "--menu" ]]; then
+if [ -e "$root/menu" ]; then
 menu
 return 1
 else 
@@ -348,7 +349,7 @@ rm $root/dnscrypt-proxy.toml > /dev/null 2>&1
 cp $root/dnscrypt-proxy.toml.bak $root/dnscrypt-proxy.toml
 echo "==> Opening file contain public resolvers";
 sleep 2
-if [[ "$1" == "-c" ]] || [[ "$1" == "--configure" ]]; then
+if [ -e "$root/configure" ]; then
 echo "==> Type "q" to quit";
 sleep 3
 more $root/public-resolvers.md
@@ -368,7 +369,7 @@ sleep 3
 configure
 return 1
 fi
-if [[ "$1" == "--configure" ]]; then
+if [ -e "$root/configure" ]; then
 echo "==> Type "q" to quit";
 sleep 3
 more $root/public-resolvers.md
@@ -383,27 +384,20 @@ sleep 3
 configure
 return 1
 fi
+clear
 echo "==> Opening file contain relays";
 sleep 2
 killall leafpad > /dev/null 2>&1
-if [[ "$1" == "--configure" ]]; then
-echo "==> Type "q" to quit";
-sleep 3
-more $root/relays.md
-else
-xterm -T "Relay" -e "leafpad $root/relays.md" &
-clear
-fi
 echo "==> Carefully choose relays/servers so that they are run by different entities!";
 sleep 2
 echo "";
-if [[ "$1" == "--configure" ]]; then
+if [ -e "$root/configure" ]; then
 echo "==> Type "q" to quit";
 sleep 3
 more $root/relays.md
 fi
 echo "==> Please enter the name of the first realy to use!";
-echo -n0 "    First relay for the first server: ";
+echo -n "    First relay for the first server: ";
 read -e relay1
 echo "";
 if ! grep "\<$relay1\>" $root/relays.md > /dev/null; then
@@ -413,7 +407,7 @@ sleep 3
 configure
 return 1
 fi
-if [[ "$1" == "--configure" ]]; then
+if [ -e "$root/configure" ]; then
 echo "==> Type "q" to quit";
 sleep 3
 more $root/relays.md
@@ -429,7 +423,7 @@ sleep 3
 configure
 return 1
 fi
-if [[ "$1" == "--configure" ]]; then
+if [ -e "$root/configure" ]; then
 echo "==> Type "q" to quit";
 sleep 3
 more $root/relays.md
@@ -445,7 +439,7 @@ sleep 3
 configure
 return 1
 fi
-if [[ "$1" == "--configure" ]]; then
+if [ -e "$root/configure" ]; then
 echo "==> Type "q" to quit";
 sleep 3
 more $root/relays.md
@@ -571,7 +565,7 @@ echo "";
 echo "==> Sorry! Your system is not ready to start the service...";
 echo "==> Please, check if you have installed the necessary files";
 sleep 7
-if [[ "$#" -eq 0  ]] || [[ "$1" == "--menu" ]]; then
+if [ -e "$root/menu" ]; then
 menu
 return 1
 else 
@@ -636,7 +630,7 @@ echo "trap restoring_script SIGINT SIGTERM" >> restoring_orig.sh
 echo "sleep 7" >> restoring_orig.sh
 echo "done" >> restoring_orig.sh
 chmod +x restoring_orig.sh
-if [[ "$1" == "-c" ]] || [[ "$1" == "--configure" ]]; then
+if [ -e "$root/configure" ]; then
 nohup ./restoring_orig.sh > /dev/null 2>&1 &
 clear
 else
@@ -672,7 +666,7 @@ if ! pgrep -x "tor" > /dev/null; then
 echo "==> Sorry! No connection to TOR...Please, report this issue to the project";
 sleep 7
 shutdown_service
-if [[ "$#" -eq 0  ]] || [[ "$1" == "--menu" ]]; then
+if [ -e "$root/menu" ]; then
 menu
 return 1
 else
@@ -683,7 +677,7 @@ if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
 echo "==> Sorry! Dnscrypt-proxy isn't running...Please, report this issue to the project";
 sleep 7
 shutdown_service
-if [[ "$#" -eq 0  ]] || [[ "$1" == "--menu" ]]; then
+if [ -e "$root/menu" ]; then
 menu
 return 1
 else
@@ -694,7 +688,7 @@ if ! pgrep -x "unbound" > /dev/null; then
 echo "==> Sorry! Unbound isn't running...Please, report this issue to the project";
 sleep 7
 shutdown_service
-if [[ "$#" -eq 0  ]] || [[ "$1" == "--menu" ]]; then
+if [ -e "$root/menu" ]; then
 menu
 return 1
 else
@@ -728,7 +722,7 @@ if ! pgrep -x "tor" > /dev/null; then
 echo "==> Sorry! No connection to TOR...Please, report this issue to the project";
 sleep 7
 shutdown_service
-if [[ "$#" -eq 0  ]] || [[ "$1" == "--menu" ]]; then
+if [ -e "$root/menu" ]; then
 menu
 return 1
 else
@@ -766,7 +760,7 @@ echo "";
 echo "==> Sorry! Your system is not ready to start the service...";
 echo "==> Please, check if you have installed the necessary files";
 sleep 7
-if [[ "$#" -eq 0  ]] || [[ "$1" == "--menu" ]]; then
+if [ -e "$root/menu" ]; then
 menu
 return 1
 else
@@ -886,6 +880,9 @@ echo "==> Stopping anon-service";
 sleep 7
 fi
 rm $root/tor.txt > /dev/null 2>&1
+rm $root/menu > /dev/null 2>&1
+rm $root/download > /dev/null 2>&1
+rm $root/configure > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
@@ -983,7 +980,7 @@ printf '%s\n' "Options:"
 printf '%s\n' " --download       check dependencies and download them"
 printf '%s\n' " --configure      choose transparent proxy type"
 printf '%s\n' " --start          start service"
-printf '%s\n' " --stop           stop without removing service and setting"
+printf '%s\n' " --stop           without removing service files and settings"
 printf '%s\n' " --restart        restart service"
 printf '%s\n' " --status         display status service"
 printf '%s\n' " --menu           display interactive menu"
@@ -999,6 +996,9 @@ echo -e "\n";
 ##
 ## Main
 ##
+rm $root/menu > /dev/null 2>&1
+rm $root/download > /dev/null 2>&1
+rm $root/configure > /dev/null 2>&1
 clear
 ### Checking for administrator privileges 
 ifsudo=$(id -u)
@@ -1011,10 +1011,12 @@ pwd > cpath
 if [ -s $root/dnscrypt-proxy.toml.bak ] || [ "$#" -gt 0 ]; then
 case "$1" in
 --download )
+touch $root/download
 download
 exit 0
 ;;
---configure)              
+--configure)
+touch $root/configure            
 configure
 exit 0
 ;;
@@ -1059,6 +1061,7 @@ fi
 fi
 ;;
 --menu)
+touch $root/menu
 menu
 ;;
 --install)
@@ -1110,6 +1113,7 @@ if ( grep -q "icmp_seq=1" conn.txt ); then
 clear
 rm conn.txt > /dev/null 2>&1
 sleep 1
+touch $root/menu
 menu
 echo error;
 else
