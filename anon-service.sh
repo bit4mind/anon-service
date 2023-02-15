@@ -159,29 +159,54 @@ if [ -s "$root" ]; then
 echo "";
 echo "==> Please, firstly remove all files and settings via dedicated option";
 sleep 7
-if [ -e "$root/menu" ]; then
+if [ -e "menu" ]; then
 menu
 return 1
 else 
 exit 1
 fi
 fi
+### Checking for network connection
+rm conn.txt > /dev/null 2>&1
+ping -c1 opendns.com > conn.txt 2>&1
+if ( ! grep -q "icmp_seq=1" conn.txt ); then
+rm conn.txt > /dev/null 2>&1
+echo "==> Please check your network connection!";
+sleep 5
+if [ -e "menu" ]; then
+menu
+return 1
+else 
+exit 1
+fi   
+fi
 clear
 echo "==> Checking dependencies and preparing the system"
 rm -rf $root > /dev/null 2>&1
 adduser -q --disabled-password --gecos "" $owner > /dev/null 2>&1
 usermod -u 999 $owner > /dev/null 2>&1
-mv cpath $root/ > /dev/null 2>&1
+mv cpath $root > /dev/null 2>&1
 mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
-if [ -e "$root/configure" ]; then
+if [ ! -e "menu" ]; then
 apt-get install -y curl wget psmisc nano apt-transport-https unbound > /dev/null
 else
 apt-get install -y curl wget xterm psmisc wmctrl leafpad apt-transport-https unbound > /dev/null
 fi
 sleep 1
 clear
+if [ -e tor_option1 ]; then
+install_tor_project
+elif [ -e tor_option2 ]; then
+rm $repo  > /dev/null 2>&1
+apt-get update > /dev/null
+echo "==> Installing Tor";
+apt-get install -y tor > /dev/null 2>&1
+elif [ -e tor_option3 ]; then
+echo "==> OK!";
+touch $root/installed
+else
 echo "==> Which version of Tor do you prefer to use?";
 echo "      1.Tor Project repository";
 echo "      2.Official repository";
@@ -191,6 +216,62 @@ echo -n  " Choose: ";
 read -e choose
 case "$choose"
 in 1)
+install_tor_project
+;;
+2)
+rm $repo  > /dev/null 2>&1
+apt-get update > /dev/null
+echo "==> Installing Tor";
+apt-get install -y tor > /dev/null 2>&1
+;;
+3)
+echo "==> OK!";
+touch $root/installed
+;;
+*)
+echo "==> Are you serious?";
+sleep 5
+menu
+esac
+fi
+touch $root/temp/arch.txt > /dev/null
+uname -a > $root/temp/arch.txt
+if ( grep -Fq "x86_64" $root/temp/arch.txt ); then
+   cd $root/temp/
+echo "==> Downloading dnscrypt-proxy";
+   wget -q https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_x86_64-$dnscrel.tar.gz
+else
+   cd $root/temp/
+echo "==> Downloading dnscrypt-proxy";
+   wget -q https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_i386-$dnscrel.tar.gz
+fi
+tar -xf dnscrypt-proxy-linux_*.tar.gz
+cp linux-*/dnscrypt-proxy $root
+cp linux-*/example-dnscrypt-proxy.toml $root/dnscrypt-proxy.toml.bak
+cp linux-*/localhost.pem $root
+rm -rf $root/temp > /dev/null 2>&1
+cd $root
+
+rm *.md > /dev/null 2>&1
+rm *.md* > /dev/null 2>&1
+echo "==> Downloading public DNS resolvers list";
+curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/public-resolvers.md > /dev/null 2>&1
+echo "==> Downloading anonymized DNS relays list";
+curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/relays.md > /dev/null 2>&1
+### Backup systemd-resolved
+if [ ! -s "$root/resolved.bak" ]; then
+cp $resolved $root/resolved.bak > /dev/null 2>&1
+fi
+### Backup NetworkManager.conf
+if [ ! -s "$netman.bak" ]; then
+cp $netman $netman.bak
+fi
+cd $(cat $root/cpath)
+}
+##
+## INSTALLING TOR PROJECT
+##
+install_tor_project(){
 touch $root/temp/distribution.txt
 ### Tor Project supported distro
 cd $root/temp/
@@ -256,54 +337,6 @@ else
    echo "==> Installing Tor";
    apt-get install -y tor deb.torproject.org-keyring > /dev/null 2>&1
 fi
-;;
-2)
-rm $repo  > /dev/null 2>&1
-apt-get update > /dev/null
-echo "==> Installing Tor";
-apt-get install -y tor > /dev/null 2>&1
-;;
-3)
-echo "==> OK!";
-touch $root/installed
-;;
-*)
-echo "==> Are you serious?";
-sleep 5
-menu
-esac
-touch $root/temp/arch.txt > /dev/null
-uname -a > $root/temp/arch.txt
-if ( grep -Fq "x86_64" $root/temp/arch.txt ); then
-   cd $root/temp/
-echo "==> Downloading dnscrypt-proxy";
-   wget -q https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_x86_64-$dnscrel.tar.gz
-else
-   cd $root/temp/
-echo "==> Downloading dnscrypt-proxy";
-   wget -q https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_i386-$dnscrel.tar.gz
-fi
-tar -xf dnscrypt-proxy-linux_*.tar.gz
-cp linux-*/dnscrypt-proxy $root
-cp linux-*/example-dnscrypt-proxy.toml $root/dnscrypt-proxy.toml.bak
-cp linux-*/localhost.pem $root
-cd $root
-rm -rf $root/temp > /dev/null 2>&1
-rm *.md > /dev/null 2>&1
-rm *.md* > /dev/null 2>&1
-echo "==> Downloading public DNS resolvers list";
-curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/public-resolvers.md > /dev/null 2>&1
-echo "==> Downloading anonymized DNS relays list";
-curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/relays.md > /dev/null 2>&1
-### Backup systemd-resolved
-if [ ! -s "$root/resolved.bak" ]; then
-cp $resolved $root/resolved.bak > /dev/null 2>&1
-fi
-### Backup NetworkManager.conf
-if [ ! -s "$netman.bak" ]; then
-cp $netman $netman.bak
-fi
-cd $(cat $root/cpath)
 }
 ##
 ## CONFIGURING SERVICES
@@ -317,7 +350,7 @@ echo "";
 echo "==> Sorry! Your system is not ready to complete this action";
 echo "==> Please, check if you have installed the necessary files";
 sleep 7
-if [ -e "$root/menu" ]; then
+if [ -e "menu" ]; then
 menu
 return 1
 else 
@@ -327,6 +360,17 @@ fi
 ### Disable tor and unbound starting at boot time
 systemctl disable unbound > /dev/null 2>&1
 systemctl disable tor > /dev/null 2>&1
+#####
+if [ -e "$(cat $root/cpath)/temp/configure_option1" ]; then 
+rm $root/stp-service > /dev/null 2>&1
+touch $root/stp-service
+echo "1" > $root/stp-service
+elif [ -e "$(cat $root/cpath)/temp/configure_option2" ]; then 
+rm $root/stp-service > /dev/null 2>&1
+touch $root/stp-service
+echo "0" > $root/stp-service
+dnscryptconf
+elif [ -e "$(cat $root/cpath)/temp/menu" ]; then
 clear
 echo "==> Which type of transparent proxy do you prefer to use?";
 echo "      1. Standard transparent proxy";
@@ -344,146 +388,23 @@ echo "1" > $root/stp-service
 rm $root/stp-service > /dev/null 2>&1
 touch $root/stp-service
 echo "0" > $root/stp-service 
-### Configuring dnscrypt_proxy
-rm $root/dnscrypt-proxy.toml > /dev/null 2>&1
-cp $root/dnscrypt-proxy.toml.bak $root/dnscrypt-proxy.toml
-echo "==> Opening file contain public resolvers";
-sleep 2
-if [ -e "$root/configure" ]; then
-echo "==> Type "q" to quit";
-sleep 3
-more $root/public-resolvers.md
-else
-xterm -T "Resolvers" -e "leafpad $root/public-resolvers.md" &
-sleep 1
-clear
-fi
-echo "==> Please enter the name of the first resolver to use, only ipv4!";
-echo -n "    First server: ";
-read -e server1
-echo "";
-if ! grep "\<$server1\>" $root/public-resolvers.md > /dev/null; then
-echo "==> Server not found! Please retry";
-killall leafpad > /dev/null 2>&1
-sleep 3
-configure
-return 1
-fi
-if [ -e "$root/configure" ]; then
-echo "==> Type "q" to quit";
-sleep 3
-more $root/public-resolvers.md
-fi
-echo "==> Please enter the name of the second resolver to use, only ipv4!";
-echo -n "    Second server: ";
-read -e server2
-if ! grep "\<$server2\>" $root/public-resolvers.md > /dev/null; then
-echo "==> Server not found! Please retry";
-killall leafpad > /dev/null 2>&1
-sleep 3
-configure
-return 1
-fi
-clear
-echo "==> Opening file contain relays";
-sleep 2
-killall leafpad > /dev/null 2>&1
-echo "==> Carefully choose relays/servers so that they are run by different entities!";
-sleep 2
-echo "";
-if [ -e "$root/configure" ]; then
-echo "==> Type "q" to quit";
-sleep 3
-more $root/relays.md
-fi
-echo "==> Please enter the name of the first realy to use!";
-echo -n "    First relay for the first server: ";
-read -e relay1
-echo "";
-if ! grep "\<$relay1\>" $root/relays.md > /dev/null; then
-echo "==> Relay not found! Please retry";
-killall leafpad > /dev/null 2>&1
-sleep 3
-configure
-return 1
-fi
-if [ -e "$root/configure" ]; then
-echo "==> Type "q" to quit";
-sleep 3
-more $root/relays.md
-fi
-echo "==> Please enter the name of the second relay to use!";
-echo -n "    Second relay for the first server: ";
-read -e relay2
-echo "";
-if ! grep "\<$relay2\>" $root/relays.md > /dev/null; then
-echo "==> Relay not found! Please retry";
-killall leafpad > /dev/null 2>&1
-sleep 3
-configure
-return 1
-fi
-if [ -e "$root/configure" ]; then
-echo "==> Type "q" to quit";
-sleep 3
-more $root/relays.md
-fi
-echo "==> Please enter the name of the third resolver to use!";
-echo -n "    First relay for the second server: ";
-read -e relay3
-echo "";
-if ! grep "\<$relay3\>" $root/relays.md > /dev/null; then
-echo "==> Relay not found! Please retry";
-killall leafpad > /dev/null 2>&1
-sleep 3
-configure
-return 1
-fi
-if [ -e "$root/configure" ]; then
-echo "==> Type "q" to quit";
-sleep 3
-more $root/relays.md
-fi
-echo "==> Please enter the name of the fourth resolver to use!";
-echo -n "    Second relay for the second server: ";
-read -e relay4
-echo "";
-if ! grep "\<$relay4\>" $root/relays.md > /dev/null; then
-echo "==> Relay not found! Please retry";
-killall leafpad > /dev/null 2>&1
-sleep 3
-configure
-return 1
-fi
-killall leafpad > /dev/null 2>&1
-clear
-echo "==> Configuring other services";
-sed -i "1iforce_tcp = true" $root/dnscrypt-proxy.toml
-sed -i "2iserver_names = ['$server1', '$server2']" $root/dnscrypt-proxy.toml
-sed -i "s/127.0.0.1:53/127.0.0.1:10000/g; s/9.9.9.9/208.67.222.222/g; s/8.8.8.8/208.67.220.220/g; s/require_dnssec = false/require_dnssec = true/g; s/force_tcp = false/#force_tcp = false/g; s/\[anonymized_dns\]/\[anonymized_dns\]\nroutes = \[\n{ server_name='$server1', via=\[\'$relay1\', \'$relay2\'\] },\n{ server_name=\'$server2\', via=[\'$relay3\', \'$relay4\'] }\n\]/g; s/skip_incompatible = false/skip_incompatible = true/g" $root/dnscrypt-proxy.toml
-### Configuring unbound
-unbound-anchor > /dev/null 2>&1
-sleep 1
-echo "server:" > $unbound
-echo "tcp-upstream: yes" >> $unbound
-echo "domain-insecure: \"onion\"" >> $unbound
-echo "private-domain: \"onion\"" >> $unbound
-echo "do-not-query-localhost: no" >> $unbound 
-echo "interface: 127.0.0.1@53" >> $unbound
-echo "local-zone: \"onion.\" transparent" >> $unbound
-echo "forward-zone:" >> $unbound
-echo "    name: \"onion\"" >> $unbound
-echo "    forward-addr: 127.0.0.1@5353" >> $unbound
-echo "forward-zone:" >> $unbound
-echo "   name: \".\"" >> $unbound
-echo "   forward-addr: 127.0.0.1@10000" >> $unbound
+dnscryptconf
 ;;
 *)
 echo "";
 echo "==> Are you serious?"
 sleep 5
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 configure
+return 1
+else 
+exit 1
+fi
 esac
+else
+echo "==> Sorry! Something went wrong...Please, report this issue to the project";
+fi
+echo "==> Configuring Tor";
 ### Configuring Tor
 cp $tor $root/torrc
 echo "Log notice file $root/notices.log" >> $root/torrc
@@ -556,6 +477,194 @@ chmod +x $root/iptables_rules.sh
 cd $(cat $root/cpath)
 }
 ##
+## CONFIGURING DNSCRYPT
+##
+dnscryptconf(){
+### Configuring dnscrypt_proxy
+rm $root/dnscrypt-proxy.toml > /dev/null 2>&1
+cp $root/dnscrypt-proxy.toml.bak $root/dnscrypt-proxy.toml
+if [ -e "configure_option2" ]; then
+server1="$(cat server1)"
+else
+echo "==> Opening file contain public resolvers";
+sleep 2
+if [ -e "configure" ]; then
+echo "==> Type "q" to quit";
+sleep 3
+more $root/public-resolvers.md
+else
+xterm -T "Resolvers" -e "leafpad $root/public-resolvers.md" &
+sleep 1
+clear
+fi
+echo "==> Please enter the name of the first resolver to use, only ipv4!";
+echo -n "    First server: ";
+read -e server1
+echo "";
+fi
+if ! grep "\<$server1\>" $root/public-resolvers.md > /dev/null; then
+echo "==> Server not found! Please retry";
+killall leafpad > /dev/null 2>&1
+sleep 3
+if [ -e "menu" ]; then
+configure
+return 1
+else 
+exit 1
+fi
+fi
+if [ -e "configure_option2" ]; then
+server2="$(cat server2)"
+else
+
+if [ -e "configure" ]; then
+echo "==> Type "q" to quit";
+sleep 3
+more $root/public-resolvers.md
+fi
+echo "==> Please enter the name of the second resolver to use, only ipv4!";
+echo -n "    Second server: ";
+read -e server2
+if ! grep "\<$server2\>" $root/public-resolvers.md > /dev/null; then
+echo "==> Server not found! Please retry";
+killall leafpad > /dev/null 2>&1
+sleep 3
+if [ -e "menu" ]; then
+configure
+return 1
+else 
+exit 1
+fi
+fi
+fi
+if [ -e "configure_option2" ]; then
+relay1="$(cat relay1)"
+else
+clear
+echo "==> Opening file contain relays";
+sleep 2
+killall leafpad > /dev/null 2>&1
+echo "==> Carefully choose relays/servers so that they are run by different entities!";
+sleep 2
+echo "";
+if [ -e "configure" ]; then
+echo "==> Type "q" to quit";
+sleep 3
+more $root/relays.md
+fi
+echo "==> Please enter the name of the first realy to use!";
+echo -n "    First relay for the first server: ";
+read -e relay1
+echo "";
+if ! grep "\<$relay1\>" $root/relays.md > /dev/null; then
+echo "==> Relay not found! Please retry";
+killall leafpad > /dev/null 2>&1
+sleep 3
+if [ -e "menu" ]; then
+configure
+return 1
+else 
+exit 1
+fi
+fi
+fi
+if [ -e "configure_option2" ]; then
+relay2="$(cat relay2)"
+else
+if [ -e "configure" ]; then
+echo "==> Type "q" to quit";
+sleep 3
+more $root/relays.md
+fi
+echo "==> Please enter the name of the second relay to use!";
+echo -n "    Second relay for the first server: ";
+read -e relay2
+echo "";
+if ! grep "\<$relay2\>" $root/relays.md > /dev/null; then
+echo "==> Relay not found! Please retry";
+killall leafpad > /dev/null 2>&1
+sleep 3
+if [ -e "menu" ]; then
+configure
+return 1
+else 
+exit 1
+fi
+fi
+fi
+if [ -e "configure_option2" ]; then
+relay3="$(cat relay3)"
+else
+if [ -e "configure" ]; then
+echo "==> Type "q" to quit";
+sleep 3
+more $root/relays.md
+fi
+echo "==> Please enter the name of the third resolver to use!";
+echo -n "    First relay for the second server: ";
+read -e relay3
+echo "";
+if ! grep "\<$relay3\>" $root/relays.md > /dev/null; then
+echo "==> Relay not found! Please retry";
+killall leafpad > /dev/null 2>&1
+sleep 3
+if [ -e "menu" ]; then
+configure
+return 1
+else 
+exit 1
+fi
+fi
+fi
+if [ -e "configure_option2" ]; then
+relay4="$(cat relay4)"
+else
+if [ -e "configure" ]; then
+echo "==> Type "q" to quit";
+sleep 3
+more $root/relays.md
+fi
+echo "==> Please enter the name of the fourth resolver to use!";
+echo -n "    Second relay for the second server: ";
+read -e relay4
+echo "";
+if ! grep "\<$relay4\>" $root/relays.md > /dev/null; then
+echo "==> Relay not found! Please retry";
+killall leafpad > /dev/null 2>&1
+sleep 3
+if [ -e "menu" ]; then
+configure
+return 1
+else 
+exit 1
+fi
+fi
+fi
+killall leafpad > /dev/null 2>&1
+clear
+echo "==> Configuring DNSCrypt";
+sed -i "1iforce_tcp = true" $root/dnscrypt-proxy.toml
+sed -i "2iserver_names = ['$server1', '$server2']" $root/dnscrypt-proxy.toml
+sed -i "s/127.0.0.1:53/127.0.0.1:10000/g; s/9.9.9.9/208.67.222.222/g; s/8.8.8.8/208.67.220.220/g; s/require_dnssec = false/require_dnssec = true/g; s/force_tcp = false/#force_tcp = false/g; s/\[anonymized_dns\]/\[anonymized_dns\]\nroutes = \[\n{ server_name='$server1', via=\[\'$relay1\', \'$relay2\'\] },\n{ server_name=\'$server2\', via=[\'$relay3\', \'$relay4\'] }\n\]/g; s/skip_incompatible = false/skip_incompatible = true/g" $root/dnscrypt-proxy.toml
+echo "==> Configuring Unbound";
+### Configuring unbound
+unbound-anchor > /dev/null 2>&1
+sleep 1
+echo "server:" > $unbound
+echo "tcp-upstream: yes" >> $unbound
+echo "domain-insecure: \"onion\"" >> $unbound
+echo "private-domain: \"onion\"" >> $unbound
+echo "do-not-query-localhost: no" >> $unbound 
+echo "interface: 127.0.0.1@53" >> $unbound
+echo "local-zone: \"onion.\" transparent" >> $unbound
+echo "forward-zone:" >> $unbound
+echo "    name: \"onion\"" >> $unbound
+echo "    forward-addr: 127.0.0.1@5353" >> $unbound
+echo "forward-zone:" >> $unbound
+echo "   name: \".\"" >> $unbound
+echo "   forward-addr: 127.0.0.1@10000" >> $unbound
+}
+##
 ## Starting services and configuring iptables
 ##
 start_service(){
@@ -565,7 +674,7 @@ echo "";
 echo "==> Sorry! Your system is not ready to start the service...";
 echo "==> Please, check if you have installed the necessary files";
 sleep 7
-if [ -e "$root/menu" ]; then
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else 
@@ -600,10 +709,10 @@ service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
-if ! grep -Fq "nameserver 127.0.0.1" /etc/resolv.conf > /dev/null 2>&1; then
+if [ ! grep -Fq "nameserver 127.0.0.1" /etc/resolv.conf ] > /dev/null 2>&1; then
 rm /etc/resolv.conf > /dev/null 2>&1 
 echo "";
-echo "==> Please change your DNS system setting to 127.0.0.1 and then press ENTER";
+echo "==> Make sure 127.0.0.1 is your DNS system setting and then press ENTER";
 read REPLY
 fi
 clear
@@ -613,7 +722,7 @@ service network-manager restart
 sleep 10
 chown -R $owner:$owner $root
 ## Restore original files automatically at shutdown
-if ! pgrep -f "restoring_orig.sh"  > /dev/null; then
+if ( ! pgrep -f "restoring_orig.sh " )  > /dev/null; then
 rm restoring_orig.sh > /dev/null 2>&1 
 touch restoring_orig.sh
 echo "#!/bin/bash" > restoring_orig.sh
@@ -630,7 +739,7 @@ echo "trap restoring_script SIGINT SIGTERM" >> restoring_orig.sh
 echo "sleep 7" >> restoring_orig.sh
 echo "done" >> restoring_orig.sh
 chmod +x restoring_orig.sh
-if [ -e "$root/configure" ]; then
+if [ -e "$(cat $root/cpath)/temp/" ]; then
 nohup ./restoring_orig.sh > /dev/null 2>&1 &
 clear
 else
@@ -652,7 +761,7 @@ SECONDS=0
 secs=30
 while (( SECONDS < secs ));
 do
-if (grep -Fq "100%" $root/notices.log ); then 
+if ( grep -Fq "100%" $root/notices.log ); then 
 break
 fi
 sleep 1
@@ -662,40 +771,40 @@ cd $root
 ./iptables_rules.sh
 unbound &
 ### Checking services
-if ! pgrep -x "tor" > /dev/null; then
+if ( ! pgrep -x "tor" ) > /dev/null; then
 echo "==> Sorry! No connection to TOR...Please, report this issue to the project";
 sleep 7
 shutdown_service
-if [ -e "$root/menu" ]; then
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
-else
+else 
 exit 1
 fi
 fi
-if ! pgrep -x "dnscrypt-proxy" > /dev/null; then
+if ( ! pgrep -x "dnscrypt-proxy" ) > /dev/null; then
 echo "==> Sorry! Dnscrypt-proxy isn't running...Please, report this issue to the project";
 sleep 7
 shutdown_service
-if [ -e "$root/menu" ]; then
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else
 exit 1
 fi
 fi
-if ! pgrep -x "unbound" > /dev/null; then
+if ( ! pgrep -x "unbound" ) > /dev/null; then
 echo "==> Sorry! Unbound isn't running...Please, report this issue to the project";
 sleep 7
 shutdown_service
-if [ -e "$root/menu" ]; then
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else
 exit 1
 fi
 else
-echo "==> Congratulations! Your system is configurated to use Tor and DNSCrypt";
+echo "==> Congratulations! Your system is configurated to use Tor and DNSCrypt-proxy";
 sleep 5
 fi
 ;;
@@ -709,7 +818,7 @@ SECONDS=0
 secs=30
 while (( SECONDS < secs ));
 do
-if (grep -Fq "100%" $root/notices.log ); then 
+if (grep -Fq "100%" $root/notices.log); then 
 break
 fi
 sleep 1
@@ -718,11 +827,11 @@ rm $root/notices.log > /dev/null 2>&1
 cd $root
 ./iptables_rules.sh
 ### Checking services
-if ! pgrep -x "tor" > /dev/null; then
+if ( ! pgrep -x "tor" > /dev/null ); then
 echo "==> Sorry! No connection to TOR...Please, report this issue to the project";
 sleep 7
 shutdown_service
-if [ -e "$root/menu" ]; then
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else
@@ -739,28 +848,23 @@ cd $(cat $root/cpath)
 ## Install this script
 ##
 install_service(){
-if [ -f "cpath" ]; then
-mv cpath $root/ > /dev/null 2>&1
-fi
 touch /usr/bin/anon-service > /dev/null 2>&1
 cp $0 /usr/bin/anon-service > /dev/null 2>&1
 chmod +x /usr/bin/anon-service
 echo "";
 echo "==> Now you can run it simply typing \"sudo anon-service\" in your terminal";
+cd $(cat $root/cpath)
 }
 ##
 ## Run at boot
 ##
 permanent_service(){
-if [ -f "cpath" ]; then
-mv cpath $root/ > /dev/null 2>&1
-fi
 if [ ! -f "$root/stp-service" ]; then
 echo "";
 echo "==> Sorry! Your system is not ready to start the service...";
 echo "==> Please, check if you have installed the necessary files";
 sleep 7
-if [ -e "$root/menu" ]; then
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else
@@ -864,11 +968,15 @@ echo "";
 echo "==> Now you are ready to go! If you haven't set 127.0.0.1 in your DNS"; 
 echo "==> setting, do it and restart your connection or reboot your system.";
 echo "";
+cd $(cat $root/cpath)
 }
 ##
 ## Exit
 ##
 shutdown_service(){
+if [ -f "cpath" ]; then
+mv cpath $root/ > /dev/null 2>&1
+fi
 clear
 service dnscrypt-proxy stop > /dev/null 2>&1
 sleep 3
@@ -880,9 +988,6 @@ echo "==> Stopping anon-service";
 sleep 7
 fi
 rm $root/tor.txt > /dev/null 2>&1
-rm $root/menu > /dev/null 2>&1
-rm $root/download > /dev/null 2>&1
-rm $root/configure > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
@@ -942,6 +1047,7 @@ fi
 apt-get clean > /dev/null
 apt-get -y autoremove > /dev/null 2>&1
 apt-get -y autoclean > /dev/null 2>&1
+rm -rf $(cat $root/cpath)/temp > /dev/null 2>&1
 userdel -r $owner > /dev/null 2>&1
 rm -rf $root > /dev/null 2>&1
 rm cpath > /dev/null 2>&1
@@ -969,36 +1075,35 @@ exit 0
 ## Usage
 ##
 usage(){
-echo "";
 printf '%s\n' "Usage:"
-printf '%s\n' " ./anon-service.sh [option]:"
+printf '%s\n' " ./anon-service.sh [option] <value> <server1> <server2> <relay1> <relay2> <relay3> <relay4>"
 echo -e "\n";
 printf '%s\n' "Transparent proxy through Tor with optionally DNSCrypt"
-printf '%s\n' "and Anonymized DNS feature enabled."
+printf '%s\n' "and anonymized DNS feature enabled."
 echo -e "\n";
 printf '%s\n' "Options:"
-printf '%s\n' " --download       check dependencies and download them"
-printf '%s\n' " --configure      choose transparent proxy type"
-printf '%s\n' " --start          start service"
-printf '%s\n' " --stop           without removing service files and settings"
-printf '%s\n' " --restart        restart service"
-printf '%s\n' " --status         display status service"
-printf '%s\n' " --menu           display interactive menu"
-printf '%s\n' " --install        install this script"
-printf '%s\n' " --permanent      enable service to start automatically at boot"
-printf '%s\n' " --remove         exit removing files and settings from system"
-printf '%s\n' " --edit           edit torrc file"
-echo -e "\n";
-printf '%s\n' " --help           display this help"
-printf '%s\n' " --version        display version"
-echo -e "\n";
+printf '%s\n' " --download  <value>  check dependencies and download them"
+printf '%s\n' "                      <value> download Tor from: -1 Tor Project"
+printf '%s\n' "                      repository -2 OS repository -3 already installed"
+printf '%s\n' " --configure <value>  choose transparent proxy type"
+printf '%s\n' "                      <value> -1 standard -2 with DNSCrypt"
+printf '%s\n' " --start              start service"
+printf '%s\n' " --stop               without removing service files and settings"
+printf '%s\n' " --restart            restart service"
+printf '%s\n' " --status             display status service"
+printf '%s\n' " --menu               display interactive menu"
+printf '%s\n' " --install            install this script"
+printf '%s\n' " --permanent          enable service to start automatically at boot"
+printf '%s\n' " --remove             exit removing files and settings from system"
+printf '%s\n' " --edit               edit torrc file"
+echo "";
+printf '%s\n' " --help               display this help"
+printf '%s\n' " --version            display version"
+echo "";
 }
 ##
 ## Main
 ##
-rm $root/menu > /dev/null 2>&1
-rm $root/download > /dev/null 2>&1
-rm $root/configure > /dev/null 2>&1
 clear
 ### Checking for administrator privileges 
 ifsudo=$(id -u)
@@ -1007,19 +1112,128 @@ echo "==> Please, run script with administrator privileges";
 exit 1
 fi
 pwd > cpath
+mkdir -p temp
+mv cpath temp/
+rm temp/menu > /dev/null 2>&1
+rm temp/download > /dev/null 2>&1
+rm temp/configure > /dev/null 2>&1
+rm temp/server1 > /dev/null 2>&1
+rm temp/server2 > /dev/null 2>&1
+rm temp/relay1 > /dev/null 2>&1
+rm temp/relay2 > /dev/null 2>&1
+rm temp/relay3 > /dev/null 2>&1
+rm temp/relay4 > /dev/null 2>&1
+rm temp/tor_option1 > /dev/null 2>&1
+rm temp/tor_option2 > /dev/null 2>&1
+rm temp/tor_option3 > /dev/null 2>&1
+rm temp/configure_option1 > /dev/null 2>&1
+rm temp/configure_option2 > /dev/null 2>&1
 ### Checking for required files
-if [ -s $root/dnscrypt-proxy.toml.bak ] || [ "$#" -gt 0 ]; then
+if [ "$#" -gt 0 ]; then
 case "$1" in
---download )
-touch $root/download
+--download)
+cd temp
+touch download
+if [ ! -z "$2" ]; then
+case "$2" in
+-1)
+if [ -e "download" ]; then
+touch tor_option1
+else
+echo "==> Invalid option '$2'";
+exit 1
+fi
+;;
+-2)
+if [ -e "download" ]; then
+touch tor_option2
+else
+echo "==> Invalid option '$2'";
+exit 1
+fi
+;;
+-3)
+if [ -e "download" ]; then
+touch tor_option3
+else 
+echo "==> Invalid option '$2'";
+fi
+;;
+-- | -* | *)
+echo "Invalid option '$2'";
+exit 1
+;;
+esac
 download
+fi
 exit 0
 ;;
 --configure)
-touch $root/configure            
+cd temp
+touch configure 
+case "$2" in
+-1)
+if [ -e "configure" ]; then
+touch configure_option1
+else
+echo "==> Invalid option '$2'";
+exit 1
+fi
+;;
+-2)
+if [ -e "configure" ]; then
+touch configure_option2
+else
+echo "==> Invalid option '$2'";
+exit 1
+fi
+if [ ! -z "$3" ]; then
+echo "$3" > server1
+else
+echo "==> Error! DNSCrypt enable option requires more arguments"
+exit 1
+fi
+if [ ! -z "$4" ]; then
+echo "$4" > server2
+else
+echo "==> Error! DNSCrypt enable option requires more arguments"
+exit 1
+fi
+if [ ! -z "$5" ]; then
+echo "$5" > relay1
+else
+echo "==> Error! DNSCrypt enable option requires more arguments"
+exit 1
+fi
+if [ ! -z "$6" ]; then
+echo "$6" > relay2
+else
+echo "==> Error! DNSCrypt enable option requires more arguments"
+exit 1
+fi
+if [ ! -z "$7" ]; then
+echo "$7" > relay3
+else
+echo "==> Error! DNSCrypt enable option requires more arguments"
+exit 1
+fi
+if [ ! -z "$8" ]; then
+echo "$8" > relay4
+else
+echo "==> Error! DNSCrypt enable option requires more arguments"
+exit 1
+fi
+;;
+-- | -* | *)
+echo "Invalid option '$2'";
+exit 1
+;;
+esac
+          
 configure
 exit 0
 ;;
+
 --start)
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
@@ -1061,7 +1275,8 @@ fi
 fi
 ;;
 --menu)
-touch $root/menu
+cd temp
+touch menu
 menu
 ;;
 --install)
@@ -1101,25 +1316,12 @@ exit 0
 fi
 ;;
 -- | -* | *)
-echo "Invalid option '$1'"
+echo "Invalid option '$1'";
 exit 1
 ;;
 esac
 else
-### Checking for network connection
-rm conn.txt > /dev/null 2>&1
-ping -c1 opendns.com > conn.txt 2>&1
-if ( grep -q "icmp_seq=1" conn.txt ); then
-clear
-rm conn.txt > /dev/null 2>&1
-sleep 1
-touch $root/menu
+cd temp
+touch menu
 menu
-echo error;
-else
-rm conn.txt > /dev/null 2>&1
-rm cpath > /dev/null 2>&1
-echo "==> Please first connect your system to internet!";
-exit 1   
-fi
 fi
