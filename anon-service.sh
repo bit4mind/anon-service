@@ -4,7 +4,7 @@
 # anon-service.sh
 # version 2.0
 # 
-# Transparent proxy through Tor and optionally DNSCrypt with Anonymized 
+# Transparent proxy through Tor and optionally DNSCrypt with anonymized 
 # DNS feature enabled.
 #
 # Copyright (C) 2020-2023 Bit4mind
@@ -37,7 +37,6 @@ export resolved=/etc/systemd/resolved.conf
 tor=/etc/tor/torrc
 unbound=/etc/unbound/unbound.conf
 
-
 menu(){
 clear
 printf '%s\n' "                    ▄▄▄      ███▄    █ ▒█████   ███▄    █          "
@@ -57,12 +56,12 @@ printf '%s\n' "   1. Choose transparent proxy type and configure related service
 printf '%s\n' "   2. Start/Restart service (if restart this will change your IP address)"
 printf '%s\n' "   3. Execute all tasks above"
 printf '%s\n' "   4. Close this window"
-printf '%s\n' "   5. Enable service to start automatically at boot"
-printf '%s\n' "   6. Stop service without removing files and setting"
-printf '%s\n' "   7. Exit removing service files and settings from system"
-echo -en "\033[38;2;0;100;0m    Misc\033[0m\n";
-printf '%s\n' "   8. Edit torrc file"
-printf '%s\n' "   9. Install this script"
+printf '%s\n' "   5. Display status service"
+printf '%s\n' "   6. Enable service to start automatically at boot"
+printf '%s\n' "   7. Stop service without removing files and setting"
+printf '%s\n' "   8. Exit removing service files and settings from system"
+printf '%s\n' "   9. Edit torrc file"
+printf '%s\n' "   10. Install this script"
 echo " ";
 echo -n "  Choose: ";
 read -e task
@@ -107,20 +106,25 @@ return 1
 fi
 ;;
 5)
+checking_service
+sleep 7
+menu
+;;
+6)
 permanent_service
 exit 0
 ;;
-6)
+7)
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
 shutdown_service
 menu
 ;;
-7)
+8)
 cleanall
 ;;
-8)
+9)
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
@@ -139,7 +143,7 @@ sleep 7
 menu
 fi
 ;;
-9)
+10)
 install_service
 sleep 7
 menu
@@ -231,7 +235,12 @@ touch $root/installed
 *)
 echo "==> Are you serious?";
 sleep 5
+if [ -e "menu" ]; then
 menu
+return 1
+else 
+exit 1
+fi
 esac
 fi
 touch $root/temp/arch.txt > /dev/null
@@ -251,7 +260,6 @@ cp linux-*/example-dnscrypt-proxy.toml $root/dnscrypt-proxy.toml.bak
 cp linux-*/localhost.pem $root
 rm -rf $root/temp > /dev/null 2>&1
 cd $root
-
 rm *.md > /dev/null 2>&1
 rm *.md* > /dev/null 2>&1
 echo "==> Downloading public DNS resolvers list";
@@ -374,7 +382,7 @@ elif [ -e "$(cat $root/cpath)/temp/menu" ]; then
 clear
 echo "==> Which type of transparent proxy do you prefer to use?";
 echo "      1. Standard transparent proxy";
-echo "      2. Trasparent proxy with DNSCrypt and Anonymized DNS feature";
+echo "      2. Trasparent proxy with DNSCrypt and anonymized DNS feature";
 echo " "
 echo -n  " Choose: ";
 read -e choose
@@ -403,6 +411,7 @@ fi
 esac
 else
 echo "==> Sorry! Something went wrong...Please, report this issue to the project";
+exit 1
 fi
 echo "==> Configuring Tor";
 ### Configuring Tor
@@ -516,7 +525,6 @@ fi
 if [ -e "configure_option2" ]; then
 server2="$(cat server2)"
 else
-
 if [ -e "configure" ]; then
 echo "==> Type "q" to quit";
 sleep 3
@@ -714,9 +722,9 @@ rm /etc/resolv.conf > /dev/null 2>&1
 echo "";
 echo "==> Make sure 127.0.0.1 is your DNS system setting and then press ENTER";
 read REPLY
+else 
+echo "==> Please make sure 127.0.0.1 is your DNS system setting!";
 fi
-clear
-echo "==> Starting anon-service";
 service systemd-resolved restart
 service network-manager restart
 sleep 10
@@ -746,6 +754,7 @@ else
 xterm -e nohup ./restoring_orig.sh
 fi
 fi
+echo "==> Starting anon-service";
 ## Start selected transparent proxy
 active_service=$(cat $root/stp-service)
 case $active_service in
@@ -804,7 +813,8 @@ else
 exit 1
 fi
 else
-echo "==> Congratulations! Your system is configurated to use Tor and DNSCrypt-proxy";
+echo "==> Congratulations! Your system is configurated to use Tor and DNSCrypt";
+touch $root/running
 sleep 5
 fi
 ;;
@@ -818,7 +828,7 @@ SECONDS=0
 secs=30
 while (( SECONDS < secs ));
 do
-if (grep -Fq "100%" $root/notices.log); then 
+if ( grep -Fq "100%" $root/notices.log ); then 
 break
 fi
 sleep 1
@@ -839,6 +849,7 @@ exit 1
 fi
 else
 echo "==> Congratulations! Your system is configurated to use Tor";
+touch $root/running
 sleep 5
 fi
 esac
@@ -961,6 +972,7 @@ if (( $selected_service == 1 )); then
 echo "unbound" >> /etc/network/if-up.d/anon-service
 fi
 echo "echo \"+++ anon-service started +++\"" >> /etc/network/if-up.d/anon-service
+echo "touch \$root/running > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 chown root:root /etc/network/if-up.d/anon-service
 chmod 755 /etc/network/if-up.d/anon-service
 chmod +x /etc/network/if-up.d/anon-service
@@ -969,6 +981,30 @@ echo "==> Now you are ready to go! If you haven't set 127.0.0.1 in your DNS";
 echo "==> setting, do it and restart your connection or reboot your system.";
 echo "";
 cd $(cat $root/cpath)
+}
+##
+## CHECKING IF RUNNING
+##
+checking_service(){
+if [ ! -e $root/running ] > /dev/null; then
+echo "==> Service is not running!";
+sleep 3	
+else
+echo "==> Service is running!";
+curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 			1 "Your IP address" | sed -e 's/<[^>]*>//g' | xargs > $root/ip.txt
+if ( grep -q "Your" $root/ip.txt ); then
+ipaddr=$(cat $root/ip.txt)
+echo "==> $ipaddr";
+else
+echo "==> But the service can't access internet. Try the restart option";
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
+menu
+return 1
+else
+exit 1
+fi
+fi
+fi
 }
 ##
 ## Exit
@@ -988,6 +1024,7 @@ echo "==> Stopping anon-service";
 sleep 7
 fi
 rm $root/tor.txt > /dev/null 2>&1
+rm $root/running > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
@@ -1083,8 +1120,8 @@ printf '%s\n' "and anonymized DNS feature enabled."
 echo -e "\n";
 printf '%s\n' "Options:"
 printf '%s\n' " --download  <value>  check dependencies and download them"
-printf '%s\n' "                      <value> download Tor from: -1 Tor Project"
-printf '%s\n' "                      repository -2 OS repository -3 already installed"
+printf '%s\n' "                      <value> Tor from: -1 Tor Project repository"
+printf '%s\n' "                      -2 OS repository -3 already installed"
 printf '%s\n' " --configure <value>  choose transparent proxy type"
 printf '%s\n' "                      <value> -1 standard -2 with DNSCrypt"
 printf '%s\n' " --start              start service"
@@ -1171,6 +1208,7 @@ exit 0
 --configure)
 cd temp
 touch configure 
+
 case "$2" in
 -1)
 if [ -e "configure" ]; then
@@ -1228,12 +1266,10 @@ fi
 echo "Invalid option '$2'";
 exit 1
 ;;
-esac
-          
+esac        
 configure
 exit 0
 ;;
-
 --start)
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
@@ -1258,7 +1294,7 @@ start_service
 exit 0
 ;;
 --status)
-if ! pgrep -x "tor" > /dev/null; then
+if [ ! -e $root/running ] > /dev/null; then
 echo "==> Service is not running!";
 sleep 3	
 else
