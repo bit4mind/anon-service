@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-# #####################################################################
+# ####################################################################
 # anon-service.sh
 # version 2.0
 # 
-# Transparent proxy through Tor and optionally DNSCrypt with anonymized 
-# DNS feature enabled.
+# Transparent proxy through Tor and optionally DNSCrypt with  
+# Anonymized-DNS feature enabled.
 #
 # Copyright (C) 2020-2023 Bit4mind
 #
@@ -382,7 +382,7 @@ elif [ -e "$(cat $root/cpath)/temp/menu" ]; then
 clear
 echo "==> Which type of transparent proxy do you prefer to use?";
 echo "      1. Standard transparent proxy";
-echo "      2. Trasparent proxy with DNSCrypt and anonymized DNS feature";
+echo "      2. Trasparent proxy with DNSCrypt and Anonymized-DNS feature";
 echo " "
 echo -n  " Choose: ";
 read -e choose
@@ -414,6 +414,7 @@ echo "==> Sorry! Something went wrong...Please, report this issue to the project
 exit 1
 fi
 echo "==> Configuring Tor";
+sleep 2
 ### Configuring Tor
 cp $tor $root/torrc
 echo "Log notice file $root/notices.log" >> $root/torrc
