@@ -48,7 +48,6 @@ chmod +x anon-service.sh
 ```
 sudo ./anon-service.sh --help
 
-Usage:
  ./anon-service.sh [option] <value> <server1> <server2> <relay1> <relay2> <relay3> <relay4>
 
 Options:
