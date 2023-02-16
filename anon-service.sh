@@ -325,7 +325,7 @@ cd
 echo "==> Checking repository"; 
 apt-get update > $root/temp/apt.log 
 sleep 1
-if ( grep "torproject.org $os Release" $root/temp/apt.log > /dev/null 2>&1)
+if ( grep "torproject.org $os Release" $root/temp/apt.log > /dev/null 2>&1 )
 then
    echo "";
    echo "==> Sorry! The script can't obtain the correct codename for your OS...";
@@ -718,7 +718,7 @@ service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
-if [ ! grep -Fq "nameserver 127.0.0.1" /etc/resolv.conf ] > /dev/null 2>&1; then
+if ( ! grep -Fq "nameserver 127.0.0.1" /etc/resolv.conf ) > /dev/null 2>&1; then
 rm /etc/resolv.conf > /dev/null 2>&1 
 echo "";
 echo "==> Make sure 127.0.0.1 is your DNS system setting and then press ENTER";
