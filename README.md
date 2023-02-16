@@ -1,6 +1,6 @@
 # anon-service
 
-Transparent proxy through Tor with optionally DNSCrypt and Anonymized DNS feature enabled.
+Transparent proxy through Tor with optionally DNSCrypt and Anonymized-DNS feature enabled.
 
 From Wikipedia: Tor is free and open-source software for enabling anonymous
 communication by directing Internet traffic through a free, worldwide, volunteer
@@ -14,7 +14,7 @@ Router" network and optionally to provide encryption/authentication to DNS traff
 in the clearnet via dnscrycpt/DNSSEC, leaving the resolution of onion domains to the 
 Tor DNS resolvers.
 All applications will use the TOR network even if they do not support SOCKS.
-The script supports anonymized DNS feature and is able to find the correct 
+The script supports Anonymized-DNS feature and is able to find the correct 
 version for your distribution by downloading it directly from the TOR Project 
 repository.
 
@@ -29,8 +29,9 @@ and the unbound package present in the repositories. Tested on Debian, Ubuntu, M
 
 
 ## HOW IT WORKS
-
-The script works as a launcher: after installing the necessary software, you can select
+You can execute all tasks via command-line or via the interactive menu.
+The default mode (starting the script without any options) is the interactive menu.
+The interactive menu works as a launcher: after installing the necessary software, you can select
 the transparent proxy type or reconfigure resolvers/relays before each 
 reactivation of the service; you can stop the service without deleting the data
 and then reactivate it faster.
@@ -45,17 +46,52 @@ Usage:
 chmod +x anon-service.sh
 ```
 ```
-sudo ./anon-service.sh
+sudo ./anon-service.sh --help
+
+ ./anon-service.sh [option] <value> <server1> <server2> <relay1> <relay2> <relay3> <relay4>
+
+Options:
+ --download  <value>  check dependencies and download them
+                      <value> Tor from: -1 Tor Project repository
+                      -2 OS repository -3 already installed
+ --configure <value>  choose transparent proxy type
+                      <value> -1 standard -2 with DNSCrypt
+ --start              start service
+ --stop               without removing service files and settings
+ --restart            restart service
+ --status             display status service
+ --menu               display interactive menu
+ --install            install this script
+ --permanent          enable service to start automatically at boot
+ --remove             exit removing files and settings from system
+ --edit               edit torrc file
+
+ --help               display this help
+ --version            display version
 ```
+Examples:
+
+```
+sudo ./anon-service.sh --download -1 && sudo ./anon-service.sh --configure -1 && sudo ./anon-service.sh --start
+```
+
+This will start the service in standard transparent proxy mode getting Tor from the official project repository
+```
+sudo ./anon-service.sh --download -1 && sudo ./anon-service.sh --configure -2 dnscrypt-de-blahdns-ipv4 meganerd anon-acsacsar-ams-ipv4 anon-openinternet anon-v.dnscrypt.uk-ipv4 anon-sth-se && sudo ./anon-service.sh --start
+```
+This will start the service with DNSCrypt and the Anonymized-DNS feature enabled by obtaining Tor from the official project repository. Change servers and relays to whatever you want based on the list of public resolvers and relays provided by the dnscrypt-proxy project
 
 ### Important: 
 If you want to update the script, first remove all files and settings using the 
 appropriate option in the same script.
-Note:
+
+NOTES:
+The command line download option will install the software required to run without 
+a graphical environment: some options in the interactive menu may not work.
 If you install the script to start automatically at boot, be aware that the service 
 will start with a small delay after the host has established the connection to the 
 network. Before the service is fully loaded, the connection will not work: you can 
-check its status via syslog with the command
+check status via syslog with the command
 
 ```
 tail -f /var/log/syslog
@@ -83,8 +119,8 @@ focused on security and privacy like Whomix or Tails.
 
 ## TROUBLESHOTTING
 
-The upgrade may create unbound permissions issues: first remove unbound package purging
-the configuration files, then reinstall it and reconfigure the service through the 
-dedicated option in the script (1).
+System update may create permissions issues with Unbound: first remove Unbound package purging
+the configuration files, then reinstall it and reconfigure the service via the 
+dedicated option.
 
 This script may not work properly if used on a not-fully updated system.

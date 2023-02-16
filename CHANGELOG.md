@@ -3,6 +3,20 @@ CHANGELOG
 All notable changes to this project will be documented in this file.
 
 Released
+2.0 - 2023-02-16
+
+Added
+
+    Command line options
+    Display status service
+
+Changed
+
+    Options, controllers and more
+    
+
+
+Released
 1.3 - 2021-10-06
 
 Added
