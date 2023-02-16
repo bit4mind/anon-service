@@ -87,7 +87,7 @@ focused on security and privacy like Whomix or Tails.
 ## TROUBLESHOTTING
 
 The upgrade may create unbound permissions issues: first remove unbound package purging
-the configuration files, then reinstall it and reconfigure the service through the 
-dedicated option in the script (1).
+the configuration files, then reinstall it and reconfigure the service via the 
+dedicated option.
 
 This script may not work properly if used on a not-fully updated system.
