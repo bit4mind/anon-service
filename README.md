@@ -1,6 +1,6 @@
 # anon-service
 
-Transparent proxy through Tor with optionally DNSCrypt and Anonymized DNS feature enabled.
+Transparent proxy through Tor with optionally DNSCrypt and Anonymized-DNS feature enabled.
 
 From Wikipedia: Tor is free and open-source software for enabling anonymous
 communication by directing Internet traffic through a free, worldwide, volunteer
@@ -14,7 +14,7 @@ Router" network and optionally to provide encryption/authentication to DNS traff
 in the clearnet via dnscrycpt/DNSSEC, leaving the resolution of onion domains to the 
 Tor DNS resolvers.
 All applications will use the TOR network even if they do not support SOCKS.
-The script supports anonymized DNS feature and is able to find the correct 
+The script supports Anonymized-DNS feature and is able to find the correct 
 version for your distribution by downloading it directly from the TOR Project 
 repository.
 
@@ -29,8 +29,9 @@ and the unbound package present in the repositories. Tested on Debian, Ubuntu, M
 
 
 ## HOW IT WORKS
-
-The script works as a launcher: after installing the necessary software, you can select
+You can execute all tasks via command-line or launch them via the interactive menu.
+The default mode (starting the script without any options) is the interactive menu.
+The interactive menu works as a launcher: after installing the necessary software, you can select
 the transparent proxy type or reconfigure resolvers/relays before each 
 reactivation of the service; you can stop the service without deleting the data
 and then reactivate it faster.
@@ -38,6 +39,8 @@ You can install it to start automatically at boot: in this case you could restar
 service simply restarting your connection and continue to use the script for
 editing torrc file, configuring dnscrypt servers and relays or removing all things.
 Editing torrc file you can customize your tor configuration (https://tor.void.gr/docs/tor-manual.html.en).
+NOTE: The command line download option will install the software required to run without a graphical 
+environment: some options in the interactive menu may not work.
 
 Usage:
 
@@ -51,7 +54,7 @@ sudo ./anon-service.sh
 ### Important: 
 If you want to update the script, first remove all files and settings using the 
 appropriate option in the same script.
-Note:
+NOTE:
 If you install the script to start automatically at boot, be aware that the service 
 will start with a small delay after the host has established the connection to the 
 network. Before the service is fully loaded, the connection will not work: you can 
