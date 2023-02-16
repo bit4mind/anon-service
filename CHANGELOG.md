@@ -12,7 +12,7 @@ Added
 
 Changed
 
-    ...
+    Options, controllers and more
     
 
 
