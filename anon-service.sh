@@ -433,6 +433,7 @@ if [[ -s "$root/resolved.bak" ]]; then
 cp $root/resolved.bak $root/resolved.conf.temp
 chown $USER:$USER resolved.conf.temp
 sed -i 's/^DNSStubListener=yes/#&/' resolved.conf.temp
+echo "DNS=127.0.0.1" >> resolved.conf.temp
 echo "DNSStubListener=no" >> resolved.conf.temp
 fi
 rm $root/iptables_rules.sh > /dev/null 2>&1
@@ -513,7 +514,7 @@ read -e server1
 echo "";
 fi
 if ! grep "\<$server1\>" $root/public-resolvers.md > /dev/null; then
-echo "==> Server not found! Please retry";
+echo "==> First server not found! Please retry";
 killall leafpad > /dev/null 2>&1
 sleep 3
 if [ -e "menu" ]; then
@@ -535,7 +536,7 @@ echo "==> Please enter the name of the second resolver to use, only ipv4!";
 echo -n "    Second server: ";
 read -e server2
 if ! grep "\<$server2\>" $root/public-resolvers.md > /dev/null; then
-echo "==> Server not found! Please retry";
+echo "==> Second server not found! Please retry";
 killall leafpad > /dev/null 2>&1
 sleep 3
 if [ -e "menu" ]; then
@@ -566,7 +567,7 @@ echo -n "    First relay for the first server: ";
 read -e relay1
 echo "";
 if ! grep "\<$relay1\>" $root/relays.md > /dev/null; then
-echo "==> Relay not found! Please retry";
+echo "==> First relay for the first server not found! Please retry";
 killall leafpad > /dev/null 2>&1
 sleep 3
 if [ -e "menu" ]; then
@@ -590,7 +591,7 @@ echo -n "    Second relay for the first server: ";
 read -e relay2
 echo "";
 if ! grep "\<$relay2\>" $root/relays.md > /dev/null; then
-echo "==> Relay not found! Please retry";
+echo "==> Second relay for the first server not found! Please retry";
 killall leafpad > /dev/null 2>&1
 sleep 3
 if [ -e "menu" ]; then
@@ -614,7 +615,7 @@ echo -n "    First relay for the second server: ";
 read -e relay3
 echo "";
 if ! grep "\<$relay3\>" $root/relays.md > /dev/null; then
-echo "==> Relay not found! Please retry";
+echo "==> First relay for the second server not found! Please retry";
 killall leafpad > /dev/null 2>&1
 sleep 3
 if [ -e "menu" ]; then
@@ -638,7 +639,7 @@ echo -n "    Second relay for the second server: ";
 read -e relay4
 echo "";
 if ! grep "\<$relay4\>" $root/relays.md > /dev/null; then
-echo "==> Relay not found! Please retry";
+echo "==> Second relay for the second server not found! Please retry";
 killall leafpad > /dev/null 2>&1
 sleep 3
 if [ -e "menu" ]; then
@@ -711,24 +712,28 @@ cp NetworkManager.conf $netman
 chown root:root $netman
 service dnsmasq stop > /dev/null 2>&1
 service bind stop > /dev/null 2>&1
-service dnscrypt-proxy stop > /dev/null 2>&1
+service systemd-resolved stop
 killall dnsmasq bind > /dev/null 2>&1
 sleep 1
 service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
-if ( ! grep -Fq "nameserver 127.0.0.1" /etc/resolv.conf ) > /dev/null 2>&1; then
+rm /etc/resolv.conf > /dev/null 2>&1
+service systemd-resolved restart
+service network-manager restart
+sleep 5
+cat /etc/resolv.conf | sed -e '/^$/d; /^#/d' > $root/dnsread
+if [[ $(cat $root/dnsread) != "nameserver 127.0.0.1" ]]; then 
 rm /etc/resolv.conf > /dev/null 2>&1 
 echo "";
 echo "==> Make sure 127.0.0.1 is your DNS system setting and then press ENTER";
 read REPLY
-else 
-echo "==> Please make sure 127.0.0.1 is your DNS system setting!";
-fi
 service systemd-resolved restart
 service network-manager restart
-sleep 10
+fi
+rm $root/dnsread > /dev/null 2>&1
+sleep 5
 chown -R $owner:$owner $root
 ## Restore original files automatically at shutdown
 if ( ! pgrep -f "restoring_orig.sh " )  > /dev/null; then
@@ -1209,7 +1214,6 @@ exit 0
 --configure)
 cd temp
 touch configure 
-
 case "$2" in
 -1)
 if [ -e "configure" ]; then
