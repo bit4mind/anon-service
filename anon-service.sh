@@ -208,7 +208,7 @@ apt-get update > /dev/null
 echo "==> Installing Tor";
 apt-get install -y tor > /dev/null 2>&1
 elif [ -e tor_option3 ]; then
-echo "==> OK!";
+echo "==> Tor already installed...";
 touch $root/installed
 else
 echo "==> Which version of Tor do you prefer to use?";
@@ -369,16 +369,16 @@ fi
 systemctl disable unbound > /dev/null 2>&1
 systemctl disable tor > /dev/null 2>&1
 #####
-if [ -e "$(cat $root/cpath)/temp/configure_option1" ]; then 
+if [ -e "configure_option1" ]; then 
 rm $root/stp-service > /dev/null 2>&1
 touch $root/stp-service
 echo "1" > $root/stp-service
-elif [ -e "$(cat $root/cpath)/temp/configure_option2" ]; then 
+elif [ -e "configure_option2" ]; then 
 rm $root/stp-service > /dev/null 2>&1
 touch $root/stp-service
 echo "0" > $root/stp-service
 dnscryptconf
-elif [ -e "$(cat $root/cpath)/temp/menu" ]; then
+elif [ -e "$(cat $root/cpath)/temp/menu" ] || [ -e "$(cat $root/cpath)/temp/configure" ]; then
 clear
 echo "==> Which type of transparent proxy do you prefer to use?";
 echo "      1. Standard transparent proxy";
@@ -684,7 +684,7 @@ echo "";
 echo "==> Sorry! Your system is not ready to start the service...";
 echo "==> Please, check if you have installed the necessary files";
 sleep 7
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
+if [ -e "menu" ]; then
 menu
 return 1
 else 
@@ -997,7 +997,7 @@ echo "==> Service is not running!";
 sleep 3	
 else
 echo "==> Service is running!";
-curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 			1 "Your IP address" | sed -e 's/<[^>]*>//g' | xargs > $root/ip.txt
+curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 1 "Your IP address" | sed -e 's/<[^>]*>//g' | xargs > $root/ip.txt
 if ( grep -q "Your" $root/ip.txt ); then
 ipaddr=$(cat $root/ip.txt)
 echo "==> $ipaddr";
@@ -1172,6 +1172,7 @@ rm temp/tor_option3 > /dev/null 2>&1
 rm temp/configure_option1 > /dev/null 2>&1
 rm temp/configure_option2 > /dev/null 2>&1
 ### Checking for required files
+
 if [ "$#" -gt 0 ]; then
 case "$1" in
 --download)
@@ -1208,12 +1209,15 @@ exit 1
 ;;
 esac
 download
+else
+download
 fi
 exit 0
 ;;
 --configure)
 cd temp
 touch configure 
+if [ ! -z "$2" ]; then
 case "$2" in
 -1)
 if [ -e "configure" ]; then
@@ -1274,6 +1278,9 @@ exit 1
 esac        
 configure
 exit 0
+else
+configure
+fi
 ;;
 --start)
 if [ -f "cpath" ]; then
@@ -1304,7 +1311,7 @@ echo "==> Service is not running!";
 sleep 3	
 else
 echo "==> Service is running!";
-curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 			1 "Your IP address" | sed -e 's/<[^>]*>//g' | xargs > $root/ip.txt
+curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 	1 "Your IP address" | sed -e 's/<[^>]*>//g' | xargs > $root/ip.txt
 sleep 3
 if ( grep -q "Your" $root/ip.txt ); then
 		ipaddr=$(cat $root/ip.txt)
