@@ -123,4 +123,4 @@ System update may create permissions issues with Unbound: first remove Unbound p
 the configuration files, then reinstall it and reconfigure the service via the 
 dedicated option.
 
-This script may not work properly if used on a not-fully updated system.
+This script may not work properly on a not-fully updated system.
