@@ -209,7 +209,13 @@ echo "==> Installing Tor";
 apt-get install -y tor > /dev/null 2>&1
 elif [ -e tor_option3 ]; then
 echo "==> Tor already installed...";
+sleep 2
+if hash tor 2>/dev/null; then
 touch $root/installed
+else
+echo "==> Sorry! The script cannot recognize your Tor package";
+exit 1
+fi
 else
 echo "==> Which version of Tor do you prefer to use?";
 echo "      1.Tor Project repository";
@@ -230,7 +236,18 @@ apt-get install -y tor > /dev/null 2>&1
 ;;
 3)
 echo "==> OK!";
+sleep 2
+if hash tor 2>/dev/null; then
 touch $root/installed
+else
+echo "==> Sorry! The script cannot recognize your Tor package";
+if [ -e "menu" ]; then
+menu
+return 1
+else 
+exit 1
+fi
+fi
 ;;
 *)
 echo "==> Are you serious?";
@@ -694,6 +711,7 @@ fi
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
+rm $root/running > /dev/null 2>&1
 ### Firewall flush
 iptables -F
 iptables -t nat -F
@@ -745,6 +763,7 @@ echo "if [ ! -f /etc/network/if-up.d/anon-service ]; then" >> restoring_orig.sh
 echo "cp $root/resolved.bak $resolved" >> restoring_orig.sh
 echo "cp $netman.bak $netman" >> restoring_orig.sh
 echo "fi" >> restoring_orig.sh
+echo "rm $root/running > /dev/null 2>&1" >> restoring_orig.sh
 echo "exit" >> restoring_orig.sh
 echo "}" >> restoring_orig.sh
 echo "while :" >> restoring_orig.sh
@@ -898,6 +917,7 @@ touch /etc/network/if-up.d/anon-service
 echo "#!/bin/sh" > /etc/network/if-up.d/anon-service
 echo "root=/home/anon-service" >> /etc/network/if-up.d/anon-service
 echo "owner=anon-service" >> /etc/network/if-up.d/anon-service
+echo "rm $root/running > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "iptables -F" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -F" >> /etc/network/if-up.d/anon-service
 echo "iptables --flush" >> /etc/network/if-up.d/anon-service
@@ -1172,7 +1192,6 @@ rm temp/tor_option3 > /dev/null 2>&1
 rm temp/configure_option1 > /dev/null 2>&1
 rm temp/configure_option2 > /dev/null 2>&1
 ### Checking for required files
-
 if [ "$#" -gt 0 ]; then
 case "$1" in
 --download)
