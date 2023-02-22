@@ -722,6 +722,9 @@ iptables --table nat --delete-chain
 iptables -P OUTPUT ACCEPT
 iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
+### Disable ipv6 
+echo "1" > /dev/null 2>&1 | tee /proc/sys/net/ipv6/conf/default/disable_ipv6
+echo "1" > /dev/null 2>&1 | tee /proc/sys/net/ipv6/conf/all/disable_ipv6
 ### Configure Network-Manager
 cd $root
 cp resolved.conf.temp $resolved > /dev/null 2>&1
@@ -927,6 +930,8 @@ echo "iptables --table nat --delete-chain" >> /etc/network/if-up.d/anon-service
 echo "iptables -P OUTPUT ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "iptables -P INPUT ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "iptables -P FORWARD ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "echo \"1\" > /dev/null 2>&1 | tee /proc/sys/net/ipv6/conf/default/disable_ipv6" >> /etc/network/if-up.d/anon-service
+echo "echo \"1\" > /dev/null 2>&1 | tee /proc/sys/net/ipv6/conf/all/disable_ipv6" >> /etc/network/if-up.d/anon-service
 echo "service dnsmasq stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "service bind stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "killall dnsmasq bind > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
