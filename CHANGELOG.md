@@ -12,6 +12,7 @@ Added
 Changed
 
     Managing network device
+    No NM needed
     
 
 
