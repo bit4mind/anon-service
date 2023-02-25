@@ -194,7 +194,7 @@ mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
 if [ ! -e "menu" ]; then
-apt-get install -y curl wget psmisc nano apt-transport-https unbound > /dev/null
+apt-get install -y curl wget psmisc nano apt-transport-https unbound network-manager > /dev/null
 else
 apt-get install -y curl wget xterm psmisc wmctrl leafpad apt-transport-https unbound > /dev/null
 fi
