@@ -716,6 +716,18 @@ fi
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
+if [ -s "/etc/network/if-up.d/anon-service" ]; then
+echo "";
+echo "==> Sorry! This menu option is not usable in permanent mode";
+echo "==> Reboot your system or simply restart your connection instead";
+sleep 7
+if [ -e "menu" ]; then
+menu
+return 1
+else 
+exit 1
+fi
+fi
 rm $root/running > /dev/null 2>&1
 ### Firewall flush
 iptables -F
@@ -1115,7 +1127,6 @@ fi
 rm /usr/bin/anon-service > /dev/null 2>&1
 service systemd-resolved restart
 service network-manager restart > /dev/null 2>&1
-
 systemctl restart networking > /dev/null 2>&1
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
@@ -1339,8 +1350,15 @@ sleep 3
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
+if [ -s "/etc/network/if-up.d/anon-service" ]; then
+service systemd-resolved restart
+service network-manager restart > /dev/null 2>&1
+systemctl restart networking > /dev/null 2>&1
+exit 0
+else
 start_service
 exit 0
+fi
 ;;
 --status)
 if [ ! -e $root/running ] > /dev/null; then
