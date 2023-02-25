@@ -759,7 +759,7 @@ service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
-rm /etc/resolv.conf > /dev/null 2>&1
+#rm /etc/resolv.conf > /dev/null 2>&1
 service systemd-resolved restart
 service network-manager restart > /dev/null 2>&1
 systemctl restart networking > /dev/null 2>&1
