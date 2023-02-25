@@ -2,7 +2,7 @@
 
 # ####################################################################
 # anon-service.sh
-# version 2.0
+# version 2.1
 # 
 # Transparent proxy through Tor and optionally DNSCrypt with  
 # Anonymized-DNS feature enabled.
@@ -287,9 +287,11 @@ curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/relays.md > /dev
 if [ ! -s "$root/resolved.bak" ]; then
 cp $resolved $root/resolved.bak > /dev/null 2>&1
 fi
-### Backup NetworkManager.conf
+### Backup NetworkManager.conf (if exists)
 if [ ! -s "$netman.bak" ]; then
-cp $netman $netman.bak
+if [ -s "$netman" ]; then
+cp $netman $netman.bak > /dev/null 2>&1
+fi
 fi
 cd $(cat $root/cpath)
 }
@@ -337,7 +339,7 @@ wget -qO- https://deb.torproject.org/torproject.org/A3C4F0F979CAA22CDBA8F512EE8C
 sleep 1
 ### Fixing gnupg ownership 
 gpgconf --kill dirmngr
-chown -R $USER ~/.gnupg
+chown -R $USER ~/.gnupg > /dev/null 2>&1
 cd
 echo "==> Checking repository"; 
 apt-get update > $root/temp/apt.log 
@@ -439,15 +441,18 @@ echo "VirtualAddrNetworkIPv4 10.192.0.0/10" >> $root/torrc
 echo "AutomapHostsOnResolve 1" >> $root/torrc
 echo "TransPort 9040 IsolateClientAddr IsolateClientProtocol IsolateDestAddr IsolateDestPort" >> $root/torrc
 echo "DNSPort 5353" >> $root/torrc
-### Disabling dnsmasq and configure Network-Manager and systemd-resolved
+### Disabling dnsmasq and configure Network-Manager (if exists) and systemd-resolved
+if [ -s $netman ]; then
 rm $root/NetworkManager.conf.temp > /dev/null 2>&1
 cp $netman.bak $root/NetworkManager.conf.temp
 cd $root
 chown $USER:$USER NetworkManager.conf.temp
 sed -i 's/^dns=dnsmasq/#&/' NetworkManager.conf.temp
 sed '/\[main\]/a dns=default' NetworkManager.conf.temp > NetworkManager.conf
-if [[ -s "$root/resolved.bak" ]]; then
+fi
+if [ -s "$root/resolved.bak" ]; then
 cp $root/resolved.bak $root/resolved.conf.temp
+sleep 1
 chown $USER:$USER resolved.conf.temp
 sed -i 's/^DNSStubListener=yes/#&/' resolved.conf.temp
 echo "DNS=127.0.0.1" >> resolved.conf.temp
@@ -729,8 +734,10 @@ echo "1" > /dev/null 2>&1 | tee /proc/sys/net/ipv6/conf/all/disable_ipv6
 cd $root
 cp resolved.conf.temp $resolved > /dev/null 2>&1
 chown root:root $resolved > /dev/null 2>&1
+if [ -s $netman ]; then
 cp NetworkManager.conf $netman
 chown root:root $netman
+fi
 service dnsmasq stop > /dev/null 2>&1
 service bind stop > /dev/null 2>&1
 service systemd-resolved stop
@@ -742,7 +749,8 @@ service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
 service systemd-resolved restart
-service network-manager restart
+service network-manager restart > /dev/null 2>&1
+systemctl restart networking > /dev/null 2>&1
 sleep 5
 cat /etc/resolv.conf | sed -e '/^$/d; /^#/d' > $root/dnsread
 if [[ $(cat $root/dnsread) != "nameserver 127.0.0.1" ]]; then 
@@ -751,7 +759,8 @@ echo "";
 echo "==> Make sure 127.0.0.1 is your DNS system setting and then press ENTER";
 read REPLY
 service systemd-resolved restart
-service network-manager restart
+service network-manager restart > /dev/null 2>&1
+systemctl restart networking > /dev/null 2>&1
 fi
 rm $root/dnsread > /dev/null 2>&1
 sleep 5
@@ -764,7 +773,7 @@ echo "#!/bin/bash" > restoring_orig.sh
 echo "restoring_script() {" >> restoring_orig.sh 
 echo "if [ ! -f /etc/network/if-up.d/anon-service ]; then" >> restoring_orig.sh
 echo "cp $root/resolved.bak $resolved" >> restoring_orig.sh
-echo "cp $netman.bak $netman" >> restoring_orig.sh
+echo "cp $netman.bak $netman > /dev/null 2>&1" >> restoring_orig.sh
 echo "fi" >> restoring_orig.sh
 echo "rm $root/running > /dev/null 2>&1" >> restoring_orig.sh
 echo "exit" >> restoring_orig.sh
@@ -913,7 +922,7 @@ fi
 cd $root
 cp resolved.conf.temp $resolved > /dev/null 2>&1
 chown root:root $resolved > /dev/null 2>&1
-cp NetworkManager.conf $netman
+cp NetworkManager.conf $netman > /dev/null 2>&1
 chown root:root $netman
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
 touch /etc/network/if-up.d/anon-service
@@ -1071,7 +1080,8 @@ echo -e "\n\n";
 sleep 7
 fi
 service systemd-resolved restart
-service network-manager restart
+service network-manager restart > /dev/null 2>&1
+systemctl restart networking > /dev/null 2>&1
 ### Firewall flush
 iptables -F
 iptables -t nat -F
@@ -1103,7 +1113,8 @@ cp $netman.bak $netman > /dev/null 2>&1
 fi
 rm /usr/bin/anon-service > /dev/null 2>&1
 service systemd-resolved restart
-service network-manager restart
+service network-manager restart > /dev/null 2>&1
+systemctl restart networking > /dev/null 2>&1
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
