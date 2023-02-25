@@ -194,9 +194,9 @@ mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
 if [ ! -e "menu" ]; then
-apt-get install -y curl wget psmisc nano apt-transport-https unbound network-manager > /dev/null
+apt-get install -y curl wget psmisc nano apt-transport-https unbound ifupdown > /dev/null
 else
-apt-get install -y curl wget xterm psmisc wmctrl leafpad apt-transport-https unbound > /dev/null
+apt-get install -y curl wget xterm psmisc wmctrl leafpad apt-transport-https unbound ifupdown > /dev/null
 fi
 sleep 1
 clear
@@ -752,7 +752,7 @@ service systemd-resolved restart
 service network-manager restart > /dev/null 2>&1
 systemctl restart networking > /dev/null 2>&1
 sleep 5
-cat /etc/resolv.conf | sed -e '/^$/d; /^#/d' > $root/dnsread
+cat /etc/resolv.conf > /dev/null 2>&1 | sed -e '/^$/d; /^#/d' > $root/dnsread
 if [[ $(cat $root/dnsread) != "nameserver 127.0.0.1" ]]; then 
 rm /etc/resolv.conf > /dev/null 2>&1 
 echo "";
@@ -760,7 +760,7 @@ echo "==> Make sure 127.0.0.1 is your DNS system setting and then press ENTER";
 read REPLY
 service systemd-resolved restart
 service network-manager restart > /dev/null 2>&1
-systemctl restart networking > /dev/null 2>&1
+systemctl restart networking.service > /dev/null 2>&1
 fi
 rm $root/dnsread > /dev/null 2>&1
 sleep 5
@@ -1081,6 +1081,7 @@ sleep 7
 fi
 service systemd-resolved restart
 service network-manager restart > /dev/null 2>&1
+
 systemctl restart networking > /dev/null 2>&1
 ### Firewall flush
 iptables -F
@@ -1114,6 +1115,7 @@ fi
 rm /usr/bin/anon-service > /dev/null 2>&1
 service systemd-resolved restart
 service network-manager restart > /dev/null 2>&1
+
 systemctl restart networking > /dev/null 2>&1
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
