@@ -3,6 +3,19 @@ CHANGELOG
 All notable changes to this project will be documented in this file.
 
 Released
+2.1 - 2023-??-??
+
+Added
+
+    Server support
+
+Changed
+
+    Managing network device
+    
+
+
+Released
 2.0 - 2023-02-16
 
 Added
