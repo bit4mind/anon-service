@@ -23,7 +23,7 @@ repository.
 ## REQUIREMENTS
 
 
-The script should work on many debian-based distros with network-manager the unbound package present 
+The script should work on many debian-based distros with the Unbound package present 
 in the repositories. Tested on Debian, Ubuntu, Mint.
 
 
