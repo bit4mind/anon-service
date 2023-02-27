@@ -57,7 +57,7 @@ Options:
  --configure <value>  choose transparent proxy type
                       <value> -1 standard -2 with DNSCrypt
  --start              start service
- --stop               without removing service files and settings
+ --stop               exit without removing service files and settings
  --restart            restart service
  --status             display status service
  --menu               display interactive menu
