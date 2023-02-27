@@ -122,8 +122,4 @@ focused on security and privacy like Whomix or Tails.
 System update may create permissions issues with Unbound: first remove Unbound package purging
 the configuration files, then reinstall it and reconfigure the service via the 
 dedicated option.
-
-If something goes wrong (e.g. electrical blackout) restore the original data and settings using 
-the dedicated option.
-
 This script may not work properly on a not-fully updated system.
