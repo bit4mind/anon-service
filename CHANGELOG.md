@@ -11,9 +11,10 @@ Added
 
 Changed
 
-    Managing network device
+    Network device management
+    Resolv.conf configuration
     No NM needed
-    
+
 
 
 Released
