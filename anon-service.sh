@@ -1093,7 +1093,8 @@ echo "==> Restoring original files";
 sleep 7
 else
 echo "==> Stopping anon-service";
-sleep 7
+sleep 2
+echo "==> Restoring original files";
 fi
 chattr -i /etc/resolv.conf > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
@@ -1226,7 +1227,7 @@ printf '%s\n' "                      -2 OS repository -3 already installed"
 printf '%s\n' " --configure <value>  choose transparent proxy type"
 printf '%s\n' "                      <value> -1 standard -2 with DNSCrypt"
 printf '%s\n' " --start              start service"
-printf '%s\n' " --stop               without removing service files and settings"
+printf '%s\n' " --stop               stop without removing service files and settings"
 printf '%s\n' " --restart            restart service"
 printf '%s\n' " --status             display status service"
 printf '%s\n' " --menu               display interactive menu"
@@ -1234,6 +1235,7 @@ printf '%s\n' " --install            install this script"
 printf '%s\n' " --permanent          enable service to start automatically at boot"
 printf '%s\n' " --remove             exit removing files and settings from system"
 printf '%s\n' " --edit               edit torrc file"
+printf '%s\n' " --restore            restore original files and settings"
 echo "";
 printf '%s\n' " --help               display this help"
 printf '%s\n' " --version            display version"
@@ -1461,6 +1463,10 @@ exit 0
 ;;
 --remove)
 cleanall
+exit 0
+;;
+--restore)
+shutdown_service
 exit 0
 ;;
 --version)
