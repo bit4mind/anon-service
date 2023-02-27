@@ -23,7 +23,7 @@ repository.
 ## REQUIREMENTS
 
 
-The script should work on many debian-based distros with the Unbound package present 
+The script should work on many debian-based distros (desktop and server) with the Unbound package present 
 in the repositories. Tested on Debian, Ubuntu, Mint.
 
 
@@ -65,7 +65,8 @@ Options:
  --permanent          enable service to start automatically at boot
  --remove             exit removing files and settings from system
  --edit               edit torrc file
-
+ --restore            restore original files and settings
+ 
  --help               display this help
  --version            display version
 ```
@@ -122,5 +123,6 @@ focused on security and privacy like Whomix or Tails.
 System update may create permissions issues with Unbound: first remove Unbound package purging
 the configuration files, then reinstall it and reconfigure the service via the 
 dedicated option.
-
+If something goes wrong (e.g. electrical blackout) restore the original data and settings
+using the dedicated option or remove the service and then reinstall it.
 This script may not work properly on a not-fully updated system.
