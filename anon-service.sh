@@ -312,7 +312,6 @@ echo $target > $root/temp/os.txt
 fi
 done
 os=$(cat $root/temp/os.txt | sed -e 's/^[ \t]*//')
-echo "";
 if [[ "$os" == " " ]]; then
 echo "==> Sorry! Apparently your OS hasn't candidate in Tor Project";
 echo "==> repo...Please, re-run the script and choose other options";
@@ -448,7 +447,8 @@ cp $netman.bak $root/NetworkManager.conf.temp
 cd $root
 chown $USER:$USER NetworkManager.conf.temp
 sed -i 's/^dns=dnsmasq/#&/' NetworkManager.conf.temp
-sed '/\[main\]/a dns=default' NetworkManager.conf.temp > NetworkManager.conf
+sed -i '/\[main\]/a dns=none' NetworkManager.conf.temp
+sed '/dns=none/a rc-manager=unmanaged' NetworkManager.conf.temp > NetworkManager.conf 
 fi
 if [ -s "$root/resolved.bak" ]; then
 cp $root/resolved.bak $root/resolved.conf.temp
@@ -680,6 +680,8 @@ sed -i "2iserver_names = ['$server1', '$server2']" $root/dnscrypt-proxy.toml
 sed -i "s/127.0.0.1:53/127.0.0.1:10000/g; s/9.9.9.9/208.67.222.222/g; s/8.8.8.8/208.67.220.220/g; s/require_dnssec = false/require_dnssec = true/g; s/force_tcp = false/#force_tcp = false/g; s/\[anonymized_dns\]/\[anonymized_dns\]\nroutes = \[\n{ server_name='$server1', via=\[\'$relay1\', \'$relay2\'\] },\n{ server_name=\'$server2\', via=[\'$relay3\', \'$relay4\'] }\n\]/g; s/skip_incompatible = false/skip_incompatible = true/g" $root/dnscrypt-proxy.toml
 echo "==> Configuring Unbound";
 ### Configuring unbound
+echo "==> Configuring Unbound";
+sleep 1
 unbound-anchor > /dev/null 2>&1
 sleep 1
 echo "server:" > $unbound
@@ -739,9 +741,6 @@ iptables --table nat --delete-chain
 iptables -P OUTPUT ACCEPT
 iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
-### Disable ipv6 
-echo "1" > /dev/null 2>&1 | tee /proc/sys/net/ipv6/conf/default/disable_ipv6
-echo "1" > /dev/null 2>&1 | tee /proc/sys/net/ipv6/conf/all/disable_ipv6
 ### Configure Network-Manager
 cd $root
 cp resolved.conf.temp $resolved > /dev/null 2>&1
@@ -750,6 +749,7 @@ if [ -s $netman ]; then
 cp NetworkManager.conf $netman
 chown root:root $netman
 fi
+service resolvconf stop > /dev/null 2>&1
 service dnsmasq stop > /dev/null 2>&1
 service bind stop > /dev/null 2>&1
 service systemd-resolved stop
@@ -759,22 +759,25 @@ service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall unbound tor dnscrypt-proxy > /dev/null 2>&1
+service systemd-resolved restart
+echo "==> Forcing nameserver to 127.0.0.1 in resolv.conf";
 rm /etc/resolv.conf > /dev/null 2>&1
-service systemd-resolved restart
+echo $'inameserver 127.0.0.1\E:x\n' | vi /etc/resolv.conf > /dev/null 2>&1
+chattr +i /etc/resolv.conf > /dev/null 2>&1
+if [ -f $netman ]; then
 service network-manager restart > /dev/null 2>&1
-systemctl restart networking > /dev/null 2>&1
 sleep 5
-cat /etc/resolv.conf > /dev/null 2>&1 | sed -e '/^$/d; /^#/d' > $root/dnsread
-if [[ $(cat $root/dnsread) != "nameserver 127.0.0.1" ]]; then 
-rm /etc/resolv.conf > /dev/null 2>&1 
-echo "";
-echo "==> Make sure 127.0.0.1 is your DNS system setting and then press ENTER";
-read REPLY
-service systemd-resolved restart
-service network-manager restart > /dev/null 2>&1
-systemctl restart networking.service > /dev/null 2>&1
+else
+ifdown -a > /dev/null 2>&1 && ifup -a > /dev/null 2>&1
 fi
-rm $root/dnsread > /dev/null 2>&1
+### Disable ipv6 
+ipv6_status=$(cat /proc/sys/net/ipv6/conf/default/disable_ipv6)
+if [ "$ipv6_status" == "0" ]; then
+echo "==> Disabling IPV6 protocol";
+sleep 1
+sysctl -w net.ipv6.conf.all.disable_ipv6=1 > /dev/null 2>&1
+sysctl -w net.ipv6.conf.default.disable_ipv6=1 > /dev/null 2>&1
+fi
 sleep 5
 chown -R $owner:$owner $root
 ## Restore original files automatically at shutdown
@@ -786,6 +789,7 @@ echo "restoring_script() {" >> restoring_orig.sh
 echo "if [ ! -f /etc/network/if-up.d/anon-service ]; then" >> restoring_orig.sh
 echo "cp $root/resolved.bak $resolved" >> restoring_orig.sh
 echo "cp $netman.bak $netman > /dev/null 2>&1" >> restoring_orig.sh
+echo "chattr -i /etc/resolv.conf > /dev/null 2>&1" >> restoring_orig.sh
 echo "fi" >> restoring_orig.sh
 echo "rm $root/running > /dev/null 2>&1" >> restoring_orig.sh
 echo "exit" >> restoring_orig.sh
@@ -796,11 +800,11 @@ echo "trap restoring_script SIGINT SIGTERM" >> restoring_orig.sh
 echo "sleep 7" >> restoring_orig.sh
 echo "done" >> restoring_orig.sh
 chmod +x restoring_orig.sh
-if [ -e "$(cat $root/cpath)/temp/" ]; then
+if [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
 nohup ./restoring_orig.sh > /dev/null 2>&1 &
-clear
 else
 xterm -e nohup ./restoring_orig.sh
+echo "==> Automatic restore started"
 fi
 fi
 echo "==> Starting anon-service";
@@ -862,7 +866,7 @@ else
 exit 1
 fi
 else
-echo "==> Congratulations! Your system is configurated to use Tor and DNSCrypt";
+echo "==> Service started using Tor and DNSCrypt";
 touch $root/running
 sleep 5
 fi
@@ -897,7 +901,7 @@ else
 exit 1
 fi
 else
-echo "==> Congratulations! Your system is configurated to use Tor";
+echo "==> Service started using Tor network";
 touch $root/running
 sleep 5
 fi
@@ -935,9 +939,13 @@ cd $root
 cp resolved.conf.temp $resolved > /dev/null 2>&1
 chown root:root $resolved > /dev/null 2>&1
 cp NetworkManager.conf $netman > /dev/null 2>&1
-chown root:root $netman
+chown root:root $netman > /dev/null 2>&1
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
 touch /etc/network/if-up.d/anon-service
+chattr -i /etc/resolv.conf > /dev/null 2>&1
+rm /etc/resolv.conf > /dev/null 2>&1
+echo $'inameserver 127.0.0.1\E:x\n' | vi /etc/resolv.conf > /dev/null 2>&1
+chattr +i /etc/resolv.conf > /dev/null 2>&1
 echo "#!/bin/sh" > /etc/network/if-up.d/anon-service
 echo "root=/home/anon-service" >> /etc/network/if-up.d/anon-service
 echo "owner=anon-service" >> /etc/network/if-up.d/anon-service
@@ -951,8 +959,6 @@ echo "iptables --table nat --delete-chain" >> /etc/network/if-up.d/anon-service
 echo "iptables -P OUTPUT ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "iptables -P INPUT ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "iptables -P FORWARD ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "echo \"1\" > /dev/null 2>&1 | tee /proc/sys/net/ipv6/conf/default/disable_ipv6" >> /etc/network/if-up.d/anon-service
-echo "echo \"1\" > /dev/null 2>&1 | tee /proc/sys/net/ipv6/conf/all/disable_ipv6" >> /etc/network/if-up.d/anon-service
 echo "service dnsmasq stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "service bind stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "killall dnsmasq bind > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
@@ -961,6 +967,8 @@ echo "cd $root" >> /etc/network/if-up.d/anon-service
 echo "service tor stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "service dnscrypt-proxy stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "service unbound stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
+echo "sysctl -w net.ipv6.conf.all.disable_ipv6=1 > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
+echo "sysctl -w net.ipv6.conf.default.disable_ipv6=1 > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "killall unbound tor dnscrypt-proxy > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "chown -R $owner:$owner $root" >> /etc/network/if-up.d/anon-service
 selected_service=$(cat $root/stp-service)
@@ -1029,8 +1037,8 @@ chown root:root /etc/network/if-up.d/anon-service
 chmod 755 /etc/network/if-up.d/anon-service
 chmod +x /etc/network/if-up.d/anon-service
 echo "";
-echo "==> Now you are ready to go! If you haven't set 127.0.0.1 in your DNS"; 
-echo "==> setting, do it and restart your connection or reboot your system.";
+echo "==> Now you are ready to go! Use the restart command-line option"; 
+echo "==> Otherwise restart your network connection or reboot your system.";
 echo "";
 cd $(cat $root/cpath)
 }
@@ -1065,7 +1073,9 @@ shutdown_service(){
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 clear
+fi
 service dnscrypt-proxy stop > /dev/null 2>&1
 sleep 3
 if ! pgrep -x "tor" > /dev/null; then
@@ -1074,6 +1084,15 @@ sleep 7
 else
 echo "==> Stopping anon-service";
 sleep 7
+fi
+chattr -i /etc/resolv.conf > /dev/null 2>&1
+rm /etc/resolv.conf > /dev/null 2>&1
+### Re-enable ipv6 
+ipv6_status=$(cat /proc/sys/net/ipv6/conf/default/disable_ipv6)
+if [ "$ipv6_status" == "1" ]; then
+echo "==> Enabling IPV6 protocol";
+sysctl -w net.ipv6.conf.all.disable_ipv6=0 > /dev/null 2>&1
+sysctl -w net.ipv6.conf.default.disable_ipv6=0 > /dev/null 2>&1
 fi
 rm $root/tor.txt > /dev/null 2>&1
 rm $root/running > /dev/null 2>&1
@@ -1092,9 +1111,12 @@ echo -e "\n\n";
 sleep 7
 fi
 service systemd-resolved restart
+if [ -f $netman ]; then
 service network-manager restart > /dev/null 2>&1
-
-systemctl restart networking > /dev/null 2>&1
+sleep 5
+else
+ifdown -a > /dev/null 2>&1 && ifup -a > /dev/null 2>&1
+fi
 ### Firewall flush
 iptables -F
 iptables -t nat -F
@@ -1111,8 +1133,19 @@ cd $(cat $root/cpath)
 ## Cleaning all and exit
 ##
 cleanall(){
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 clear
+fi
 echo "==> Removing anon-service files and settings from system";
+### Re-enable ipv6 
+ipv6_status=$(cat /proc/sys/net/ipv6/conf/default/disable_ipv6)
+if [ "$ipv6_status" == "1" ]; then
+echo "==> Enabling IPV6 protocol";
+sysctl -w net.ipv6.conf.all.disable_ipv6=0 > /dev/null 2>&1
+sysctl -w net.ipv6.conf.default.disable_ipv6=0 > /dev/null 2>&1
+fi
+chattr -i /etc/resolv.conf > /dev/null 2>&1
+rm /etc/resolv.conf > /dev/null 2>&1
 service tor stop > /dev/null 2>&1
 service dnscrypt-proxy stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
@@ -1126,8 +1159,12 @@ cp $netman.bak $netman > /dev/null 2>&1
 fi
 rm /usr/bin/anon-service > /dev/null 2>&1
 service systemd-resolved restart
+if [ -f $netman ]; then
 service network-manager restart > /dev/null 2>&1
-systemctl restart networking > /dev/null 2>&1
+sleep 5
+else
+ifdown -a > /dev/null 2>&1 && ifup -a > /dev/null 2>&1
+fi
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
@@ -1155,7 +1192,6 @@ iptables -P INPUT ACCEPT
 iptables -P FORWARD ACCEPT
 clear
 echo -e "\n\n\n\n\n\n";
-echo "==> Remember to change your DNS system setting";
 echo "    ______________________________________________";
 echo " "
 echo "    +++ Have a nice day! ;) +++";
@@ -1192,6 +1228,23 @@ echo "";
 printf '%s\n' " --help               display this help"
 printf '%s\n' " --version            display version"
 echo "";
+}
+##
+## Banner
+##
+banner(){
+printf '%s\n' "                    ▄▄▄      ███▄    █ ▒█████   ███▄    █          "
+printf '%s\n' "                   ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          "
+printf '%s\n' "                   ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         "
+printf '%s\n' "                   ░██▄▄▄▄██▓██▒  ▐▌██▒██   ██░▓██▒  ▐▌██▒         "
+printf '%s\n' "                    ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         "
+printf '%s\n' "                ██████ ▓█████  ██▀███░  ██▒ ░ █▓ ██▓ ▄████▄ ▓█████ "
+printf '%s\n' "              ▒██    ▒ ▓█   ▀ ▓██ ▒ ██▒▓██░   █▒▓██▒▒██▀ ▀█ ▓█   ▀ "
+printf '%s\n' "              ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██  █▒░▒██▒▒▓█    ▄▒███   "
+printf '%s\n' "                ▒   ██▒▒▓█  ▄ ▒██▀▀█▄    ▒██ █░░░██░▒▓▓▄ ▄██▒▓█  ▄ "
+printf '%s\n' "              ▒██████▒▒░▒████▒░██▓ ▒██▒   ▒▀█░  ░██░▒ ▓███▀ ░▒████▒"
+printf '%s\n' "                    ░           ░           ░       ░ by bit4mind  "
+echo " ";
 }
 ##
 ## Main
@@ -1331,6 +1384,7 @@ configure
 fi
 ;;
 --start)
+banner
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
@@ -1347,13 +1401,19 @@ exit 0
 --restart)
 echo "==> Reloading...";
 sleep 3
+clear
+banner
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
 service systemd-resolved restart
+if [ -f $netman ]; then
 service network-manager restart > /dev/null 2>&1
-systemctl restart networking > /dev/null 2>&1
+sleep 5
+else
+ifdown -a > /dev/null 2>&1 && ifup -a > /dev/null 2>&1
+fi
 exit 0
 else
 start_service
@@ -1394,6 +1454,7 @@ cleanall
 exit 0
 ;;
 --version)
+banner
 echo "anon-service $version";
 ;;
 --help)
