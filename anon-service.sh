@@ -170,12 +170,17 @@ else
 exit 1
 fi
 fi
+echo "   #######################################################";
+echo "   #                  ANON-SERVICE SETUP                 #";
+echo "   #######################################################";
 ### Checking for network connection
+echo "";
+echo "==> Checking for internet connection"
 rm conn.txt > /dev/null 2>&1
 ping -c1 opendns.com > conn.txt 2>&1
 if ( ! grep -q "icmp_seq=1" conn.txt ); then
 rm conn.txt > /dev/null 2>&1
-echo "==> Please check your network connection!";
+echo "==> Please connect to a network!";
 sleep 5
 if [ -e "menu" ]; then
 menu
@@ -184,7 +189,6 @@ else
 exit 1
 fi   
 fi
-clear
 echo "==> Checking dependencies and preparing the system"
 rm -rf $root > /dev/null 2>&1
 adduser -q --disabled-password --gecos "" $owner > /dev/null 2>&1
@@ -199,7 +203,6 @@ else
 apt-get install -y curl wget xterm psmisc wmctrl leafpad apt-transport-https unbound ifupdown > /dev/null
 fi
 sleep 1
-clear
 if [ -e tor_option1 ]; then
 install_tor_project
 elif [ -e tor_option2 ]; then
@@ -224,6 +227,7 @@ echo "      3.I already have tor installed";
 echo " "
 echo -n  " Choose: ";
 read -e choose
+echo "";
 case "$choose"
 in 1)
 install_tor_project
@@ -383,6 +387,9 @@ else
 exit 1
 fi
 fi
+echo "   #######################################################";
+echo "   #              ANON-SERVICE CONFIGURATION             #";
+echo "   #######################################################";
 ### Disable tor and unbound starting at boot time
 systemctl disable unbound > /dev/null 2>&1
 systemctl disable tor > /dev/null 2>&1
@@ -397,11 +404,11 @@ touch $root/stp-service
 echo "0" > $root/stp-service
 dnscryptconf
 elif [ -e "$(cat $root/cpath)/temp/menu" ] || [ -e "$(cat $root/cpath)/temp/configure" ]; then
-clear
+echo " ";
 echo "==> Which type of transparent proxy do you prefer to use?";
 echo "      1. Standard transparent proxy";
-echo "      2. Trasparent proxy with DNSCrypt and Anonymized-DNS feature";
-echo " "
+echo "      2. Trasparent proxy with DNSCrypt";
+echo " ";
 echo -n  " Choose: ";
 read -e choose
 case "$choose" in 
@@ -428,9 +435,11 @@ exit 1
 fi
 esac
 else
+echo "";
 echo "==> Sorry! Something went wrong...Please, report this issue to the project";
 exit 1
 fi
+echo "";
 echo "==> Configuring Tor";
 sleep 2
 ### Configuring Tor
@@ -441,6 +450,7 @@ echo "AutomapHostsOnResolve 1" >> $root/torrc
 echo "TransPort 9040 IsolateClientAddr IsolateClientProtocol IsolateDestAddr IsolateDestPort" >> $root/torrc
 echo "DNSPort 5353" >> $root/torrc
 ### Disabling dnsmasq and configure Network-Manager (if exists) and systemd-resolved
+echo "==> Configuring system";
 if [ -s $netman ]; then
 rm $root/NetworkManager.conf.temp > /dev/null 2>&1
 cp $netman.bak $root/NetworkManager.conf.temp
@@ -1233,17 +1243,17 @@ echo "";
 ## Banner
 ##
 banner(){
-printf '%s\n' "                    ▄▄▄      ███▄    █ ▒█████   ███▄    █          "
-printf '%s\n' "                   ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          "
-printf '%s\n' "                   ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         "
-printf '%s\n' "                   ░██▄▄▄▄██▓██▒  ▐▌██▒██   ██░▓██▒  ▐▌██▒         "
-printf '%s\n' "                    ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         "
-printf '%s\n' "                ██████ ▓█████  ██▀███░  ██▒ ░ █▓ ██▓ ▄████▄ ▓█████ "
-printf '%s\n' "              ▒██    ▒ ▓█   ▀ ▓██ ▒ ██▒▓██░   █▒▓██▒▒██▀ ▀█ ▓█   ▀ "
-printf '%s\n' "              ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██  █▒░▒██▒▒▓█    ▄▒███   "
-printf '%s\n' "                ▒   ██▒▒▓█  ▄ ▒██▀▀█▄    ▒██ █░░░██░▒▓▓▄ ▄██▒▓█  ▄ "
-printf '%s\n' "              ▒██████▒▒░▒████▒░██▓ ▒██▒   ▒▀█░  ░██░▒ ▓███▀ ░▒████▒"
-printf '%s\n' "                    ░           ░           ░       ░ by bit4mind  "
+printf '%s\n' "         ▄▄▄      ███▄    █ ▒█████   ███▄    █          "
+printf '%s\n' "        ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          "
+printf '%s\n' "        ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         "
+printf '%s\n' "        ░██▄▄▄▄██▓██▒  ▐▌██▒██   ██░▓██▒  ▐▌██▒         "
+printf '%s\n' "         ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         "
+printf '%s\n' "     ██████ ▓█████  ██▀███░  ██▒ ░ █▓ ██▓ ▄████▄ ▓█████ "
+printf '%s\n' "   ▒██    ▒ ▓█   ▀ ▓██ ▒ ██▒▓██░   █▒▓██▒▒██▀ ▀█ ▓█   ▀ "
+printf '%s\n' "   ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██  █▒░▒██▒▒▓█    ▄▒███   "
+printf '%s\n' "     ▒   ██▒▒▓█  ▄ ▒██▀▀█▄    ▒██ █░░░██░▒▓▓▄ ▄██▒▓█  ▄ "
+printf '%s\n' "   ▒██████▒▒░▒████▒░██▓ ▒██▒   ▒▀█░  ░██░▒ ▓███▀ ░▒████▒"
+printf '%s\n' "         ░           ░           ░       ░ by bit4mind  "
 echo " ";
 }
 ##
