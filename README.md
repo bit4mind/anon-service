@@ -124,5 +124,5 @@ System update may create permissions issues with Unbound: first remove Unbound p
 the configuration files, then reinstall it and reconfigure the service via the 
 dedicated option.
 If something goes wrong (e.g. electrical blackout) restore the original data and settings
-using the dedicated option or remove the service and then reinstall it.
+using the dedicated option or remove the service.
 This script may not work properly on a not-fully updated system.
