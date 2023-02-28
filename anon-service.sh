@@ -70,7 +70,7 @@ case "$task" in
 ## Detect if X runs
 if ! timeout 1s xset q &>/dev/null; then
 echo " ";
-echo "==> No X server detected. Try to use command line option instead." >&2
+echo "==> No X server detected. Try to use command-line option instead." >&2
 sleep 5
 exit 1
 fi
@@ -1227,7 +1227,7 @@ printf '%s\n' "                      -2 OS repository -3 already installed"
 printf '%s\n' " --configure <value>  choose transparent proxy type"
 printf '%s\n' "                      <value> -1 standard -2 with DNSCrypt"
 printf '%s\n' " --start              start service"
-printf '%s\n' " --stop               stop without removing service files and settings"
+printf '%s\n' " --stop               exit without removing service files and settings"
 printf '%s\n' " --restart            restart service"
 printf '%s\n' " --status             display status service"
 printf '%s\n' " --menu               display interactive menu"
@@ -1245,17 +1245,17 @@ echo "";
 ## Banner
 ##
 banner(){
-printf '%s\n' "         ▄▄▄      ███▄    █ ▒█████   ███▄    █          "
-printf '%s\n' "        ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          "
-printf '%s\n' "        ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         "
-printf '%s\n' "        ░██▄▄▄▄██▓██▒  ▐▌██▒██   ██░▓██▒  ▐▌██▒         "
-printf '%s\n' "         ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         "
-printf '%s\n' "     ██████ ▓█████  ██▀███░  ██▒ ░ █▓ ██▓ ▄████▄ ▓█████ "
-printf '%s\n' "   ▒██    ▒ ▓█   ▀ ▓██ ▒ ██▒▓██░   █▒▓██▒▒██▀ ▀█ ▓█   ▀ "
-printf '%s\n' "   ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██  █▒░▒██▒▒▓█    ▄▒███   "
-printf '%s\n' "     ▒   ██▒▒▓█  ▄ ▒██▀▀█▄    ▒██ █░░░██░▒▓▓▄ ▄██▒▓█  ▄ "
-printf '%s\n' "   ▒██████▒▒░▒████▒░██▓ ▒██▒   ▒▀█░  ░██░▒ ▓███▀ ░▒████▒"
-printf '%s\n' "         ░           ░           ░       ░ by bit4mind  "
+printf '%s\n' "           ▄▄▄      ███▄    █ ▒█████   ███▄    █          "
+printf '%s\n' "          ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          "
+printf '%s\n' "          ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         "
+printf '%s\n' "          ░██▄▄▄▄██▓██▒  ▐▌██▒██   ██░▓██▒  ▐▌██▒         "
+printf '%s\n' "           ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         "
+printf '%s\n' "       ██████ ▓█████  ██▀███░  ██▒ ░ █▓ ██▓ ▄████▄ ▓█████ "
+printf '%s\n' "     ▒██    ▒ ▓█   ▀ ▓██ ▒ ██▒▓██░   █▒▓██▒▒██▀ ▀█ ▓█   ▀ "
+printf '%s\n' "     ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██  █▒░▒██▒▒▓█    ▄▒███   "
+printf '%s\n' "       ▒   ██▒▒▓█  ▄ ▒██▀▀█▄    ▒██ █░░░██░▒▓▓▄ ▄██▒▓█  ▄ "
+printf '%s\n' "     ▒██████▒▒░▒████▒░██▓ ▒██▒   ▒▀█░  ░██░▒ ▓███▀ ░▒████▒"
+printf '%s\n' "           ░           ░           ░       ░ by bit4mind  "
 echo " ";
 }
 ##
