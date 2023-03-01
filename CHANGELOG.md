@@ -8,6 +8,7 @@ Released
 Added
 
     Server support
+    Edit iptables rules
 
 Changed
 
