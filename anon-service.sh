@@ -968,6 +968,7 @@ case "$answer" in
 if [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
 nano $root/torrc
 echo "==> Please restart the service to apply changes";
+echo "";
 exit 0
 else
 xterm -T "Torrc" -e "leafpad $root/torrc" > /dev/null 2>&1 
@@ -982,32 +983,26 @@ if [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
 nano /etc/network/if-up.d/anon-service
 echo "==> Please restart via command-line option to apply changes"; 
 echo "==> Otherwise restart your network connection or reboot your system.";
+echo "";
 exit 0
 else
 xterm -T "Editor" -e "leafpad /etc/network/if-up.d/anon-service" > /dev/null 2>&1
 echo "==> Please restart via command-line option to apply changes"; 
 echo "==> Otherwise restart your network connection or reboot your system.";
 sleep 7
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
-else 
-exit 0
-fi
 fi
 else 
 if [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
 nano $root/iptables_rules.sh
 echo "==> Please restart the service to apply changes";
+echo "";
 exit 0
 else
 xterm -T "Editor" -e "leafpad $root/iptables_rules.sh" > /dev/null 2>&1
 echo "==> Please restart the service to apply changes";
 sleep 7
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
-else 
-exit 0
-fi
 fi
 fi
 ;;
@@ -1223,11 +1218,12 @@ service dnscrypt-proxy stop > /dev/null 2>&1
 sleep 3
 if ! pgrep -x "tor" > /dev/null; then
 echo "==> Restoring original files"; 
-sleep 7
+sleep 1
 else
 echo "==> Stopping anon-service";
-sleep 2
+sleep 1
 echo "==> Restoring original files";
+sleep 1
 fi
 rm $root/tor.txt > /dev/null 2>&1
 rm $root/running > /dev/null 2>&1
@@ -1238,6 +1234,7 @@ service unbound stop > /dev/null 2>&1
 killall xterm unbound tor dnscrypt-proxy restoring_orig.sh > /dev/null 2>&1
 cp $netman.bak $netman > /dev/null 2>&1
 echo "==> Restarting neworking";
+echo "";
 service systemd-resolved restart
 if [ -f $netman ]; then
 service network-manager restart > /dev/null 2>&1
@@ -1248,7 +1245,6 @@ sleep 1
 fi
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
 rm /etc/network/if-up.d/anon-service
-echo "";
 echo "==> Now the service is no more enabled at startup!";
 echo "==> You can reactivate it using appropriate option";
 echo "";
@@ -1605,6 +1601,7 @@ if [ ! -s "$root/torrc" ]; then
 echo "";
 echo "==> Sorry! Your system is not ready to complete this action";
 echo "==> Please, check if you have installed the necessary files";
+echo "";
 sleep 3
 exit 1
 fi
@@ -1613,6 +1610,7 @@ case "$2" in
 torrc)
 nano $root/torrc
 echo "==> Please restart the service to apply changes";
+echo "";
 exit 0
 ;;
 iptables)
@@ -1620,10 +1618,12 @@ if [ -s "/etc/network/if-up.d/anon-service" ]; then
 nano /etc/network/if-up.d/anon-service
 echo "==> Please restart via command-line option to apply changes"; 
 echo "==> Otherwise restart your network connection or reboot your system.";
+echo "";
 exit 0
 else 
 nano $root/iptables_rules.sh
 echo "==> Please restart the service to apply changes";
+echo "";
 exit 0
 fi
 ;;
