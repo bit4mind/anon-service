@@ -3,6 +3,22 @@ CHANGELOG
 All notable changes to this project will be documented in this file.
 
 Released
+2.1 - 2023-03-02
+
+Added
+
+    Server support
+    Edit iptables rules
+
+Changed
+
+    Network device management
+    Resolv.conf configuration
+    No NM needed
+
+
+
+Released
 2.0 - 2023-02-16
 
 Added
