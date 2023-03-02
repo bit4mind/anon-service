@@ -462,6 +462,7 @@ echo "TransPort 9040 IsolateClientAddr IsolateClientProtocol IsolateDestAddr Iso
 echo "DNSPort 5353" >> $root/torrc
 ### Disabling unwanted services and configure Network-Manager (if exists)
 echo "==> Configuring system";
+echo "";
 sleep 1
 if [ -s $netman ]; then
 rm $root/NetworkManager.conf.temp > /dev/null 2>&1
