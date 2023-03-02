@@ -59,7 +59,7 @@ printf '%s\n' "   5.  Display status service"
 printf '%s\n' "   6.  Enable service to start automatically at boot"
 printf '%s\n' "   7.  Stop service without removing files and setting"
 printf '%s\n' "   8.  Exit removing service files and settings from system"
-printf '%s\n' "   9.  Edit torrc file"
+printf '%s\n' "   9.  Edit configuration files"
 printf '%s\n' "   10. Install this script"
 echo " ";
 echo -n "  Choose: ";
@@ -70,6 +70,7 @@ case "$task" in
 if ! timeout 1s xset q &>/dev/null; then
 echo " ";
 echo "==> No X server detected. Try to use command-line option instead." >&2
+echo "";
 sleep 5
 exit 1
 fi
@@ -97,6 +98,7 @@ fi
 if hash wmctrl 2>/dev/null; then
 wmctrl -c :ACTIVE:
 else
+echo "";
 echo "==> Sorry! Your system is not ready to complete this action";
 echo "==> Please, check if you have installed the necessary files";
 sleep 7
@@ -105,6 +107,7 @@ return 1
 fi
 ;;
 5)
+clear
 checking_service
 sleep 7
 menu
@@ -136,9 +139,7 @@ menu
 return 1
 else
 echo "";
-xterm -T "Torrc" -e "leafpad $root/torrc" > /dev/null 2>&1 
-echo "==> Please restart the service to apply changes";
-sleep 7
+editor
 menu
 fi
 ;;
@@ -166,6 +167,7 @@ if [ -e "menu" ]; then
 menu
 return 1
 else 
+echo "";
 exit 1
 fi
 fi
@@ -184,7 +186,8 @@ sleep 5
 if [ -e "menu" ]; then
 menu
 return 1
-else 
+else
+echo ""; 
 exit 1
 fi   
 fi
@@ -216,6 +219,7 @@ if hash tor 2>/dev/null; then
 touch $root/installed
 else
 echo "==> Sorry! The script cannot recognize your Tor package";
+echo "";
 exit 1
 fi
 else
@@ -249,6 +253,7 @@ if [ -e "menu" ]; then
 menu
 return 1
 else 
+echo "";
 exit 1
 fi
 fi
@@ -260,6 +265,7 @@ if [ -e "menu" ]; then
 menu
 return 1
 else 
+echo "";
 exit 1
 fi
 esac
@@ -316,6 +322,7 @@ os=$(cat $root/temp/os.txt | sed -e 's/^[ \t]*//')
 if [[ "$os" == " " ]]; then
 echo "==> Sorry! Apparently your OS hasn't candidate in Tor Project";
 echo "==> repo...Please, re-run the script and choose other options";
+echo "";
 exit 1
 fi
 if curl --head --silent --fail https://deb.torproject.org/torproject.org/dists/$os/main/binary-i386/ > /dev/null 2>&1;
@@ -352,6 +359,7 @@ then
    echo "==> Please, try to enter the correct codename for the debian or ubuntu";
    echo "==> repository compatible with your OS...In doubt, search on internet!";
    echo "==> Warning: if the repository is not correct, the script could crash!"; 
+   echo "";
    echo -n "    Please, enter the codename (for example: buster): ";
    read -e codename 
    rm $repo
@@ -382,6 +390,7 @@ if [ -e "menu" ]; then
 menu
 return 1
 else 
+echo "";
 exit 1
 fi
 fi
@@ -429,12 +438,14 @@ if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 configure
 return 1
 else 
+echo "";
 exit 1
 fi
 esac
 else
 echo "";
 echo "==> Sorry! Something went wrong...Please, report this issue to the project";
+echo "";
 exit 1
 fi
 if [ -e "configure_option1" ]; then
@@ -491,7 +502,7 @@ echo "for _clearnet in \$_non_tor; do" >> $root/iptables_rules.sh
 echo "iptables -t nat -A OUTPUT -d \$_clearnet -j RETURN" >> $root/iptables_rules.sh
 echo "done" >> $root/iptables_rules.sh
 echo "sleep 5" >> $root/iptables_rules.sh
-echo "## Edit and uncomment to grant yourself ssh access from remote machines before the DROP." >> $root/iptables_rules.sh
+echo "## Edit and uncomment the next line to grant yourself ssh access from remote machines before the DROP." >> $root/iptables_rules.sh
 echo "#iptables -A INPUT -i YOUR_NETWORK_DEVICE_HERE -p tcp --dport 22 -m state --state NEW -j ACCEPT" >> $root/iptables_rules.sh
 echo "iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT" >> $root/iptables_rules.sh
 echo "iptables -A INPUT -i lo -j ACCEPT" >> $root/iptables_rules.sh
@@ -693,6 +704,7 @@ echo "==> Configuring DNSCrypt";
 sleep 1
 sed -i "1iforce_tcp = true" $root/dnscrypt-proxy.toml
 sed -i "2iserver_names = ['$server1', '$server2']" $root/dnscrypt-proxy.toml
+sed -i "3iproxy = 'socks5://127.0.0.1:9050'" $root/dnscrypt-proxy.toml
 sed -i "s/127.0.0.1:53/127.0.0.1:10000/g; s/9.9.9.9/208.67.222.222/g; s/8.8.8.8/208.67.220.220/g; s/require_dnssec = false/require_dnssec = true/g; s/force_tcp = false/#force_tcp = false/g; s/\[anonymized_dns\]/\[anonymized_dns\]\nroutes = \[\n{ server_name='$server1', via=\[\'$relay1\', \'$relay2\'\] },\n{ server_name=\'$server2\', via=[\'$relay3\', \'$relay4\'] }\n\]/g; s/skip_incompatible = false/skip_incompatible = true/g" $root/dnscrypt-proxy.toml
 ### Configuring unbound
 echo "==> Configuring Unbound";
@@ -729,6 +741,7 @@ if [ -e "menu" ]; then
 menu
 return 1
 else 
+echo "";
 exit 1
 fi
 fi
@@ -744,6 +757,7 @@ if [ -e "menu" ]; then
 menu
 return 1
 else 
+echo "";
 exit 1
 fi
 fi
@@ -791,6 +805,7 @@ if [ -e "menu" ]; then
 menu
 return 1
 else 
+echo "";
 exit 1
 fi
 fi
@@ -872,37 +887,23 @@ unbound &
 if ( ! pgrep -x "tor" ) > /dev/null; then
 echo "==> Sorry! No connection to TOR...Please, report this issue to the project";
 sleep 7
-shutdown_service
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
-menu
-return 1
-else 
+shutdown_service 
 exit 1
-fi
 fi
 if ( ! pgrep -x "dnscrypt-proxy" ) > /dev/null; then
 echo "==> Sorry! Dnscrypt-proxy isn't running...Please, report this issue to the project";
 sleep 7
 shutdown_service
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
-menu
-return 1
-else
 exit 1
-fi
 fi
 if ( ! pgrep -x "unbound" ) > /dev/null; then
 echo "==> Sorry! Unbound isn't running...Please, report this issue to the project";
 sleep 7
 shutdown_service
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
-menu
-return 1
-else
 exit 1
-fi
 else
 echo "==> Service started using Tor and DNSCrypt";
+echo "";
 touch $root/running
 sleep 5
 fi
@@ -928,6 +929,7 @@ cd $root
 ### Checking services
 if ( ! pgrep -x "tor" > /dev/null ); then
 echo "==> Sorry! No connection to TOR...Please, report this issue to the project";
+echo "";
 sleep 7
 shutdown_service
 if [ -e "$(cat $root/cpath)/temp/menu" ]; then
@@ -938,11 +940,88 @@ exit 1
 fi
 else
 echo "==> Service started using Tor network";
+echo "";
 touch $root/running
 sleep 5
 fi
 esac
 cd $(cat $root/cpath)
+}
+##
+## Edit configuration files
+##
+editor(){
+echo "   #######################################################";
+echo "   #              ANON-SERVICE CUSTOMIZATION             #";
+echo "   #######################################################";
+echo "";
+echo "==> What do you want to edit?";
+echo "      1.torrc";
+echo "      2.iptables rules";
+echo " "
+echo -n  " Choose: ";
+read -e answer
+echo "";
+case "$answer" in 
+1)
+if [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
+nano $root/torrc
+echo "==> Please restart the service to apply changes";
+exit 0
+else
+xterm -T "Torrc" -e "leafpad $root/torrc" > /dev/null 2>&1 
+echo "==> Please restart the service to apply changes";
+sleep 7
+menu
+fi
+;;
+2)
+if [ -s "/etc/network/if-up.d/anon-service" ]; then
+if [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
+nano /etc/network/if-up.d/anon-service
+echo "==> Please restart via command-line option to apply changes"; 
+echo "==> Otherwise restart your network connection or reboot your system.";
+exit 0
+else
+xterm -T "Editor" -e "leafpad /etc/network/if-up.d/anon-service" > /dev/null 2>&1
+echo "==> Please restart via command-line option to apply changes"; 
+echo "==> Otherwise restart your network connection or reboot your system.";
+sleep 7
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
+menu
+else 
+exit 0
+fi
+fi
+else 
+if [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
+nano $root/iptables_rules.sh
+echo "==> Please restart the service to apply changes";
+exit 0
+else
+xterm -T "Editor" -e "leafpad $root/iptables_rules.sh" > /dev/null 2>&1
+echo "==> Please restart the service to apply changes";
+sleep 7
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
+menu
+else 
+exit 0
+fi
+fi
+fi
+;;
+*)
+echo "==> Are you serious?"
+sleep 5
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
+menu
+return 1
+else 
+echo "";
+exit 1
+fi
+;;
+esac
 }
 ##
 ## Install this script
@@ -953,7 +1032,9 @@ cp $0 /usr/bin/anon-service > /dev/null 2>&1
 chmod +x /usr/bin/anon-service
 echo "";
 echo "==> Now you can run it simply typing \"sudo anon-service\" in your terminal";
+echo "";
 cd $(cat $root/cpath)
+exit 0
 }
 ##
 ## Run at boot
@@ -968,6 +1049,7 @@ if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else
+echo "";
 exit 1
 fi
 fi
@@ -1023,7 +1105,7 @@ echo "sleep 1s" >> /etc/network/if-up.d/anon-service
 echo "fi" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
 selected_service=$(cat $root/stp-service)
-if (( $selected_service == 1 )); then
+if (( $selected_service == 0 )); then
 echo "nohup ./dnscrypt-proxy > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
 echo "sleep 1s" >> /etc/network/if-up.d/anon-service
 fi
@@ -1048,7 +1130,7 @@ echo "for _clearnet in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -d \$_clearnet -j RETURN" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
 echo "sleep 5s" >> /etc/network/if-up.d/anon-service
-echo "## Edit and uncomment to grant yourself ssh access from remote machines before the DROP." >> /etc/network/if-up.d/anon-service
+echo "## Edit and uncomment the next line to grant yourself ssh access from remote machines before the DROP." >> /etc/network/if-up.d/anon-service
 echo "#iptables -A INPUT -i YOUR_NETWORK_DEVICE_HERE -p tcp --dport 22 -m state --state NEW -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "iptables -A INPUT -i lo -j ACCEPT" >> /etc/network/if-up.d/anon-service
@@ -1079,7 +1161,7 @@ echo "sleep 1s" >> /etc/network/if-up.d/anon-service
 echo "ip6tables -P FORWARD DROP" >> /etc/network/if-up.d/anon-service
 echo "ip6tables -P INPUT DROP" >> /etc/network/if-up.d/anon-service
 echo "ip6tables -P OUTPUT DROP" >> /etc/network/if-up.d/anon-service
-if (( $selected_service == 1 )); then
+if (( $selected_service == 0 )); then
 echo "unbound" >> /etc/network/if-up.d/anon-service
 fi
 echo "echo \"+++ anon-service started +++\"" >> /etc/network/if-up.d/anon-service
@@ -1097,8 +1179,13 @@ cd $(cat $root/cpath)
 ## CHECKING IF RUNNING
 ##
 checking_service(){
+echo "   #######################################################";
+echo "   #                 ANON-SERVICE STATUS                 #";
+echo "   #######################################################";
+echo "";
 if [ ! -e $root/running ] > /dev/null; then
 echo "==> Service is not running!";
+echo "";
 sleep 3	
 else
 echo "==> Service is running!";
@@ -1106,12 +1193,14 @@ curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.t
 if ( grep -q "Your" $root/ip.txt ); then
 ipaddr=$(cat $root/ip.txt)
 echo "==> $ipaddr";
+echo "";
 else
 echo "==> But the service can't access internet. Try the restart option";
 if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else
+echo "";
 exit 1
 fi
 fi
@@ -1121,6 +1210,8 @@ fi
 ## Exit
 ##
 shutdown_service(){
+banner
+echo "";
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
@@ -1145,20 +1236,22 @@ service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall xterm unbound tor dnscrypt-proxy restoring_orig.sh > /dev/null 2>&1
 cp $netman.bak $netman > /dev/null 2>&1
+echo "==> Restarting neworking";
+service systemd-resolved restart
+if [ -f $netman ]; then
+service network-manager restart > /dev/null 2>&1
+sleep 1
+else
+ifdown -a > /dev/null 2>&1 && ifup -a > /dev/null 2>&1
+sleep 1
+fi
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
 rm /etc/network/if-up.d/anon-service
 echo "";
 echo "==> Now the service is no more enabled at startup!";
 echo "==> You can reactivate it using appropriate option";
-echo -e "\n\n";
+echo "";
 sleep 7
-fi
-service systemd-resolved restart
-if [ -f $netman ]; then
-service network-manager restart > /dev/null 2>&1
-sleep 5
-else
-ifdown -a > /dev/null 2>&1 && ifup -a > /dev/null 2>&1
 fi
 ### Firewall flush
 iptables -F
@@ -1194,17 +1287,6 @@ killall xterm unbound tor dnscrypt-proxy restoring_orig.sh > /dev/null 2>&1
 echo "==> Removing anon-service files and settings from system";
 chattr -i /etc/resolv.conf > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
-service systemd-resolved restart
-if [[ -s "$netman.bak" ]]; then
-cp $netman.bak $netman > /dev/null 2>&1
-fi
-rm /usr/bin/anon-service > /dev/null 2>&1
-if [ -f $netman ]; then
-service network-manager restart > /dev/null 2>&1
-sleep 5
-else
-ifdown -a > /dev/null 2>&1 && ifup -a > /dev/null 2>&1
-fi
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
@@ -1220,6 +1302,19 @@ rm -rf $(cat $root/cpath)/temp > /dev/null 2>&1
 userdel -r $owner > /dev/null 2>&1
 rm -rf $root > /dev/null 2>&1
 rm cpath > /dev/null 2>&1
+echo "==> Restarting neworking";
+service systemd-resolved restart
+if [[ -s "$netman.bak" ]]; then
+cp $netman.bak $netman > /dev/null 2>&1
+fi
+rm /usr/bin/anon-service > /dev/null 2>&1
+if [ -f $netman ]; then
+service network-manager restart > /dev/null 2>&1
+sleep 1
+else
+ifdown -a > /dev/null 2>&1 && ifup -a > /dev/null 2>&1
+sleep 1
+fi
 ### Firewall flush
 iptables -F
 iptables -t nat -F
@@ -1266,7 +1361,8 @@ printf '%s\n' " --menu               display interactive menu"
 printf '%s\n' " --install            install this script"
 printf '%s\n' " --permanent          enable service to start automatically at boot"
 printf '%s\n' " --remove             exit removing files and settings from system"
-printf '%s\n' " --edit               edit torrc file"
+printf '%s\n' " --edit      <value>  edit configuraion files"
+printf '%s\n' "                      <value> torrc or iptables"
 printf '%s\n' " --restore            restore original files and settings"
 echo "";
 printf '%s\n' " --help               display this help"
@@ -1443,8 +1539,8 @@ shutdown_service
 exit 0
 ;;
 --restart)
-echo "==> Reloading...";
-sleep 3
+echo "Reloading...";
+sleep 1
 clear
 banner
 if [ -f "cpath" ]; then
@@ -1453,9 +1549,14 @@ fi
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
 if [ -f $netman ]; then
 service network-manager restart > /dev/null 2>&1
-sleep 5
+echo "";
+echo "==> Service restarted...Be patient!";
+echo "";
 else
 ifdown -a > /dev/null 2>&1 && ifup -a > /dev/null 2>&1
+echo "";
+echo "==> Service restarted...Be patient!";
+echo "";
 fi
 exit 0
 else
@@ -1464,21 +1565,8 @@ exit 0
 fi
 ;;
 --status)
-if [ ! -e $root/running ] > /dev/null; then
-echo "==> Service is not running!";
-sleep 3	
-else
-echo "==> Service is running!";
-curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 	1 "Your IP address" | sed -e 's/<[^>]*>//g' | xargs > $root/ip.txt
-sleep 3
-if ( grep -q "Your" $root/ip.txt ); then
-		ipaddr=$(cat $root/ip.txt)
-echo "==> $ipaddr";
-else
-echo "==> But the service can't access internet. Try the restart option";
+checking_service
 exit 0
-fi
-fi
 ;;
 --menu)
 cd temp
@@ -1518,11 +1606,33 @@ echo "==> Sorry! Your system is not ready to complete this action";
 echo "==> Please, check if you have installed the necessary files";
 sleep 3
 exit 1
-else
-echo "";
+fi
+if [ ! -z "$2" ]; then
+case "$2" in
+torrc)
 nano $root/torrc
 echo "==> Please restart the service to apply changes";
-sleep 3
+exit 0
+;;
+iptables)
+if [ -s "/etc/network/if-up.d/anon-service" ]; then
+nano /etc/network/if-up.d/anon-service
+echo "==> Please restart via command-line option to apply changes"; 
+echo "==> Otherwise restart your network connection or reboot your system.";
+exit 0
+else 
+nano $root/iptables_rules.sh
+echo "==> Please restart the service to apply changes";
+exit 0
+fi
+;;
+*)
+echo "==> Invalid option '$2'";
+exit 1
+;;
+esac
+else
+editor
 exit 0
 fi
 ;;
