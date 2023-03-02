@@ -37,8 +37,9 @@ reactivation of the service; you can stop the service without deleting the data
 and then reactivate it faster.
 You can install it to start automatically at boot: in this case you could restart
 service simply restarting your connection and continue to use the script for
-editing torrc file, configuring dnscrypt servers and relays or removing all things.
+editing configuration file, configuring dnscrypt servers and relays or removing all things.
 Editing torrc file you can customize your tor configuration (https://tor.void.gr/docs/tor-manual.html.en).
+Editing iptables rules you can grant yourself ssh access from remote machines and other stuff.
 
 Usage:
 
@@ -64,7 +65,8 @@ Options:
  --install            install this script
  --permanent          enable service to start automatically at boot
  --remove             exit removing files and settings from system
- --edit               edit torrc file
+ --edit      <value>  edit configuraion files
+                      <value> torrc or iptables
  --restore            restore original files and settings
  
  --help               display this help
@@ -80,19 +82,21 @@ This will start the service in standard transparent proxy mode getting Tor from 
 ```
 sudo ./anon-service.sh --download -1 && sudo ./anon-service.sh --configure -2 dnscrypt-de-blahdns-ipv4 meganerd anon-acsacsar-ams-ipv4 anon-openinternet anon-v.dnscrypt.uk-ipv4 anon-sth-se && sudo ./anon-service.sh --start
 ```
-This will start the service with DNSCrypt and the Anonymized-DNS feature enabled by obtaining Tor from the official project repository. Change servers and relays to whatever you want based on the list of public resolvers and relays provided by the dnscrypt-proxy project
+This will start the service with DNSCrypt and the Anonymized-DNS feature enabled by obtaining Tor from the official
+project repository. Change servers and relays to whatever you want based on the updated list of public resolvers 
+and relays provided by the dnscrypt-proxy project
 
 ### Important: 
 If you want to update the script, first remove all files and settings using the 
 appropriate option in the same script.
 
 NOTES:
-The command line download option will install the software required to run without 
+The command-line download option will install the software required to run without 
 a graphical environment: some options in the interactive menu may not work.
 If you install the script to start automatically at boot, be aware that the service 
 will start with a small delay after the host has established the connection to the 
 network. Before the service is fully loaded, the connection will not work: you can 
-check status via syslog with the command
+check status via syslog with the command:
 
 ```
 tail -f /var/log/syslog
