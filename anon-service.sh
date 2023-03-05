@@ -2,7 +2,7 @@
 
 # ####################################################################
 # anon-service.sh
-# version 2.1
+# version 2.2
 # 
 # Transparent proxy through Tor and optionally DNSCrypt with  
 # Anonymized-DNS feature enabled.
@@ -27,7 +27,7 @@
 
 export root=/home/anon-service
 owner=anon-service
-version="2.0"
+version="2.2"
 repo=/etc/apt/sources.list.d/tor.list
 ## DNSCrypt-proxy release
 dnscrel="2.1.4"
@@ -99,8 +99,8 @@ if hash wmctrl 2>/dev/null; then
 wmctrl -c :ACTIVE:
 else
 echo "";
-echo "==> Sorry! Your system is not ready to complete this action";
-echo "==> Please, check if you have installed the necessary files";
+echo "==> Sorry! Your system is not ready to complete this action.";
+echo "==> Please, check if you have installed the necessary files.";
 sleep 7
 menu
 return 1
@@ -132,8 +132,8 @@ mv cpath $root/ > /dev/null 2>&1
 fi
 if [ ! -s "$root/torrc" ]; then
 echo "";
-echo "==> Sorry! Your system is not ready to complete this action";
-echo "==> Please, check if you have installed the necessary files";
+echo "==> Sorry! Your system is not ready to complete this action.";
+echo "==> Please, check if you have installed the necessary files.";
 sleep 7
 menu
 return 1
@@ -161,7 +161,7 @@ esac
 download(){
 if [ -s "$root" ]; then
 echo "";
-echo "==> Please, firstly remove all files and settings via dedicated option";
+echo "==> Please, firstly remove all files and settings via dedicated option!";
 sleep 7
 if [ -e "menu" ]; then
 menu
@@ -218,7 +218,7 @@ sleep 2
 if hash tor 2>/dev/null; then
 touch $root/installed
 else
-echo "==> Sorry! The script cannot recognize your Tor package";
+echo "==> Sorry! The script cannot recognize your Tor package.";
 echo "";
 exit 1
 fi
@@ -247,7 +247,7 @@ sleep 2
 if hash tor 2>/dev/null; then
 touch $root/installed
 else
-echo "==> Sorry! The script cannot recognize your Tor package";
+echo "==> Sorry! The script cannot recognize your Tor package.";
 sleep 3
 if [ -e "menu" ]; then
 menu
@@ -320,8 +320,8 @@ fi
 done
 os=$(cat $root/temp/os.txt | sed -e 's/^[ \t]*//')
 if [[ "$os" == " " ]]; then
-echo "==> Sorry! Apparently your OS hasn't candidate in Tor Project";
-echo "==> repo...Please, re-run the script and choose other options";
+echo "==> Sorry! Apparently your OS hasn't candidate in Tor Project.";
+echo "==> repo...Please, re-run the script and choose other options.";
 echo "";
 exit 1
 fi
@@ -383,8 +383,8 @@ mv cpath $root/ > /dev/null 2>&1
 fi
 if [ ! -s "$root/dnscrypt-proxy.toml.bak" ]; then
 echo "";
-echo "==> Sorry! Your system is not ready to complete this action";
-echo "==> Please, check if you have installed the necessary files";
+echo "==> Sorry! Your system is not ready to complete this action.";
+echo "==> Please, check if you have installed the necessary files.";
 sleep 7
 if [ -e "menu" ]; then
 menu
@@ -451,6 +451,7 @@ fi
 if [ -e "configure_option1" ]; then
 echo "";
 fi
+netiface
 echo "==> Configuring Tor";
 sleep 1
 ### Configuring Tor
@@ -480,53 +481,66 @@ touch $root/iptables_rules.sh
 echo "#!/bin/bash" > $root/iptables_rules.sh
 # Destinations you don't want routed through Tor
 echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> $root/iptables_rules.sh
-# The UID that Tor runs as (varies from system to system)
-echo "_user_uid=\"999\"" >> $root/iptables_rules.sh
+echo "_user_uid=\"999\" ## Tor is the only process that runs as this user" >> $root/iptables_rules.sh
 # Tor's VirtualAddrNetworkIPv4
 echo "_virt_addr=\"10.192.0.0/10\"" >> $root/iptables_rules.sh
 # Tor's TransPort
 echo "_trans_port=\"9040\"" >> $root/iptables_rules.sh
 # Other IANA reserved blocks (These are not processed by tor and dropped by default)
 echo "_resv_iana=\"0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4 255.255.255.255/32\"" >> $root/iptables_rules.sh
+echo "_iface=\$(cat \$root/netiface.txt)" >> $root/iptables_rules.sh
 echo "iptables -F" >> $root/iptables_rules.sh
 echo "iptables -t nat -F" >> $root/iptables_rules.sh
 echo "iptables -t nat -A OUTPUT -d \$_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports \$_trans_port" >> $root/iptables_rules.sh
-echo "iptables -A OUTPUT -m state --state INVALID -j DROP" >> $root/iptables_rules.sh
-echo "iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT" >> $root/iptables_rules.sh
-echo "iptables -t nat -A OUTPUT -m owner --uid-owner \$_user_uid -j RETURN" >> $root/iptables_rules.sh
+echo "sleep 1" >> $root/iptables_rules.sh
 if ( grep -Fq "1" $root/stp-service); then
-echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 5353" >> $root/iptables_rules.sh
+echo "iptables -t nat -A OUTPUT -d 127.0.0.1/32 -p udp -m udp --dport 53 -j REDIRECT --to-ports 5353" >> $root/iptables_rules.sh
 else
-echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53" >> $root/iptables_rules.sh
+echo "iptables -t nat -A OUTPUT -d 127.0.0.1/32 -p udp -m udp --dport 53 -j REDIRECT --to-ports 53" >> $root/iptables_rules.sh
 fi
-echo "for _clearnet in \$_non_tor; do" >> $root/iptables_rules.sh
-echo "iptables -t nat -A OUTPUT -d \$_clearnet -j RETURN" >> $root/iptables_rules.sh
+echo "iptables -t nat -A OUTPUT -m owner --uid-owner \$_user_uid -j RETURN" >> $root/iptables_rules.sh
+echo "sleep 1" >> $root/iptables_rules.sh
+echo "iptables -t nat -A OUTPUT -o lo -j RETURN" >> $root/iptables_rules.sh
+echo "for _lan in \$_non_tor; do" >> $root/iptables_rules.sh
+echo "iptables -t nat -A OUTPUT -d \$_lan -j RETURN" >> $root/iptables_rules.sh
 echo "done" >> $root/iptables_rules.sh
 echo "sleep 5" >> $root/iptables_rules.sh
-echo "## Edit and uncomment the next line to grant yourself ssh access from remote machines before the DROP." >> $root/iptables_rules.sh
-echo "#iptables -A INPUT -i YOUR_NETWORK_DEVICE_HERE -p tcp --dport 22 -m state --state NEW -j ACCEPT" >> $root/iptables_rules.sh
+echo "for _iana in \$_resv_iana; do" >> $root/iptables_rules.sh
+echo "iptables -t nat -A OUTPUT -d \$_iana -j RETURN" >> $root/iptables_rules.sh
+echo "done" >> $root/iptables_rules.sh
+echo "sleep 7" >> $root/iptables_rules.sh
+echo "iptables -t nat -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports \$_trans_port" >> $root/iptables_rules.sh
+echo "## Uncomment the next line to grant yourself ssh access from remote machines before the DROP." >> $root/iptables_rules.sh
+echo "#iptables -A INPUT -i \$_iface -p tcp --dport 22 -m state --state NEW -j ACCEPT" >> $root/iptables_rules.sh
 echo "iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT" >> $root/iptables_rules.sh
 echo "iptables -A INPUT -i lo -j ACCEPT" >> $root/iptables_rules.sh
-echo "## Uncomment the next 4 lines to Allow INPUT from lan hosts" >> $root/iptables_rules.sh
+echo "# Allow INPUT from lan hosts in \$_non_tor" >> $root/iptables_rules.sh
+echo "## Uncomment the next 4 lines to enable" >> $root/iptables_rules.sh
+echo "#for _lan in \$_non_tor; do" >> $root/iptables_rules.sh
+echo "# iptables -A INPUT -s \$_lan -j ACCEPT" >> $root/iptables_rules.sh
+echo "#done" >> $root/iptables_rules.sh
+echo "#sleep 2" >> $root/iptables_rules.sh
+echo "## Uncomment the next line to enable logging" >> $root/iptables_rules.sh
+echo "#iptables -A INPUT -j LOG --log-prefix "Dropped INPUT packet: " --log-level 7 --log-uid" >> $root/iptables_rules.sh
+echo "iptables -A INPUT -j DROP" >> $root/iptables_rules.sh
+echo "iptables -A FORWARD -j DROP" >> $root/iptables_rules.sh
+echo "iptables -A OUTPUT -m state --state INVALID -j DROP" >> $root/iptables_rules.sh
+echo "iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT" >> $root/iptables_rules.sh
+echo "sleep 1" >> $root/iptables_rules.sh
+echo "iptables -A OUTPUT -o \$_iface -m owner --uid-owner \$_user_uid -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -m state --state NEW -j ACCEPT" >> $root/iptables_rules.sh
+echo "sleep 1" >> $root/iptables_rules.sh
+echo "iptables -A OUTPUT -d 127.0.0.1/32 -o lo -j ACCEPT" >> $root/iptables_rules.sh
+echo "sleep 1" >> $root/iptables_rules.sh
+echo "iptables -A OUTPUT -d 127.0.0.1/32 -p tcp -m tcp --dport \$_trans_port --tcp-flags FIN,SYN,RST,ACK SYN -j ACCEPT" >> $root/iptables_rules.sh
+echo "sleep 1" >> $root/iptables_rules.sh
+echo "## Uncomment the next 4 lines to Allow OUTPUT to lan hosts" >> $root/iptables_rules.sh
 echo "#for _lan in \$_non_tor; do" >> $root/iptables_rules.sh
 echo "#iptables -A INPUT -s \$_lan -j ACCEPT" >> $root/iptables_rules.sh
 echo "#done" >> $root/iptables_rules.sh
 echo "#sleep 5" >> $root/iptables_rules.sh
-echo "for _iana in \$_resv_iana; do" >> $root/iptables_rules.sh
-echo "iptables -t nat -A OUTPUT -d \$_iana -j RETURN" >> $root/iptables_rules.sh
-echo "done" >> $root/iptables_rules.sh
-echo "sleep 3" >> $root/iptables_rules.sh
-echo "iptables -A INPUT -j DROP" >> $root/iptables_rules.sh
-echo "iptables -A FORWARD -j DROP" >> $root/iptables_rules.sh
-echo "for _clearnet in \$_non_tor; do" >> $root/iptables_rules.sh
-echo "iptables -A OUTPUT -d \$_clearnet -j ACCEPT" >> $root/iptables_rules.sh
-echo "done" >> $root/iptables_rules.sh
-echo "sleep 3" >> $root/iptables_rules.sh
-echo "iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports \$_trans_port" >> $root/iptables_rules.sh
-echo "iptables -A OUTPUT -m owner --uid-owner \$_user_uid -j ACCEPT" >> $root/iptables_rules.sh
-echo "sleep 2" >> $root/iptables_rules.sh
+echo "## Uncomment the next line to enable logging" >> $root/iptables_rules.sh
+echo "#iptables -A OUTPUT -j LOG --log-prefix "Dropped OUTPUT packet: " --log-level 7 --log-uid" >> $root/iptables_rules.sh
 echo "iptables -A OUTPUT -j DROP" >> $root/iptables_rules.sh
-echo "sleep 1" >> $root/iptables_rules.sh
 echo "iptables -P FORWARD DROP" >> $root/iptables_rules.sh
 echo "iptables -P INPUT DROP" >> $root/iptables_rules.sh
 echo "iptables -P OUTPUT DROP" >> $root/iptables_rules.sh
@@ -736,7 +750,7 @@ start_service(){
 if [ ! -s "$root/stp-service" ]; then
 echo "";
 echo "==> Sorry! Your system is not ready to start the service...";
-echo "==> Please, check if you have installed the necessary files";
+echo "==> Please, check if you have installed the necessary files.";
 sleep 7
 if [ -e "menu" ]; then
 menu
@@ -751,8 +765,8 @@ mv cpath $root/ > /dev/null 2>&1
 fi
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
 echo "";
-echo "==> Sorry! This menu option is not usable in permanent mode";
-echo "==> Reboot your system or simply restart your connection instead";
+echo "==> Sorry! This menu option is not usable in permanent mode.";
+echo "==> Reboot your system or simply restart your connection instead!";
 sleep 7
 if [ -e "menu" ]; then
 menu
@@ -776,6 +790,7 @@ iptables -P FORWARD ACCEPT
 ip6tables -P OUTPUT ACCEPT
 ip6tables -P INPUT ACCEPT
 ip6tables -P FORWARD ACCEPT
+netiface
 ### Configure Network-Manager
 cd $root
 if [ -s $netman ]; then
@@ -800,8 +815,8 @@ sleep 1
 cat /etc/resolv.conf | sed -e '/^$/d; /^#/d' > $root/dnsread
 if [[ $(cat $root/dnsread) != "nameserver 127.0.0.1" ]]; then 
 echo "";
-echo "==> There is a problem with your DNS setting! Fix your";
-echo "==> /etc/resolv.conf by setting 127.0.0.1 as nameserver and try again"
+echo "==> There is a problem with your DNS setting! Fix your /etc/resolv.conf";
+echo "==> by setting 127.0.0.1 as nameserver and try again."
 if [ -e "menu" ]; then
 menu
 return 1
@@ -981,13 +996,13 @@ fi
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
 if [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
 nano /etc/network/if-up.d/anon-service
-echo "==> Please restart via command-line option to apply changes"; 
+echo "==> Please restart via command-line option to apply changes!"; 
 echo "==> Otherwise restart your network connection or reboot your system.";
 echo "";
 exit 0
 else
 xterm -T "Editor" -e "leafpad /etc/network/if-up.d/anon-service" > /dev/null 2>&1
-echo "==> Please restart via command-line option to apply changes"; 
+echo "==> Please restart via command-line option to apply changes!"; 
 echo "==> Otherwise restart your network connection or reboot your system.";
 sleep 7
 menu
@@ -1027,10 +1042,29 @@ touch /usr/bin/anon-service > /dev/null 2>&1
 cp $0 /usr/bin/anon-service > /dev/null 2>&1
 chmod +x /usr/bin/anon-service
 echo "";
-echo "==> Now you can run it simply typing \"sudo anon-service\" in your terminal";
+echo "==> Now you can run it simply typing \"sudo anon-service\" in your terminal!";
 echo "";
 cd $(cat $root/cpath)
 exit 0
+}
+##
+## Find network device
+##
+netiface(){
+ifconfig | grep "RUNNING" | awk '{ print $1 '} | tr -d : | sed -e '/^lo/d; /^$/d' > $root/netiface.txt
+sleep 1 
+clines=$(wc -l "$root/netiface.txt" | awk '{ print $1 }')
+if [[ "$clines" > "1" ]]; then
+echo "==> Available network devices:";
+cat $root/netiface.txt
+echo " "
+echo "==> Which network interface do you prefer to use?";
+echo " "
+echo -n  " Choose: ";
+read -e netdevice
+echo "";
+echo $netdevice > $root/netiface.txt
+fi
 }
 ##
 ## Run at boot
@@ -1039,7 +1073,7 @@ permanent_service(){
 if [ ! -f "$root/stp-service" ]; then
 echo "";
 echo "==> Sorry! Your system is not ready to start the service...";
-echo "==> Please, check if you have installed the necessary files";
+echo "==> Please, check if you have installed the necessary files!";
 sleep 7
 if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
@@ -1111,49 +1145,62 @@ echo "_user_uid=\"999\"" >> /etc/network/if-up.d/anon-service
 echo "_virt_addr=\"10.192.0.0/10\"" >> /etc/network/if-up.d/anon-service
 echo "_trans_port=\"9040\"" >> /etc/network/if-up.d/anon-service
 echo "_resv_iana=\"0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4 255.255.255.255/32\"" >> /etc/network/if-up.d/anon-service
+echo "_iface=\$(cat \$root/netiface.txt)" >> /etc/network/if-up.d/anon-service
 echo "iptables -F" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -F" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -d \$_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports \$_trans_port" >> /etc/network/if-up.d/anon-service
-echo "iptables -A OUTPUT -m state --state INVALID -j DROP" >> /etc/network/if-up.d/anon-service
-echo "iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "iptables -t nat -A OUTPUT -m owner --uid-owner \$_user_uid -j RETURN" >> /etc/network/if-up.d/anon-service
+echo "sleep 1s" >> /etc/network/if-up.d/anon-service
 if (( $selected_service == 0 )); then
 echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53" >> /etc/network/if-up.d/anon-service
 else
 echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 5353" >> /etc/network/if-up.d/anon-service
 fi
-echo "for _clearnet in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
-echo "iptables -t nat -A OUTPUT -d \$_clearnet -j RETURN" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -A OUTPUT -m owner --uid-owner \$_user_uid -j RETURN" >> /etc/network/if-up.d/anon-service
+echo "sleep 1s" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -A OUTPUT -o lo -j RETURN" >> /etc/network/if-up.d/anon-service
+echo "for _lan in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -A OUTPUT -d \$_lan -j RETURN" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
-echo "sleep 5s" >> /etc/network/if-up.d/anon-service
-echo "## Edit and uncomment the next line to grant yourself ssh access from remote machines before the DROP." >> /etc/network/if-up.d/anon-service
-echo "#iptables -A INPUT -i YOUR_NETWORK_DEVICE_HERE -p tcp --dport 22 -m state --state NEW -j ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "iptables -A INPUT -i lo -j ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "## Uncomment the next 4 lines to Allow INPUT from lan hosts" >> /etc/network/if-up.d/anon-service
-echo "#for _lan in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
-echo "#iptables -A INPUT -s \$_lan -j ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "#done" >> /etc/network/if-up.d/anon-service
-echo "#sleep 5s" >> /etc/network/if-up.d/anon-service
+echo "sleep 3s" >> /etc/network/if-up.d/anon-service
 echo "for _iana in \$_resv_iana; do" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -d \$_iana -j RETURN" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
 echo "sleep 3s" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports \$_trans_port" >> /etc/network/if-up.d/anon-service
+echo "## Uncomment the next line to grant yourself ssh access from remote machines before the DROP." >> /etc/network/if-up.d/anon-service
+echo "#iptables -A INPUT -i \$_iface -p tcp --dport 22 -m state --state NEW -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "iptables -A INPUT -m state --state ESTABLISHED -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "iptables -A INPUT -i lo -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "# Allow INPUT from lan hosts in \$_non_tor" >> /etc/network/if-up.d/anon-service
+echo "## Uncomment the next 4 lines to enable" >> /etc/network/if-up.d/anon-service
+echo "#for _lan in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
+echo "# iptables -A INPUT -s \$_lan -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "#done" >> /etc/network/if-up.d/anon-service
+echo "#sleep 2s" >> /etc/network/if-up.d/anon-service
+echo "## Uncomment the next line to enable logging" >> /etc/network/if-up.d/anon-service
+echo "#iptables -A INPUT -j LOG --log-prefix "Dropped INPUT packet: " --log-level 7 --log-uid" >> /etc/network/if-up.d/anon-service
 echo "iptables -A INPUT -j DROP" >> /etc/network/if-up.d/anon-service
 echo "iptables -A FORWARD -j DROP" >> /etc/network/if-up.d/anon-service
-echo "iptables -t nat -A OUTPUT -p tcp --syn -j REDIRECT --to-ports \$_trans_port" >> /etc/network/if-up.d/anon-service
-echo "for _clearnet in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
-echo "iptables -A OUTPUT -d \$_clearnet -j ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "done" >> /etc/network/if-up.d/anon-service
-echo "sleep 3s" >> /etc/network/if-up.d/anon-service
-echo "iptables -A OUTPUT -m owner --uid-owner \$_user_uid -j ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "sleep 2s" >> /etc/network/if-up.d/anon-service
-echo "iptables -A OUTPUT -j DROP" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -m state --state INVALID -j DROP" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -m state --state ESTABLISHED,RELATED -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "sleep 1s" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -o \$_iface -m owner --uid-owner \$_user_uid -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -m state --state NEW -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "sleep 1s" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -d 127.0.0.1/32 -o lo -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "sleep 1s" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -d 127.0.0.1/32 -p tcp -m tcp --dport \$_trans_port --tcp-flags FIN,SYN,RST,ACK SYN -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "sleep 1s" >> /etc/network/if-up.d/anon-service
+echo "## Uncomment the next 4 lines to Allow OUTPUT to lan hosts" >> /etc/network/if-up.d/anon-service
+echo "#for _lan in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
+echo "#iptables -A INPUT -s \$_lan -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "#done" >> /etc/network/if-up.d/anon-service
+echo "#sleep 3s" >> /etc/network/if-up.d/anon-service
+echo "## Uncomment the next line to enable logging" >> /etc/network/if-up.d/anon-service
+echo "#iptables -A OUTPUT -j LOG --log-prefix "Dropped OUTPUT packet: " --log-level 7 --log-uid" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -j DROP" >> /etc/network/if-up.d/anon-service
 echo "iptables -P FORWARD DROP" >> /etc/network/if-up.d/anon-service
 echo "iptables -P INPUT DROP" >> /etc/network/if-up.d/anon-service
 echo "iptables -P OUTPUT DROP" >> /etc/network/if-up.d/anon-service
-echo "sleep 1s" >> /etc/network/if-up.d/anon-service
 echo "ip6tables -P FORWARD DROP" >> /etc/network/if-up.d/anon-service
 echo "ip6tables -P INPUT DROP" >> /etc/network/if-up.d/anon-service
 echo "ip6tables -P OUTPUT DROP" >> /etc/network/if-up.d/anon-service
@@ -1166,7 +1213,7 @@ chown root:root /etc/network/if-up.d/anon-service
 chmod 755 /etc/network/if-up.d/anon-service
 chmod +x /etc/network/if-up.d/anon-service
 echo "";
-echo "==> Now you are ready to go! Use the restart command-line option"; 
+echo "==> Now you are ready to go! Use the restart command-line option."; 
 echo "==> Otherwise restart your network connection or reboot your system.";
 echo "";
 cd $(cat $root/cpath)
@@ -1191,7 +1238,7 @@ ipaddr=$(cat $root/ip.txt)
 echo "==> $ipaddr";
 echo "";
 else
-echo "==> But the service can't access internet. Try the restart option";
+echo "==> But the service can't access internet. Try the restart option!";
 if [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
@@ -1246,7 +1293,7 @@ fi
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
 rm /etc/network/if-up.d/anon-service
 echo "==> Now the service is no more enabled at startup!";
-echo "==> You can reactivate it using appropriate option";
+echo "==> You can reactivate it using appropriate option.";
 echo "";
 sleep 7
 fi
@@ -1390,7 +1437,7 @@ clear
 ### Checking for administrator privileges 
 ifsudo=$(id -u)
 if [ $ifsudo != 0 ]; then
-echo "==> Please, run script with administrator privileges";
+echo "==> Please, run script with administrator privileges!";
 exit 1
 fi
 pwd > cpath
@@ -1599,8 +1646,8 @@ mv cpath $root/ > /dev/null 2>&1
 fi
 if [ ! -s "$root/torrc" ]; then
 echo "";
-echo "==> Sorry! Your system is not ready to complete this action";
-echo "==> Please, check if you have installed the necessary files";
+echo "==> Sorry! Your system is not ready to complete this action.";
+echo "==> Please, check if you have installed the necessary files.";
 echo "";
 sleep 3
 exit 1
@@ -1616,7 +1663,7 @@ exit 0
 iptables)
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
 nano /etc/network/if-up.d/anon-service
-echo "==> Please restart via command-line option to apply changes"; 
+echo "==> Please restart via command-line option to apply changes!"; 
 echo "==> Otherwise restart your network connection or reboot your system.";
 echo "";
 exit 0
