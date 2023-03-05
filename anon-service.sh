@@ -894,7 +894,7 @@ break
 fi
 sleep 1
 done
-rm $root/notices.log > /dev/null 2>&1
+#rm $root/notices.log > /dev/null 2>&1
 cd $root
 ./iptables_rules.sh
 sleep 2
@@ -939,7 +939,7 @@ break
 fi
 sleep 1
 done
-rm $root/notices.log > /dev/null 2>&1
+#rm $root/notices.log > /dev/null 2>&1
 cd $root
 ./iptables_rules.sh
 ### Checking services
@@ -1048,22 +1048,38 @@ cd $(cat $root/cpath)
 exit 0
 }
 ##
-## Find network device
+## Discover network device
 ##
 netiface(){
 ifconfig | grep "RUNNING" | awk '{ print $1 '} | tr -d : | sed -e '/^lo/d; /^$/d' > $root/netiface.txt
 sleep 1 
 clines=$(wc -l "$root/netiface.txt" | awk '{ print $1 }')
 if [[ "$clines" > "1" ]]; then
+echo " ";
 echo "==> Available network devices:";
-cat $root/netiface.txt
-echo " "
+echo "";
+for dev in $(cat $root/netiface.txt); do
+echo "    $dev";
+done
+echo "";
 echo "==> Which network interface do you prefer to use?";
-echo " "
+echo " ";
 echo -n  " Choose: ";
 read -e netdevice
 echo "";
-echo $netdevice > $root/netiface.txt
+if ( ! grep -Fq "$netdevice" $root/netiface.txt ); then
+echo "==> The selected device does not match! Please try again.";
+sleep 3
+if [ -e "$(cat $root/cpath)/temp/menu" ]; then
+menu
+return 1
+else
+echo "";
+exit 1
+fi
+else
+echo ${netdevice//[[:blank:]]/} > $root/netiface.txt
+fi
 fi
 }
 ##
@@ -1139,7 +1155,7 @@ if (( $selected_service == 0 )); then
 echo "nohup ./dnscrypt-proxy > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
 echo "sleep 1s" >> /etc/network/if-up.d/anon-service
 fi
-echo "rm $root/notices.log > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
+#echo "rm $root/notices.log > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> /etc/network/if-up.d/anon-service
 echo "_user_uid=\"999\"" >> /etc/network/if-up.d/anon-service
 echo "_virt_addr=\"10.192.0.0/10\"" >> /etc/network/if-up.d/anon-service
