@@ -719,7 +719,7 @@ echo "==> Configuring DNSCrypt";
 sleep 1
 sed -i "1iforce_tcp = true" $root/dnscrypt-proxy.toml
 sed -i "2iserver_names = ['$server1', '$server2']" $root/dnscrypt-proxy.toml
-sed -i "3iproxy = 'socks5://127.0.0.1:9050'" $root/dnscrypt-proxy.toml
+#sed -i "3iproxy = 'socks5://127.0.0.1:9050'" $root/dnscrypt-proxy.toml
 sed -i "s/127.0.0.1:53/127.0.0.1:10000/g; s/9.9.9.9/208.67.222.222/g; s/8.8.8.8/208.67.220.220/g; s/require_dnssec = false/require_dnssec = true/g; s/force_tcp = false/#force_tcp = false/g; s/\[anonymized_dns\]/\[anonymized_dns\]\nroutes = \[\n{ server_name='$server1', via=\[\'$relay1\', \'$relay2\'\] },\n{ server_name=\'$server2\', via=[\'$relay3\', \'$relay4\'] }\n\]/g; s/skip_incompatible = false/skip_incompatible = true/g" $root/dnscrypt-proxy.toml
 ### Configuring unbound
 echo "==> Configuring Unbound";
