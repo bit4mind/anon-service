@@ -2,7 +2,7 @@
 
 # ####################################################################
 # anon-service.sh
-# version 2.2
+# version 2.3
 # 
 # Transparent proxy through Tor and optionally DNSCrypt with  
 # Anonymized-DNS feature enabled.
@@ -27,7 +27,7 @@
 
 export root=/home/anon-service
 owner=anon-service
-version="2.2"
+version="2.3"
 repo=/etc/apt/sources.list.d/tor.list
 ## DNSCrypt-proxy release
 dnscrel="2.1.4"
@@ -38,21 +38,21 @@ unbound=/etc/unbound/unbound.conf
 
 menu(){
 clear
-printf '%s\n' "                    ▄▄▄      ███▄    █ ▒█████   ███▄    █          "
-printf '%s\n' "                   ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          "
-printf '%s\n' "                   ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         "
-printf '%s\n' "                   ░██▄▄▄▄██▓██▒  ▐▌██▒██   ██░▓██▒  ▐▌██▒         "
-printf '%s\n' "                    ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         "
-printf '%s\n' "                ██████ ▓█████  ██▀███░  ██▒ ░ █▓ ██▓ ▄████▄ ▓█████ "
-printf '%s\n' "              ▒██    ▒ ▓█   ▀ ▓██ ▒ ██▒▓██░   █▒▓██▒▒██▀ ▀█ ▓█   ▀ "
-printf '%s\n' "              ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██  █▒░▒██▒▒▓█    ▄▒███   "
-printf '%s\n' "                ▒   ██▒▒▓█  ▄ ▒██▀▀█▄    ▒██ █░░░██░▒▓▓▄ ▄██▒▓█  ▄ "
-printf '%s\n' "              ▒██████▒▒░▒████▒░██▓ ▒██▒   ▒▀█░  ░██░▒ ▓███▀ ░▒████▒"
-printf '%s\n' "                    ░           ░           ░       ░ by bit4mind  "
-echo " ";
-printf '%s\n' "   0.  Check dependencies and download upgraded services"
-printf '%s\n' "   1.  Choose transparent proxy type and configure related services"
-printf '%s\n' "   2.  Start/Restart service (if restart this will change your IP address)"
+printf '%s\n' "              ▄▄▄      ███▄    █ ▒█████   ███▄    █          "
+printf '%s\n' "             ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          "
+printf '%s\n' "             ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         "
+printf '%s\n' "             ░██▄▄▄▄██▓██▒  ▐▌██▒██   ██░▓██▒  ▐▌██▒         "
+printf '%s\n' "              ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         "
+printf '%s\n' "          ██████ ▓█████  ██▀███░  ██▒ ░ █▓ ██▓ ▄████▄ ▓█████ "
+printf '%s\n' "        ▒██    ▒ ▓█   ▀ ▓██ ▒ ██▒▓██░   █▒▓██▒▒██▀ ▀█ ▓█   ▀ "
+printf '%s\n' "        ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██  █▒░▒██▒▒▓█    ▄▒███   "
+printf '%s\n' "          ▒   ██▒▒▓█  ▄ ▒██▀▀█▄    ▒██ █░░░██░▒▓▓▄ ▄██▒▓█  ▄ "
+printf '%s\n' "        ▒██████▒▒░▒████▒░██▓ ▒██▒   ▒▀█░  ░██░▒ ▓███▀ ░▒████▒"
+printf '%s\n' "              ░           ░           ░       ░ by bit4mind  "
+echo "";
+printf '%s\n' "   0.  Check and download dependencies"
+printf '%s\n' "   1.  Choose and configure transparent proxy type"
+printf '%s\n' "   2.  Start/Restart service (restart will change your IP address)"
 printf '%s\n' "   3.  Execute all tasks above"
 printf '%s\n' "   4.  Close this window"
 printf '%s\n' "   5.  Display status service"
@@ -61,9 +61,8 @@ printf '%s\n' "   7.  Stop service without removing files and setting"
 printf '%s\n' "   8.  Exit removing service files and settings from system"
 printf '%s\n' "   9.  Edit configuration files"
 printf '%s\n' "   10. Install this script"
-echo " ";
-echo -n "  Choose: ";
-read -e task
+echo -en      "   11. View log                                          \033[1;34mChoose:\033[0m ";
+read -r task
 case "$task" in  
 0)
 ## Detect if X runs
@@ -97,6 +96,7 @@ mv cpath $root/ > /dev/null 2>&1
 fi
 if hash wmctrl 2>/dev/null; then
 wmctrl -c :ACTIVE:
+exit 0
 else
 echo "";
 echo "==> Sorry! Your system is not ready to complete this action.";
@@ -107,7 +107,6 @@ return 1
 fi
 ;;
 5)
-clear
 checking_service
 sleep 7
 menu
@@ -127,25 +126,16 @@ menu
 cleanall
 ;;
 9)
-if [ -f "cpath" ]; then
-mv cpath $root/ > /dev/null 2>&1
-fi
-if [ ! -s "$root/torrc" ]; then
-echo "";
-echo "==> Sorry! Your system is not ready to complete this action.";
-echo "==> Please, check if you have installed the necessary files.";
-sleep 7
-menu
-return 1
-else
-echo "";
 editor
 menu
-fi
 ;;
 10)
 install_service
 sleep 7
+menu
+;;
+11)
+vlog
 menu
 ;;
 *)
@@ -170,6 +160,9 @@ else
 echo "";
 exit 1
 fi
+fi
+if [ -e "menu" ]; then
+clear 
 fi
 echo "   #######################################################";
 echo "   #                  ANON-SERVICE SETUP                 #";
@@ -199,10 +192,10 @@ mv cpath $root > /dev/null 2>&1
 mkdir -p $root/temp
 chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
-if [ ! -e "menu" ]; then
+if [ ! -e "menu" ] || [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
 apt-get install -y curl wget psmisc nano apt-transport-https unbound ifupdown > /dev/null
 else
-apt-get install -y curl wget xterm psmisc wmctrl leafpad apt-transport-https unbound ifupdown > /dev/null
+apt-get install -y curl wget xterm psmisc wmctrl leafpad apt-transport-https unbound > /dev/null
 fi
 sleep 1
 if [ -e tor_option1 ]; then
@@ -224,12 +217,13 @@ exit 1
 fi
 else
 echo "==> Which version of Tor do you prefer to use?";
+echo " ";
 echo "      1.Tor Project repository";
 echo "      2.Official repository";
 echo "      3.I already have tor installed";
 echo " "
 echo -n  " Choose: ";
-read -e choose
+read -r choose
 echo "";
 case "$choose"
 in 1)
@@ -249,7 +243,7 @@ touch $root/installed
 else
 echo "==> Sorry! The script cannot recognize your Tor package.";
 sleep 3
-if [ -e "menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else 
@@ -261,7 +255,7 @@ fi
 *)
 echo "==> Are you serious?";
 sleep 5
-if [ -e "menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else 
@@ -320,6 +314,7 @@ fi
 done
 os=$(cat $root/temp/os.txt | sed -e 's/^[ \t]*//')
 if [[ "$os" == " " ]]; then
+echo "";
 echo "==> Sorry! Apparently your OS hasn't candidate in Tor Project.";
 echo "==> repo...Please, re-run the script and choose other options.";
 echo "";
@@ -361,7 +356,7 @@ then
    echo "==> Warning: if the repository is not correct, the script could crash!"; 
    echo "";
    echo -n "    Please, enter the codename (for example: buster): ";
-   read -e codename 
+   read -r codename 
    rm $repo
    touch $repo
    echo "deb     [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg]  https://deb.torproject.org/torproject.org $codename main" | tee -a $repo > /dev/null
@@ -378,6 +373,17 @@ fi
 ## CONFIGURING SERVICES
 ##
 configure(){
+if [ -e "menu" ]; then
+clear 
+fi
+if [[ -e $root/cpath ]]; then
+if [[ -e "$(cat $root/cpath)/temp/menu" ]]; then
+clear 
+fi
+fi
+echo "   #######################################################";
+echo "   #              ANON-SERVICE CONFIGURATION             #";
+echo "   #######################################################";
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
@@ -394,9 +400,6 @@ echo "";
 exit 1
 fi
 fi
-echo "   #######################################################";
-echo "   #              ANON-SERVICE CONFIGURATION             #";
-echo "   #######################################################";
 ### Disable tor and unbound starting at boot time
 systemctl disable unbound > /dev/null 2>&1
 systemctl disable tor > /dev/null 2>&1
@@ -405,6 +408,7 @@ if [ -e "configure_option1" ]; then
 rm $root/stp-service > /dev/null 2>&1
 touch $root/stp-service
 echo "1" > $root/stp-service
+echo "";
 elif [ -e "configure_option2" ]; then 
 rm $root/stp-service > /dev/null 2>&1
 touch $root/stp-service
@@ -413,16 +417,18 @@ dnscryptconf
 elif [ -e "$(cat $root/cpath)/temp/menu" ] || [ -e "$(cat $root/cpath)/temp/configure" ]; then
 echo " ";
 echo "==> Which type of transparent proxy do you prefer to use?";
+echo " ";
 echo "      1. Standard transparent proxy";
 echo "      2. Trasparent proxy with DNSCrypt";
 echo " ";
 echo -n  " Choose: ";
-read -e choose
+read -r choose
 case "$choose" in 
 1)
 rm $root/stp-service > /dev/null 2>&1
 touch $root/stp-service
 echo "1" > $root/stp-service
+echo "";
 ;;
 2)
 rm $root/stp-service > /dev/null 2>&1
@@ -434,7 +440,7 @@ dnscryptconf
 echo "";
 echo "==> Are you serious?"
 sleep 5
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 configure
 return 1
 else 
@@ -447,9 +453,6 @@ echo "";
 echo "==> Sorry! Something went wrong...Please, report this issue to the project";
 echo "";
 exit 1
-fi
-if [ -e "configure_option1" ]; then
-echo "";
 fi
 netiface
 echo "==> Configuring Tor";
@@ -573,14 +576,14 @@ clear
 fi
 echo "==> Please enter the name of the first resolver to use, only ipv4!";
 echo -n "    First server: ";
-read -e server1
+read -r server1
 echo "";
 fi
 if ! grep "\<$server1\>" $root/public-resolvers.md > /dev/null; then
 echo "==> First server not found! Please retry";
 killall leafpad > /dev/null 2>&1
 sleep 3
-if [ -e "menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 configure
 return 1
 else 
@@ -597,12 +600,12 @@ more $root/public-resolvers.md
 fi
 echo "==> Please enter the name of the second resolver to use, only ipv4!";
 echo -n "    Second server: ";
-read -e server2
+read -r server2
 if ! grep "\<$server2\>" $root/public-resolvers.md > /dev/null; then
 echo "==> Second server not found! Please retry";
 killall leafpad > /dev/null 2>&1
 sleep 3
-if [ -e "menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 configure
 return 1
 else 
@@ -627,13 +630,13 @@ more $root/relays.md
 fi
 echo "==> Please enter the name of the first realy to use!";
 echo -n "    First relay for the first server: ";
-read -e relay1
+read -r relay1
 echo "";
 if ! grep "\<$relay1\>" $root/relays.md > /dev/null; then
 echo "==> First relay for the first server not found! Please retry";
 killall leafpad > /dev/null 2>&1
 sleep 3
-if [ -e "menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 configure
 return 1
 else 
@@ -651,13 +654,13 @@ more $root/relays.md
 fi
 echo "==> Please enter the name of the second relay to use!";
 echo -n "    Second relay for the first server: ";
-read -e relay2
+read -r relay2
 echo "";
 if ! grep "\<$relay2\>" $root/relays.md > /dev/null; then
 echo "==> Second relay for the first server not found! Please retry";
 killall leafpad > /dev/null 2>&1
 sleep 3
-if [ -e "menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 configure
 return 1
 else 
@@ -675,13 +678,13 @@ more $root/relays.md
 fi
 echo "==> Please enter the name of the third resolver to use!";
 echo -n "    First relay for the second server: ";
-read -e relay3
+read -r relay3
 echo "";
 if ! grep "\<$relay3\>" $root/relays.md > /dev/null; then
 echo "==> First relay for the second server not found! Please retry";
 killall leafpad > /dev/null 2>&1
 sleep 3
-if [ -e "menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 configure
 return 1
 else 
@@ -699,13 +702,13 @@ more $root/relays.md
 fi
 echo "==> Please enter the name of the fourth resolver to use!";
 echo -n "    Second relay for the second server: ";
-read -e relay4
+read -r relay4
 echo "";
 if ! grep "\<$relay4\>" $root/relays.md > /dev/null; then
 echo "==> Second relay for the second server not found! Please retry";
 killall leafpad > /dev/null 2>&1
 sleep 3
-if [ -e "menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 configure
 return 1
 else 
@@ -719,7 +722,7 @@ echo "==> Configuring DNSCrypt";
 sleep 1
 sed -i "1iforce_tcp = true" $root/dnscrypt-proxy.toml
 sed -i "2iserver_names = ['$server1', '$server2']" $root/dnscrypt-proxy.toml
-sed -i "3iproxy = 'socks5://127.0.0.1:9050'" $root/dnscrypt-proxy.toml
+#sed -i "3iproxy = 'socks5://127.0.0.1:9050'" $root/dnscrypt-proxy.toml
 sed -i "s/127.0.0.1:53/127.0.0.1:10000/g; s/9.9.9.9/208.67.222.222/g; s/8.8.8.8/208.67.220.220/g; s/require_dnssec = false/require_dnssec = true/g; s/force_tcp = false/#force_tcp = false/g; s/\[anonymized_dns\]/\[anonymized_dns\]\nroutes = \[\n{ server_name='$server1', via=\[\'$relay1\', \'$relay2\'\] },\n{ server_name=\'$server2\', via=[\'$relay3\', \'$relay4\'] }\n\]/g; s/skip_incompatible = false/skip_incompatible = true/g" $root/dnscrypt-proxy.toml
 ### Configuring unbound
 echo "==> Configuring Unbound";
@@ -747,8 +750,19 @@ sleep 1
 ##
 start_service(){
 ### Checking for required files
-if [ ! -s "$root/stp-service" ]; then
+if [ -e "menu" ]; then
+clear 
+fi
+if [[ -e $root/cpath ]]; then
+if [[ -e "$(cat $root/cpath)/temp/menu" ]]; then
+clear 
+fi
+fi
+echo "   #######################################################";
+echo "   #                ANON-SERVICE STARTER                 #";
+echo "   #######################################################";
 echo "";
+if [ ! -s "$root/stp-service" ]; then
 echo "==> Sorry! Your system is not ready to start the service...";
 echo "==> Please, check if you have installed the necessary files.";
 sleep 7
@@ -761,14 +775,13 @@ exit 1
 fi
 fi
 if [ -f "cpath" ]; then
-mv cpath $root/ > /dev/null 2>&1
+mv cpath $root/
 fi
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
-echo "";
 echo "==> Sorry! This menu option is not usable in permanent mode.";
 echo "==> Reboot your system or simply restart your connection instead!";
 sleep 7
-if [ -e "menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else 
@@ -817,7 +830,7 @@ if [[ $(cat $root/dnsread) != "nameserver 127.0.0.1" ]]; then
 echo "";
 echo "==> There is a problem with your DNS setting! Fix your /etc/resolv.conf";
 echo "==> by setting 127.0.0.1 as nameserver and try again."
-if [ -e "menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else 
@@ -862,7 +875,7 @@ echo "trap restoring_script SIGINT SIGTERM" >> restoring_orig.sh
 echo "sleep 7" >> restoring_orig.sh
 echo "done" >> restoring_orig.sh
 chmod +x restoring_orig.sh
-if [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
+if [ ! -e "menu" ] || [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
 nohup ./restoring_orig.sh > /dev/null 2>&1 &
 echo "==> Automatic restore started"
 sleep 1
@@ -948,7 +961,7 @@ echo "==> Sorry! No connection to TOR...Please, report this issue to the project
 echo "";
 sleep 7
 shutdown_service
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else
@@ -967,20 +980,40 @@ cd $(cat $root/cpath)
 ## Edit configuration files
 ##
 editor(){
+if [ -e "menu" ]; then
+clear 
+fi
+if [[ -e $root/cpath ]]; then
+if [[ -e "$(cat $root/cpath)/temp/menu" ]]; then
+clear 
+fi
+fi
 echo "   #######################################################";
 echo "   #              ANON-SERVICE CUSTOMIZATION             #";
 echo "   #######################################################";
 echo "";
+if [ -f "cpath" ]; then
+mv cpath $root/ > /dev/null 2>&1
+fi
+if [ ! -s "$root/torrc" ]; then
+echo "==> Sorry! Your system is not ready to complete this action.";
+echo "==> Please, check if you have installed the necessary files.";
+sleep 7
+menu
+return 1
+else
+echo "";
+fi
 echo "==> What do you want to edit?";
 echo "      1.torrc";
 echo "      2.iptables rules";
 echo " "
 echo -n  " Choose: ";
-read -e answer
+read -r answer
 echo "";
 case "$answer" in 
 1)
-if [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
+if  [[ ! -e "menu" ]] || [[ ! -e "$(cat $root/cpath)/temp/menu" ]]; then
 nano $root/torrc
 echo "==> Please restart the service to apply changes";
 echo "";
@@ -994,21 +1027,21 @@ fi
 ;;
 2)
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
-if [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
+if  [[ ! -e "menu" ]] || [[ ! -e "$(cat $root/cpath)/temp/menu" ]]; then
 nano /etc/network/if-up.d/anon-service
 echo "==> Please restart via command-line option to apply changes!"; 
-echo "==> Otherwise restart your network connection or reboot your system.";
+echo "==> Otherwise simply restart your network connection.";
 echo "";
 exit 0
 else
 xterm -T "Editor" -e "leafpad /etc/network/if-up.d/anon-service" > /dev/null 2>&1
 echo "==> Please restart via command-line option to apply changes!"; 
-echo "==> Otherwise restart your network connection or reboot your system.";
+echo "==> Otherwise simply restart your network connection.";
 sleep 7
 menu
 fi
 else 
-if [ ! -e "$(cat $root/cpath)/temp/menu" ]; then
+if  [[ ! -e "menu" ]] || [[ ! -e "$(cat $root/cpath)/temp/menu" ]]; then
 nano $root/iptables_rules.sh
 echo "==> Please restart the service to apply changes";
 echo "";
@@ -1024,7 +1057,7 @@ fi
 *)
 echo "==> Are you serious?"
 sleep 5
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else 
@@ -1038,15 +1071,32 @@ esac
 ## Install this script
 ##
 install_service(){
+if [ -e "menu" ]; then
+clear
+fi
+if [[ -e $root/cpath ]]; then
+if [[ -e "$(cat $root/cpath)/temp/menu" ]]; then
+clear 
+fi
+fi
+echo "   #######################################################";
+echo "   #             ANON-SERVICE MISCELLANEOUS              #";
+echo "   #######################################################";
+echo "";
 touch /usr/bin/anon-service > /dev/null 2>&1
 cp $0 /usr/bin/anon-service > /dev/null 2>&1
 chmod +x /usr/bin/anon-service
+echo "==> Now you can run it simply typing \"sudo anon-service\"!";
 echo "";
-echo "==> Now you can run it simply typing \"sudo anon-service\" in your terminal!";
-echo "";
+if [[ -e $root/cpath ]]; then
 cd $(cat $root/cpath)
-exit 0
+fi
 }
+
+
+
+
+
 ##
 ## Discover network device
 ##
@@ -1065,12 +1115,12 @@ echo "";
 echo "==> Which network interface do you prefer to use?";
 echo " ";
 echo -n  " Choose: ";
-read -e netdevice
+read -r netdevice
 echo "";
 if ( ! grep -Fq "$netdevice" $root/netiface.txt ); then
 echo "==> The selected device does not match! Please try again.";
 sleep 3
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else
@@ -1082,16 +1132,34 @@ echo ${netdevice//[[:blank:]]/} > $root/netiface.txt
 fi
 fi
 }
+
+
+
+
+
+
+
 ##
 ## Run at boot
 ##
 permanent_service(){
-if [ ! -f "$root/stp-service" ]; then
+if [ -e "menu" ]; then
+clear
+fi
+if [[ -e $root/cpath ]]; then
+if [[ -e "$(cat $root/cpath)/temp/menu" ]]; then
+clear 
+fi
+fi
+echo "   #######################################################";
+echo "   #             ANON-SERVICE MISCELLANEOUS              #";
+echo "   #######################################################";
 echo "";
+if [ ! -f "$root/stp-service" ]; then
 echo "==> Sorry! Your system is not ready to start the service...";
 echo "==> Please, check if you have installed the necessary files!";
 sleep 7
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
+if [ -e "menu" ]; then
 menu
 return 1
 else
@@ -1228,34 +1296,46 @@ echo "touch \$root/running > /dev/null 2>&1" >> /etc/network/if-up.d/anon-servic
 chown root:root /etc/network/if-up.d/anon-service
 chmod 755 /etc/network/if-up.d/anon-service
 chmod +x /etc/network/if-up.d/anon-service
+echo "==> Now you are ready to go! Restart your network connection"; 
+echo "==> or use the restart command-line option.";
 echo "";
-echo "==> Now you are ready to go! Use the restart command-line option."; 
-echo "==> Otherwise restart your network connection or reboot your system.";
-echo "";
+if [[ -e $root/cpath ]]; then
 cd $(cat $root/cpath)
+fi
 }
 ##
 ## CHECKING IF RUNNING
 ##
 checking_service(){
+if [ -e "menu" ]; then
+clear 
+fi
+if [[ -e $root/cpath ]]; then
+if [[ -e "$(cat $root/cpath)/temp/menu" ]]; then
+clear 
+fi
+fi
 echo "   #######################################################";
 echo "   #                 ANON-SERVICE STATUS                 #";
 echo "   #######################################################";
 echo "";
-if [ ! -e $root/running ] > /dev/null; then
+sleep 1
+rm $root/ip.txt > /dev/null 2>&1
+if [ ! -e $root/running ]; then
 echo "==> Service is not running!";
 echo "";
 sleep 3	
 else
 echo "==> Service is running!";
 curl --socks5 localhost:9050 --socks5-hostname localhost:9050 -s https://check.torproject.org/ | cat | grep -m 1 "Your IP address" | sed -e 's/<[^>]*>//g' | xargs > $root/ip.txt
-if ( grep -q "Your" $root/ip.txt ); then
+if ( grep -q "Your" $root/ip.txt ) > /dev/null 2>&1; then
 ipaddr=$(cat $root/ip.txt)
 echo "==> $ipaddr";
 echo "";
 else
 echo "==> But the service can't access internet. Try the restart option!";
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
+sleep 5
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
 menu
 return 1
 else
@@ -1269,13 +1349,20 @@ fi
 ## Exit
 ##
 shutdown_service(){
-banner
+if [ -e "menu" ]; then
+clear
+fi
+if [[ -e $root/cpath ]]; then
+if [[ -e "$(cat $root/cpath)/temp/menu" ]]; then
+clear 
+fi
+fi
+echo "   #######################################################";
+echo "   #               ANON-SERVICE DEACTIVATOR              #";
+echo "   #######################################################";
 echo "";
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
-fi
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
-clear
 fi
 service dnscrypt-proxy stop > /dev/null 2>&1
 sleep 3
@@ -1326,24 +1413,47 @@ iptables -P FORWARD ACCEPT
 ip6tables -P OUTPUT ACCEPT
 ip6tables -P INPUT ACCEPT
 ip6tables -P FORWARD ACCEPT
+if [ -e $root/cpath ]; then
 cd $(cat $root/cpath)
+fi
 }
 ##
 ## Cleaning all and exit
 ##
 cleanall(){
-if [ -e "$(cat $root/cpath)/temp/menu" ]; then
+if [ -e "menu" ]; then
 clear
+fi
+if [[ -e $root/cpath ]]; then
+if [[ -e "$(cat $root/cpath)/temp/menu" ]]; then
+clear 
+fi
 fi
 echo "   #######################################################";
 echo "   #               ANON-SERVICE UNINSTALLER              #";
 echo "   #######################################################";
 echo "";
-echo "==> Stopping service";
+if [ ! -d $root ]; then
+echo "==> Nothing to do here!"; 
+sleep 3
+if [ -e "menu" ]; then
+menu
+return 1
+else
+echo "";
+exit 1
+fi
+fi
+if ! pgrep -x "tor" > /dev/null; then
+echo "==> Restoring original files"; 
 sleep 1
+else
+echo "==> Stopping anon-service";
 service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall xterm unbound tor dnscrypt-proxy restoring_orig.sh > /dev/null 2>&1
+sleep 1
+fi
 echo "==> Removing anon-service files and settings from system";
 chattr -i /etc/resolv.conf > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
@@ -1358,7 +1468,9 @@ fi
 apt-get clean > /dev/null
 apt-get -y autoremove > /dev/null 2>&1
 apt-get -y autoclean > /dev/null 2>&1
+if [[ -e $root/cpath ]]; then
 rm -rf $(cat $root/cpath)/temp > /dev/null 2>&1
+fi
 userdel -r $owner > /dev/null 2>&1
 rm -rf $root > /dev/null 2>&1
 rm cpath > /dev/null 2>&1
@@ -1398,6 +1510,76 @@ echo -e "\n\n";
 exit 0
 }
 ##
+## View log
+##
+vlog(){
+if [ -e "menu" ]; then
+clear 
+fi
+if [[ -e $root/cpath ]]; then
+if [[ -e "$(cat $root/cpath)/temp/menu" ]]; then
+clear 
+fi
+fi
+echo "   #######################################################";
+echo "   #               ANON-SERVICE MAINTENANCE              #";
+echo "   #######################################################";
+if [ ! -e $root/notices.log ]; then
+echo "";
+echo "==> Sorry! Log file not exitsts.";
+echo "";
+sleep 3
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
+menu 
+else 
+exit 1
+fi
+fi
+echo " ";
+echo "==> What tor info do you want to view?";
+echo " ";
+echo "      1.Cached (last session)";
+echo "      2.Realtime";
+echo " ";
+echo -n  " Choose: ";
+read -r selected_view
+echo "";
+if [ $selected_view == 1 ]; then
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
+leafpad $root/notices.log 
+else 
+more $root/notices.log
+exit 0
+fi
+elif [ $selected_view == 2 ]; then
+if ( ! pgrep -x "tor" > /dev/null ); then
+echo "==> Tor is not running! Please view cached logs instead.";
+sleep 3
+echo "";
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
+menu 
+else 
+exit 1
+fi
+fi
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
+xterm -title "Tor log file" -e tail -f $root/notices.log &
+else 
+tail -f $root/notices.log
+fi
+else 
+echo "";
+echo "==> Are you sure Tor is running?";
+echo "";
+sleep 3
+if [ -e "menu" ] || [ -e "$(cat $root/cpath)/temp/menu" ]; then
+munu 
+else 
+exit 1
+fi
+fi
+}
+##
 ## Usage
 ##
 usage(){
@@ -1427,6 +1609,8 @@ printf '%s\n' " --restore            restore original files and settings"
 echo "";
 printf '%s\n' " --help               display this help"
 printf '%s\n' " --version            display version"
+printf '%s\n' " --log      <value>   view Tor log file"
+printf '%s\n' "                      <value> cached or realtime"
 echo "";
 }
 ##
@@ -1437,7 +1621,7 @@ printf '%s\n' "           ▄▄▄      ███▄    █ ▒█████ 
 printf '%s\n' "          ▒████▄    ██ ▀█   █▒██▒  ██▒ ██ ▀█   █          "
 printf '%s\n' "          ▒██  ▀█▄ ▓██  ▀█ ██▒██░  ██▒▓██  ▀█ ██▒         "
 printf '%s\n' "          ░██▄▄▄▄██▓██▒  ▐▌██▒██   ██░▓██▒  ▐▌██▒         "
-printf '%s\n' "           ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░         "
+printf '%s\n' "           ▓█   ▓██▒██░   ▓██░ ████▓▒░▒██░   ▓██░  v$version"
 printf '%s\n' "       ██████ ▓█████  ██▀███░  ██▒ ░ █▓ ██▓ ▄████▄ ▓█████ "
 printf '%s\n' "     ▒██    ▒ ▓█   ▀ ▓██ ▒ ██▒▓██░   █▒▓██▒▒██▀ ▀█ ▓█   ▀ "
 printf '%s\n' "     ░ ▓██▄   ▒███   ▓██ ░▄█ ▒ ▓██  █▒░▒██▒▒▓█    ▄▒███   "
@@ -1454,6 +1638,7 @@ clear
 ifsudo=$(id -u)
 if [ $ifsudo != 0 ]; then
 echo "==> Please, run script with administrator privileges!";
+echo "";
 exit 1
 fi
 pwd > cpath
@@ -1584,7 +1769,6 @@ configure
 fi
 ;;
 --start)
-banner
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
@@ -1602,7 +1786,6 @@ exit 0
 echo "Reloading...";
 sleep 1
 clear
-banner
 if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
@@ -1650,7 +1833,6 @@ exit 0
 ;;
 --version)
 banner
-echo "anon-service $version";
 ;;
 --help)
 usage
@@ -1661,6 +1843,10 @@ if [ -f "cpath" ]; then
 mv cpath $root/ > /dev/null 2>&1
 fi
 if [ ! -s "$root/torrc" ]; then
+clear
+echo "   #######################################################";
+echo "   #              ANON-SERVICE CUSTOMIZATION             #";
+echo "   #######################################################";
 echo "";
 echo "==> Sorry! Your system is not ready to complete this action.";
 echo "==> Please, check if you have installed the necessary files.";
@@ -1672,6 +1858,11 @@ if [ ! -z "$2" ]; then
 case "$2" in
 torrc)
 nano $root/torrc
+clear
+echo "   #######################################################";
+echo "   #              ANON-SERVICE CUSTOMIZATION             #";
+echo "   #######################################################";
+echo "";
 echo "==> Please restart the service to apply changes";
 echo "";
 exit 0
@@ -1679,12 +1870,22 @@ exit 0
 iptables)
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
 nano /etc/network/if-up.d/anon-service
+clear
+echo "   #######################################################";
+echo "   #              ANON-SERVICE CUSTOMIZATION             #";
+echo "   #######################################################";
+echo "";
 echo "==> Please restart via command-line option to apply changes!"; 
 echo "==> Otherwise restart your network connection or reboot your system.";
 echo "";
 exit 0
 else 
 nano $root/iptables_rules.sh
+clear
+echo "   #######################################################";
+echo "   #              ANON-SERVICE CUSTOMIZATION             #";
+echo "   #######################################################";
+echo "";
 echo "==> Please restart the service to apply changes";
 echo "";
 exit 0
@@ -1697,6 +1898,50 @@ exit 1
 esac
 else
 editor
+exit 0
+fi
+;;
+--log)
+if [ -f "cpath" ]; then
+mv cpath $root/ > /dev/null 2>&1
+fi
+if [ ! -s "$root/notices.log" ]; then
+clear
+echo "   #######################################################";
+echo "   #               ANON-SERVICE MAINTENANCE              #";
+echo "   #######################################################";
+echo "";
+echo "==> Sorry! Log file not exitsts.";
+echo "";
+sleep 3
+exit 1
+fi
+if [ ! -z "$2" ]; then
+case "$2" in
+cached)
+more $root/notices.log
+exit 0
+;;
+realtime)
+if ( ! pgrep -x "tor" > /dev/null ); then
+clear
+echo "   #######################################################";
+echo "   #               ANON-SERVICE MAINTENANCE              #";
+echo "   #######################################################";
+echo "";
+echo "==> Tor is not running! Please view cached logs instead.";
+echo "";
+exit 0
+fi
+tail -f $root/notices.log
+;;
+*)
+echo "==> Invalid option '$2'";
+exit 1
+;;
+esac
+else
+vlog
 exit 0
 fi
 ;;
