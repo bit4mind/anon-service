@@ -11,7 +11,7 @@ Added
 
 Changed
 
-    Banner
+    Banner and other outputs
 
 
 
