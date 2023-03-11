@@ -96,7 +96,7 @@ appropriate option in the same script.
 
 NOTES:
 The command-line download option will install the software required to run without 
-a graphical environment.
+a graphical environment: some interactive menu options may not work.
 If you install the script to start automatically at boot, be aware that the service 
 will start with a small delay after the host has established the connection to the 
 network. 
