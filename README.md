@@ -83,7 +83,7 @@ sudo ./anon-service.sh --download -1 && sudo ./anon-service.sh --configure -1 &&
 
 This will start the service in standard transparent proxy mode getting Tor from the official project repository
 ```
-sudo ./anon-service.sh --download -1 && sudo ./anon-service.sh --configure -2 dnscrypt-de-blahdns-ipv4 meganerd anon-acsacsar-ams-ipv4 anon-openinternet anon-v.dnscrypt.uk-ipv4 anon-sth-se && sudo ./anon-service.sh --start
+sudo ./anon-service.sh --download -1 && sudo ./anon-service.sh --configure -2 dnscrypt-de-blahdns-ipv4 meganerd anon-v.dnscrypt.uk-ipv4 anon-openinternet anon-v.dnscrypt.uk-ipv4 anon-sth-se && sudo ./anon-service.sh --start
 ```
 This will start the service with DNSCrypt and the Anonymized-DNS feature enabled by obtaining Tor from the official
 project repository. 
