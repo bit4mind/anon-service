@@ -98,6 +98,7 @@ case "$task" in
 			wmctrl -c :ACTIVE:
 			exit 0
 		else
+			echo "";
 			exit 0
 		fi
 		;;
@@ -189,9 +190,9 @@ chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
 #
 if [[ ! -e "menu" ]] || [[ ! -e "$(cat $root/cpath)/temp/menu" ]]; then
-	apt-get install -y curl wget psmisc nano apt-transport-https unbound ifupdown > /dev/null
+	apt-get install -y curl wget psmisc nano apt-transport-https unbound net-tools ifupdown > /dev/null
 else
-	apt-get install -y curl wget xterm psmisc wmctrl leafpad apt-transport-https unbound > /dev/null
+	apt-get install -y curl wget xterm psmisc wmctrl leafpad apt-transport-https net-tools unbound > /dev/null
 fi
 sleep 1
 if [ -e tor_option1 ]; then
@@ -1018,9 +1019,20 @@ echo "   #######################################################";
 echo "   #             ANON-SERVICE MISCELLANEOUS              #";
 echo "   #######################################################";
 echo "";
-touch /usr/bin/anon-service > /dev/null 2>&1
-cp $0 /usr/bin/anon-service > /dev/null 2>&1
-chmod +x /usr/bin/anon-service
+if [ -e $root/cpath ]; then
+	cd $(cat $root/cpath)
+fi
+mkdir -p /opt/anon-service > /dev/null 2>&1
+rm /usr/bin/anon-service > /dev/null 2>&1
+rm /opt/anon-service/anon-service.sh > /dev/null 2>&1
+touch /opt/anon-service/anon-service.sh > /dev/null 2>&1
+if [[ "${PWD##temp}" == "$PWD" ]]; then
+	cp ../$0 /opt/anon-service/anon-service.sh > /dev/null 2>&1
+else
+	cp $0 /opt/anon-service/anon-service.sh > /dev/null 2>&1
+fi
+chmod +x /opt/anon-service/anon-service.sh
+ln -s /opt/anon-service/anon-service.sh /usr/bin/anon-service
 echo "==> Now you can run it simply typing \"sudo anon-service\"!";
 echo "";
 if [ -e $root/cpath ]; then
@@ -1598,6 +1610,7 @@ if [ "$#" -gt 0 ]; then
 							touch tor_option1
 						else
 							echo "==> Invalid option '$2'";
+							echo "";
 							exit 1
 						fi
 						;;
@@ -1606,6 +1619,7 @@ if [ "$#" -gt 0 ]; then
 							touch tor_option2
 						else
 							echo "==> Invalid option '$2'";
+							echo "";
 							exit 1
 						fi
 						;;
@@ -1614,10 +1628,12 @@ if [ "$#" -gt 0 ]; then
 							touch tor_option3
 						else 
 							echo "==> Invalid option '$2'";
+							echo "";
 						fi
 						;;
 					-- | -* | *)
 						echo "Invalid option '$2'";
+						echo "";
 						exit 1
 						;;
 				esac
@@ -1637,6 +1653,7 @@ if [ "$#" -gt 0 ]; then
 							touch configure_option1
 						else
 							echo "==> Invalid option '$2'";
+							echo "";
 							exit 1
 						fi
 						;;
@@ -1645,47 +1662,55 @@ if [ "$#" -gt 0 ]; then
 							touch configure_option2
 						else
 							echo "==> Invalid option '$2'";
+							echo "";
 							exit 1
 						fi
 						if [ ! -z "$3" ]; then
 							echo "$3" > server1
 						else
 							echo "==> Error! DNSCrypt enable option requires more arguments"
+							echo "";
 							exit 1
 						fi
 						if [ ! -z "$4" ]; then
 							echo "$4" > server2
 						else
 							echo "==> Error! DNSCrypt enable option requires more arguments"
+							echo "";
 							exit 1
 						fi
 						if [ ! -z "$5" ]; then
 							echo "$5" > relay1
 						else
 							echo "==> Error! DNSCrypt enable option requires more arguments"
+							echo "";
 							exit 1
 						fi
 						if [ ! -z "$6" ]; then
 							echo "$6" > relay2
 						else
 							echo "==> Error! DNSCrypt enable option requires more arguments"
+							echo "";
 							exit 1
 						fi
 						if [ ! -z "$7" ]; then
 							echo "$7" > relay3
 						else
 							echo "==> Error! DNSCrypt enable option requires more arguments"
+							echo "";
 							exit 1
 						fi
 						if [ ! -z "$8" ]; then
 							echo "$8" > relay4
 						else
 							echo "==> Error! DNSCrypt enable option requires more arguments"
+							echo "";
 							exit 1
 						fi
 						;;
 					-- | -* | *)
 						echo "Invalid option '$2'";
+						echo "";
 						exit 1
 						;;
 				esac        
@@ -1820,6 +1845,7 @@ if [ "$#" -gt 0 ]; then
 						;;
 					*)
 						echo "==> Invalid option '$2'";
+						echo "";
 						exit 1
 						;;
 				esac
@@ -1864,6 +1890,7 @@ if [ "$#" -gt 0 ]; then
 						;;
 					*)
 						echo "==> Invalid option '$2'";
+						echo "";
 						exit 1
 						;;
 					esac
@@ -1874,6 +1901,7 @@ if [ "$#" -gt 0 ]; then
 			;;
 		-- | -* | *)
 			echo "Invalid option '$1'";
+			echo "";			
 			exit 1
 			;;
 	esac
