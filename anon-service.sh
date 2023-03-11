@@ -68,18 +68,12 @@ echo -en      "   11. View log                                          \033[1;3
 read -r task
 case "$task" in  
 	0)
-		## Detect if X runs
-		if ( ! timeout 1s xset q &>/dev/null ); then
-			echo " ";
-			echo "==> No X server detected. Try to use command-line option instead." >&2
-			echo "";
-			sleep 5
-			exit 1
-		fi
+		_checkX
 		_download
 		_menu
 		;;
 	1)
+		_checkX
 		_configure
 		_menu
 		;;
@@ -122,6 +116,7 @@ case "$task" in
 		_cleanall
 		;;
 	9)
+		_checkX
 		_editor
 		_menu
 		;;
@@ -131,6 +126,7 @@ case "$task" in
 		_menu
 		;;
 	11)
+		_checkX
 		vlog
 		_menu
 		;;
@@ -275,9 +271,15 @@ curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/public-resolvers
 echo "==> Downloading anonymized DNS relays list";
 sleep 1
 curl -L -O https://download.dnscrypt.info/dnscrypt-resolvers/v3/relays.md > /dev/null 2>&1
+### Backup nm and resolv.conf (if exist)
 if [ ! -s "$netman.bak" ]; then
 	if [ -s "$netman" ]; then
-	cp $netman $netman.bak > /dev/null 2>&1
+		cp $netman $netman.bak
+	fi
+fi
+if [ ! -s "/etc/resolv.conf.bak" ]; then
+	if [ -s "etc/resolv.conf" ]; then
+		cp etc/resolv.conf etc/resolv.conf.bak > /dev/null 2>&1
 	fi
 fi
 cd $(cat $root/cpath)
@@ -838,6 +840,7 @@ if ( ! pgrep -f "restoring_orig.sh " )  > /dev/null; then
 	echo "if [ ! -f /etc/network/if-up.d/anon-service ]; then" >> restoring_orig.sh
 	echo "cp $netman.bak $netman > /dev/null 2>&1" >> restoring_orig.sh
 	echo "chattr -i /etc/resolv.conf > /dev/null 2>&1" >> restoring_orig.sh
+	echo "cp /etc/resolv.conf.bak /etc/resolv.conf > /dev/null 2>&1" >> restoring_orig.sh
 	echo "fi" >> restoring_orig.sh
 	echo "rm $root/running > /dev/null 2>&1" >> restoring_orig.sh
 	echo "exit" >> restoring_orig.sh
@@ -1088,6 +1091,18 @@ if [[ "$clines" > "1" ]]; then
 	else
 		echo ${netdevice//[[:blank:]]/} > $root/netiface.txt
 	fi
+fi
+}
+##
+## Detect if X runs
+##
+_checkX(){
+if ( ! timeout 1s xset q &>/dev/null ); then
+	echo " ";
+	echo "==> No X server detected. Try to use command-line option instead." >&2
+	echo "";
+	sleep 5
+	exit 1
 fi
 }
 ##
@@ -1352,6 +1367,7 @@ rm $root/tor.txt > /dev/null 2>&1
 rm $root/running > /dev/null 2>&1
 chattr -i /etc/resolv.conf > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
+cp /etc/resolv.conf.bak /etc/resolv.conf > /dev/null 2>&1
 service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall xterm unbound tor dnscrypt-proxy restoring_orig.sh > /dev/null 2>&1
@@ -1430,6 +1446,7 @@ fi
 echo "==> Removing anon-service files and settings from system";
 chattr -i /etc/resolv.conf > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
+cp /etc/resolv.conf.bak /etc/resolv.conf > /dev/null 2>&1
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
