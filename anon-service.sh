@@ -819,7 +819,7 @@ if [ -f $netman ]; then
 	service network-manager restart > /dev/null 2>&1
 	sleep 5
 else
-	ifdown -a > /dev/null 2>&1 && sleep 5 && ifup -a > /dev/null 2>&1
+	service networking restart
 fi
 sleep 5
 ### Disable ipv6 
@@ -1378,7 +1378,7 @@ if [ -f $netman ]; then
 	service network-manager restart > /dev/null 2>&1
 	sleep 1
 else
-	ifdown -a > /dev/null 2>&1 && sleep 5 && ifup -a > /dev/null 2>&1
+	service networking restart
 	sleep 1
 fi
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
@@ -1473,7 +1473,7 @@ if [ -f $netman ]; then
 	service network-manager restart > /dev/null 2>&1
 	sleep 1
 else
-	ifdown -a > /dev/null 2>&1 && sleep 5 && ifup -a > /dev/null 2>&1
+	service networking restart
 	sleep 1
 fi
 ### Firewall flush
@@ -1786,7 +1786,7 @@ if [ "$#" -gt 0 ]; then
 					echo "==> Service restarted...Be patient!";
 					echo "";
 				else
-					ifdown -a > /dev/null 2>&1 && sleep 5 && ifup -a > /dev/null 2>&1
+					service networking restart
 					echo "";
 					echo "==> Service restarted...Be patient!";
 					echo "";
