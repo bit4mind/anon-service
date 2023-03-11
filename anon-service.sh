@@ -416,7 +416,8 @@ elif [ -e "$(cat $root/cpath)/temp/menu" ] || [ -e "$(cat $root/cpath)/temp/conf
 	2)
 		rm $root/stp-service > /dev/null 2>&1
 		touch $root/stp-service
-		echo "0" > $root/stp-service 
+		echo "0" > $root/stp-service
+		echo ""; 
 		dnscryptconf
 		;;
 	*)
@@ -544,7 +545,8 @@ rm $root/dnscrypt-proxy.toml > /dev/null 2>&1
 cp $root/dnscrypt-proxy.toml.bak $root/dnscrypt-proxy.toml
 if [ -e "configure_option2" ]; then
 	server1="$(cat server1)"
-else
+else	
+	clear
 	echo "==> Opening file contain public resolvers";
 	sleep 2
 	if [ -e "configure" ]; then
@@ -556,36 +558,41 @@ else
 		sleep 1
 		clear
 	fi
+	echo "";
 	echo "==> Please enter the name of the first resolver to use, only ipv4!";
 	echo "";
 	echo -n "    First server: ";
 	read -r server1
 fi
 if ( ! grep "\<$server1\>" $root/public-resolvers.md > /dev/null ); then
+	echo "";
 	echo "==> First server not found! Please retry";
 	killall leafpad > /dev/null 2>&1
 	sleep 3
-	_cconfig
 	echo "";
+	_cconfig
 fi
 if [ -e "configure_option2" ]; then
 	server2="$(cat server2)"
 else
 	if [ -e "configure" ]; then
+		clear
 		echo "==> Type "q" to quit";
 		sleep 3
 		more $root/public-resolvers.md
 	fi
+	echo "";
 	echo "==> Please enter the name of the second resolver to use, only ipv4!";
 	echo "";	
 	echo -n "    Second server: ";	
 	read -r server2
 	if ( ! grep "\<$server2\>" $root/public-resolvers.md > /dev/null ); then
+		echo "";
 		echo "==> Second server not found! Please retry";
 		killall leafpad > /dev/null 2>&1
 		sleep 3
-		_cconfig
 		echo "";
+		_cconfig		
 	fi
 fi
 if [ -e "configure_option2" ]; then
@@ -596,9 +603,9 @@ else
 	sleep 2
 	killall leafpad > /dev/null 2>&1
 	echo "";
-	echo "==> ***************************************************************************";
+	echo "    ***************************************************************************";
 	echo "==> Carefully choose relays/servers so that they are run by different entities!";
-	echo "==> ***************************************************************************";
+	echo "    ***************************************************************************";
 	sleep 2
 	echo "";
 	if [ -e "configure" ]; then
@@ -606,78 +613,93 @@ else
 		sleep 3
 		more $root/relays.md
 	fi
+	echo "";
 	echo "==> Please enter the name of the first realy to use!";
 	echo "";
 	echo -n "    First relay for the first server: ";
 	read -r relay1
 	if ! grep "\<$relay1\>" $root/relays.md > /dev/null; then
+		echo "";
 		echo "==> First relay for the first server not found! Please retry";
 		killall leafpad > /dev/null 2>&1
 		sleep 3
-		_cconfig
 		echo "";
+		_cconfig
 	fi
 fi
 if [ -e "configure_option2" ]; then
 	relay2="$(cat relay2)"
 else
 	if [ -e "configure" ]; then
+		clear
 		echo "==> Type "q" to quit";
 		sleep 3
 		more $root/relays.md
 	fi
+	echo "";
 	echo "==> Please enter the name of the second relay to use!";
 	echo "";
 	echo -n "    Second relay for the first server: ";
 	read -r relay2
 	echo "";
 	if ( ! grep "\<$relay2\>" $root/relays.md > /dev/null ); then
+		echo "";
 		echo "==> Second relay for the first server not found! Please retry";
 		killall leafpad > /dev/null 2>&1
 		sleep 3
-		_cconfig
 		echo "";
+		_cconfig
 	fi
 fi
 if [ -e "configure_option2" ]; then
 	relay3="$(cat relay3)"
 else
 	if [ -e "configure" ]; then
+		clear
 		echo "==> Type "q" to quit";
 		sleep 3
 		more $root/relays.md
 	fi
+	echo "";
 	echo "==> Please enter the name of the third resolver to use!";
 	echo "";
 	echo -n "    First relay for the second server: ";
 	read -r relay3
 	if ( ! grep "\<$relay3\>" $root/relays.md > /dev/null; ) then
+		echo "";
 		echo "==> First relay for the second server not found! Please retry";
 		killall leafpad > /dev/null 2>&1
 		sleep 3
-		_cconfig
 		echo "";
+		_cconfig
 	fi
 fi
 if [ -e "configure_option2" ]; then
 	relay4="$(cat relay4)"
 else
 	if [ -e "configure" ]; then
+		clear
 		echo "==> Type "q" to quit";
 		sleep 3
 		more $root/relays.md
 	fi
+	echo "";
 	echo "==> Please enter the name of the fourth resolver to use!";
 	echo "";
 	echo -n "    Second relay for the second server: ";
 	read -r relay4
 	if ( ! grep "\<$relay4\>" $root/relays.md > /dev/null ); then
+		echo "";
 		echo "==> Second relay for the second server not found! Please retry";
 		killall leafpad > /dev/null 2>&1
 		sleep 3
-		_cconfig
 		echo "";
+		_cconfig
 	fi
+	clear
+	echo "   #######################################################";
+	echo "   #              ANON-SERVICE CONFIGURATION             #";
+	echo "   #######################################################";
 fi
 killall leafpad > /dev/null 2>&1
 echo "";
@@ -1128,9 +1150,9 @@ chattr -i /etc/resolv.conf > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
 echo $'inameserver 127.0.0.1\E:x\n' | vi /etc/resolv.conf > /dev/null 2>&1
 chattr +i /etc/resolv.conf > /dev/null 2>&1
-echo "#################################################################" > $root/iptables_rules.sh
-echo "#                   DO NOT EDIT THIS SECTION                    #" >> $root/iptables_rules.sh
-echo "#################################################################" >> $root/iptables_rules.sh
+echo "#################################################################" > /etc/network/if-up.d/anon-service
+echo "#                   DO NOT EDIT THIS SECTION                    #" >> /etc/network/if-up.d/anon-service
+echo "#################################################################" >> /etc/network/if-up.d/anon-service
 echo "#!/bin/sh" >> /etc/network/if-up.d/anon-service
 echo "root=/home/anon-service" >> /etc/network/if-up.d/anon-service
 echo "owner=anon-service" >> /etc/network/if-up.d/anon-service
@@ -1178,9 +1200,9 @@ if (( $selected_service == 0 )); then
 	echo "nohup ./dnscrypt-proxy > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
 	echo "sleep 1s" >> /etc/network/if-up.d/anon-service
 fi
-echo "#################################################################" >> $root/iptables_rules.sh
-echo "#                        IPTABLES RULES                         #" >> $root/iptables_rules.sh
-echo "#################################################################" >> $root/iptables_rules.sh
+echo "#################################################################" >> /etc/network/if-up.d/anon-service
+echo "#                        IPTABLES RULES                         #" >> /etc/network/if-up.d/anon-service
+echo "#################################################################" >> /etc/network/if-up.d/anon-service
 echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> /etc/network/if-up.d/anon-service
 echo "_user_uid=\"999\"" >> /etc/network/if-up.d/anon-service
 echo "_virt_addr=\"10.192.0.0/10\"" >> /etc/network/if-up.d/anon-service
