@@ -481,7 +481,7 @@ echo "iptables -F" >> $root/iptables_rules.sh
 echo "iptables -t nat -F" >> $root/iptables_rules.sh
 echo "iptables -t nat -A OUTPUT -d \$_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports \$_trans_port" >> $root/iptables_rules.sh
 echo "sleep 1" >> $root/iptables_rules.sh
-if ( grep -Fq "1" $root/stp-service); then
+if ( grep -Fq "1" $root/stp-service ); then
 	echo "iptables -t nat -A OUTPUT -d 127.0.0.1/32 -p udp -m udp --dport 53 -j REDIRECT --to-ports 5353" >> $root/iptables_rules.sh
 else
 	echo "iptables -t nat -A OUTPUT -d 127.0.0.1/32 -p udp -m udp --dport 53 -j REDIRECT --to-ports 53" >> $root/iptables_rules.sh
@@ -1165,10 +1165,10 @@ chattr -i /etc/resolv.conf > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
 echo $'inameserver 127.0.0.1\E:x\n' | vi /etc/resolv.conf > /dev/null 2>&1
 chattr +i /etc/resolv.conf > /dev/null 2>&1
-echo "#################################################################" > /etc/network/if-up.d/anon-service
+echo "#!/bin/sh" > /etc/network/if-up.d/anon-service
+echo "#################################################################" >> /etc/network/if-up.d/anon-service
 echo "#                   DO NOT EDIT THIS SECTION                    #" >> /etc/network/if-up.d/anon-service
 echo "#################################################################" >> /etc/network/if-up.d/anon-service
-echo "#!/bin/sh" >> /etc/network/if-up.d/anon-service
 echo "root=/home/anon-service" >> /etc/network/if-up.d/anon-service
 echo "owner=anon-service" >> /etc/network/if-up.d/anon-service
 echo "rm $root/running > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
@@ -1210,8 +1210,7 @@ echo "else" >> /etc/network/if-up.d/anon-service
 echo "sleep 1s" >> /etc/network/if-up.d/anon-service
 echo "fi" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
-selected_service=$(cat $root/stp-service)
-if (( $selected_service == 0 )); then
+if ( grep -Fq "0" $root/stp-service ); then
 	echo "nohup ./dnscrypt-proxy > /dev/null 2>&1 &" >> /etc/network/if-up.d/anon-service
 	echo "sleep 1s" >> /etc/network/if-up.d/anon-service
 fi
@@ -1228,7 +1227,7 @@ echo "iptables -F" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -F" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -d \$_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports \$_trans_port" >> /etc/network/if-up.d/anon-service
 echo "sleep 1s" >> /etc/network/if-up.d/anon-service
-if (( $selected_service == 0 )); then
+if ( grep -Fq "0" $root/stp-service ); then
 	echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 53" >> /etc/network/if-up.d/anon-service
 else
 	echo "iptables -t nat -A OUTPUT -p udp --dport 53 -j REDIRECT --to-ports 5353" >> /etc/network/if-up.d/anon-service
@@ -1282,7 +1281,7 @@ echo "iptables -P OUTPUT DROP" >> /etc/network/if-up.d/anon-service
 echo "ip6tables -P FORWARD DROP" >> /etc/network/if-up.d/anon-service
 echo "ip6tables -P INPUT DROP" >> /etc/network/if-up.d/anon-service
 echo "ip6tables -P OUTPUT DROP" >> /etc/network/if-up.d/anon-service
-if (( $selected_service == 0 )); then
+if ( grep -Fq "0" $root/stp-service ); then
 	echo "unbound" >> /etc/network/if-up.d/anon-service
 fi
 echo "echo \"+++ anon-service started +++\"" >> /etc/network/if-up.d/anon-service
