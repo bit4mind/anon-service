@@ -1047,10 +1047,10 @@ mkdir -p /opt/anon-service > /dev/null 2>&1
 rm /usr/bin/anon-service > /dev/null 2>&1
 rm /opt/anon-service/anon-service.sh > /dev/null 2>&1
 touch /opt/anon-service/anon-service.sh > /dev/null 2>&1
-if [[ "${PWD##temp}" == "$PWD" ]]; then
-	cp ../$0 /opt/anon-service/anon-service.sh# > /dev/null 2>&1
+if [ -e "menu" ]; then
+	cp ../$0 /opt/anon-service/anon-service.sh > /dev/null 2>&1
 else
-	cp $0 /opt/anon-service/anon-service.sh# > /dev/null 2>&1
+	cp $0 /opt/anon-service/anon-service.sh > /dev/null 2>&1
 fi
 chmod +x /opt/anon-service/anon-service.sh
 ln -s /opt/anon-service/anon-service.sh /usr/bin/anon-service
