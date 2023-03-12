@@ -815,13 +815,9 @@ if [[ $(cat $root/dnsread) != "nameserver 127.0.0.1" ]]; then
 fi
 rm $root/dnsread > /dev/null 2>&1
 echo "==> Restarting networking";
-if [ -f $netman ]; then
-	service network-manager restart > /dev/null 2>&1
-	sleep 5
-else
-	service networking restart
-fi
-sleep 5
+service network-manager restart > /dev/null 2>&1
+service networking restart > /dev/null 2>&1
+sleep 3
 ### Disable ipv6 
 ipv6_status=$(cat /proc/sys/net/ipv6/conf/default/disable_ipv6)
 if [ "$ipv6_status" == "0" ]; then
@@ -1374,13 +1370,9 @@ cp $netman.bak $netman > /dev/null 2>&1
 echo "==> Restarting neworking";
 echo "";
 service systemd-resolved restart
-if [ -f $netman ]; then
-	service network-manager restart > /dev/null 2>&1
-	sleep 1
-else
-	service networking restart
-	sleep 1
-fi
+service network-manager restart > /dev/null 2>&1
+service networking restart > /dev/null 2>&1
+sleep 3
 if [ -s "/etc/network/if-up.d/anon-service" ]; then
 	rm /etc/network/if-up.d/anon-service
 	echo "==> Now the service is no more enabled at startup!";
@@ -1443,6 +1435,9 @@ else
 	sleep 1
 fi
 echo "==> Removing anon-service files and settings from system";
+if [ -s "$netman.bak" ]; then
+	cp $netman.bak $netman > /dev/null 2>&1
+fi
 chattr -i /etc/resolv.conf > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
 cp /etc/resolv.conf.bak /etc/resolv.conf > /dev/null 2>&1
@@ -1465,17 +1460,10 @@ rm -rf $root > /dev/null 2>&1
 rm cpath > /dev/null 2>&1
 echo "==> Restarting neworking";
 service systemd-resolved restart
-if [ -s "$netman.bak" ]; then
-	cp $netman.bak $netman > /dev/null 2>&1
-fi
 rm /usr/bin/anon-service > /dev/null 2>&1
-if [ -f $netman ]; then
-	service network-manager restart > /dev/null 2>&1
-	sleep 1
-else
-	service networking restart
-	sleep 1
-fi
+service network-manager restart > /dev/null 2>&1
+service networking restart > /dev/null 2>&1
+sleep 3
 ### Firewall flush
 iptables -F
 iptables -t nat -F
@@ -1780,17 +1768,9 @@ if [ "$#" -gt 0 ]; then
 				mv cpath $root/ > /dev/null 2>&1
 			fi
 			if [ -s "/etc/network/if-up.d/anon-service" ]; then
-				if [ -f $netman ]; then
-					service network-manager restart > /dev/null 2>&1
-					echo "";
-					echo "==> Service restarted...Be patient!";
-					echo "";
-				else
-					service networking restart
-					echo "";
-					echo "==> Service restarted...Be patient!";
-					echo "";
-				fi
+				service network-manager restart > /dev/null 2>&1
+				service networking restart > /dev/null 2>&1
+				sleep 3
 				exit 0
 			else
 				start_service
