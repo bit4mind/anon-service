@@ -122,8 +122,6 @@ case "$task" in
 		;;
 	10)
 		install_service
-		sleep 7
-		_menu
 		;;
 	11)
 		_checkX
@@ -1059,6 +1057,7 @@ echo "";
 if [ -e $root/cpath ]; then
 	cd $(cat $root/cpath)
 fi
+exit 0
 }
 ##
 ## Discover network device
