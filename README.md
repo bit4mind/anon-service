@@ -37,7 +37,7 @@ reactivation of the service; you can stop the service without deleting the data
 and then reactivate it faster.
 You can install it to start automatically at boot: in this case you could restart
 service simply restarting your connection and continue to use the script for
-editing configuration file, configuring dnscrypt servers and relays or removing all things.
+editing configuration file, configuring dnscrypt servers and relays, viewing logs or removing all things.
 Editing torrc file you can customize your tor configuration (https://tor.void.gr/docs/tor-manual.html.en).
 Editing iptables rules you can grant yourself ssh access from remote machines, enable logging and other stuff.
 Viewing the log file you can retrieve information about the activity of the Tor process.
@@ -81,14 +81,14 @@ Examples:
 sudo ./anon-service.sh --download -1 && sudo ./anon-service.sh --configure -1 && sudo ./anon-service.sh --start
 ```
 
-This will start the service in standard transparent proxy mode getting Tor from the official project repository
+This will start the service in standard transparent proxy mode getting Tor from the official project repository.
 ```
 sudo ./anon-service.sh --download -1 && sudo ./anon-service.sh --configure -2 dnscrypt-de-blahdns-ipv4 meganerd anon-v.dnscrypt.uk-ipv4 anon-openinternet anon-v.dnscrypt.uk-ipv4 anon-sth-se && sudo ./anon-service.sh --start
 ```
 This will start the service with DNSCrypt and the Anonymized-DNS feature enabled by obtaining Tor from the official
 project repository. 
 Change servers and relays to whatever you want based on the updated list of public resolvers 
-and relays provided by the dnscrypt-proxy project
+and relays provided by the dnscrypt-proxy project.
 
 ### Important: 
 If you want to update the script, first remove all files and settings using the 
