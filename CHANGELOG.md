@@ -3,7 +3,7 @@ CHANGELOG
 All notable changes to this project will be documented in this file.
 
 Released
-2.3 - 2023-??-??
+2.3 - 2023-03-15
 
 Added
 
