@@ -120,8 +120,10 @@ case "$task" in
 		_editor
 		_menu
 		;;
-	10)
+	10)	
 		install_service
+		sleep 7
+		_menu
 		;;
 	11)
 		_checkX
@@ -1041,13 +1043,24 @@ echo "";
 if [ -e $root/cpath ]; then
 	cd $(cat $root/cpath)
 fi
+if [ -f "/opt/anon-service/anon-service.sh" ]; then
+	echo "==> Nothing to do here!"; 
+	sleep 3
+	if [ -e "menu" ]; then
+		_menu
+		return 1
+	else
+		echo "";
+		exit 1
+	fi
+fi
 mkdir -p /opt/anon-service > /dev/null 2>&1
 rm /usr/bin/anon-service > /dev/null 2>&1
 rm /opt/anon-service/anon-service.sh > /dev/null 2>&1
 touch /opt/anon-service/anon-service.sh > /dev/null 2>&1
 if [ -e "menu" ]; then
 	cp ../$0 /opt/anon-service/anon-service.sh > /dev/null 2>&1
-else
+else 
 	cp $0 /opt/anon-service/anon-service.sh > /dev/null 2>&1
 fi
 chmod +x /opt/anon-service/anon-service.sh
@@ -1459,6 +1472,7 @@ rm -rf $root > /dev/null 2>&1
 rm cpath > /dev/null 2>&1
 echo "==> Restarting neworking";
 service systemd-resolved restart
+rm -rf /opt/anon-service > /dev/null 2>&1
 rm /usr/bin/anon-service > /dev/null 2>&1
 service network-manager restart > /dev/null 2>&1
 service networking restart > /dev/null 2>&1
