@@ -39,7 +39,8 @@ You can install it to start automatically at boot: in this case you could restar
 service simply restarting your connection and continue to use the script for
 editing configuration file, configuring dnscrypt servers and relays or removing all things.
 Editing torrc file you can customize your tor configuration (https://tor.void.gr/docs/tor-manual.html.en).
-Editing iptables rules you can grant yourself ssh access from remote machines and other stuff.
+Editing iptables rules you can grant yourself ssh access from remote machines, enable logging and other stuff.
+Viewing the log file you can retrieve information about the activity of the Tor process.
 
 Usage:
 
@@ -71,6 +72,8 @@ Options:
  
  --help               display this help
  --version            display version
+  --log      <value>  view Tor log file
+                      <value> cached or realtime
 ```
 Examples:
 
@@ -80,10 +83,11 @@ sudo ./anon-service.sh --download -1 && sudo ./anon-service.sh --configure -1 &&
 
 This will start the service in standard transparent proxy mode getting Tor from the official project repository
 ```
-sudo ./anon-service.sh --download -1 && sudo ./anon-service.sh --configure -2 dnscrypt-de-blahdns-ipv4 meganerd anon-acsacsar-ams-ipv4 anon-openinternet anon-v.dnscrypt.uk-ipv4 anon-sth-se && sudo ./anon-service.sh --start
+sudo ./anon-service.sh --download -1 && sudo ./anon-service.sh --configure -2 dnscrypt-de-blahdns-ipv4 meganerd anon-v.dnscrypt.uk-ipv4 anon-openinternet anon-v.dnscrypt.uk-ipv4 anon-sth-se && sudo ./anon-service.sh --start
 ```
 This will start the service with DNSCrypt and the Anonymized-DNS feature enabled by obtaining Tor from the official
-project repository. Change servers and relays to whatever you want based on the updated list of public resolvers 
+project repository. 
+Change servers and relays to whatever you want based on the updated list of public resolvers 
 and relays provided by the dnscrypt-proxy project
 
 ### Important: 
@@ -92,10 +96,11 @@ appropriate option in the same script.
 
 NOTES:
 The command-line download option will install the software required to run without 
-a graphical environment: some options in the interactive menu may not work.
+a graphical environment: some interactive menu options may not work.
 If you install the script to start automatically at boot, be aware that the service 
 will start with a small delay after the host has established the connection to the 
-network. Before the service is fully loaded, the connection will not work: you can 
+network. 
+Before the service is fully loaded, the connection will not work: you can 
 check status via syslog with the command:
 
 ```
@@ -129,4 +134,3 @@ the configuration files, then reinstall it and reconfigure the service via the
 dedicated option.
 If something goes wrong (e.g. electrical blackout) restore the original data and settings
 using the dedicated option or remove the service.
-This script may not work properly on a not-fully updated system.
