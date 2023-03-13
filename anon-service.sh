@@ -127,7 +127,7 @@ case "$task" in
 		;;
 	11)
 		_checkX
-		vlog
+		_vlog
 		_menu
 		;;
 	*)
@@ -169,11 +169,11 @@ if ( ! grep -q "icmp_seq=1" conn.txt ); then
 	echo "==> Please connect to a network!";
 	sleep 5
 	if [ -e "menu" ]; then
-	_menu
-	return 1
+		_menu
+		return 1
 	else
-	echo ""; 
-	exit 1
+		echo ""; 
+		exit 1
 	fi   
 fi
 echo "==> Checking dependencies and preparing the system"
@@ -1502,7 +1502,7 @@ exit 0
 ##
 ## View log
 ##
-vlog(){
+_vlog(){
 if [ -e "menu" ]; then
 	clear 
 fi
@@ -1926,7 +1926,7 @@ if [ "$#" -gt 0 ]; then
 						;;
 					esac
 			else
-				vlog
+				_vlog
 				exit 0
 			fi
 			;;
