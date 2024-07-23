@@ -3,6 +3,19 @@ CHANGELOG
 All notable changes to this project will be documented in this file.
 
 Released
+2.4 - 2024-07-23
+
+Added
+
+    Clipboard feature using xterm
+
+Changed
+
+    Removed leafpad
+    Updated to the lastest DNSCrypt version
+    
+
+Released
 2.3 - 2023-03-15
 
 Added
