@@ -1544,7 +1544,7 @@ read -r selected_view
 echo "";
 if [ $selected_view == 1 ]; then
 	if [[ -e "menu" ]] || [[ -e "$(cat $root/cpath)/temp/menu" ]]; then
-		xterm -T "Cached logs" -e "$root/notices.log"
+		xterm -T "Cached logs" -e "more $root/notices.log"
 	else 
 		more $root/notices.log
 		exit 0
@@ -1557,7 +1557,7 @@ elif [ $selected_view == 2 ]; then
 		_cquit
 	fi
 	if [[ -e "menu" ]] || [[ -e "$(cat $root/cpath)/temp/menu" ]]; then
-		xterm -title "Tor log file" -e tail -f $root/notices.log &
+		xterm -T "Tor log file" -e tail -f $root/notices.log &
 	else 
 		tail -f $root/notices.log
 	fi
