@@ -2,12 +2,12 @@
 
 # ####################################################################
 # anon-service.sh
-# version 2.3
+# version 2.4
 # 
 # Transparent proxy through Tor and optionally DNSCrypt with  
 # Anonymized-DNS feature enabled.
 #
-# Copyright (C) 2020-2023 Bit4mind
+# Copyright (C) 2020-2024 Bit4mind
 #
 # GNU GENERAL PUBLIC LICENSE
 #
@@ -27,10 +27,10 @@
 
 export root=/home/anon-service
 owner=anon-service
-version="2.3"
+version="2.4"
 repo=/etc/apt/sources.list.d/tor.list
 ## DNSCrypt-proxy release
-dnscrel="2.1.4"
+dnscrel="2.1.5"
 ## If necessary, change the path according to your system
 export netman=/etc/NetworkManager/NetworkManager.conf
 tor=/etc/tor/torrc
@@ -179,7 +179,7 @@ fi
 echo "==> Checking dependencies and preparing the system"
 rm -rf $root > /dev/null 2>&1
 adduser -q --disabled-password --gecos "" $owner > /dev/null 2>&1
-usermod -u 999 $owner > /dev/null 2>&1
+usermod -u 888 $owner > /dev/null 2>&1
 mv cpath $root > /dev/null 2>&1
 mkdir -p $root/temp
 chmod -R 777 $root/temp
@@ -188,7 +188,7 @@ apt-get update > $root/temp/apt.log
 if [[ ! -e "menu" ]] || [[ ! -e "$(cat $root/cpath)/temp/menu" ]]; then
 	apt-get install -y curl wget psmisc nano apt-transport-https unbound net-tools ifupdown > /dev/null
 else
-	apt-get install -y curl wget xterm psmisc wmctrl leafpad apt-transport-https net-tools unbound > /dev/null
+	apt-get install -y curl wget xterm psmisc wmctrl apt-transport-https net-tools unbound > /dev/null
 fi
 sleep 1
 if [ -e tor_option1 ]; then
@@ -469,7 +469,7 @@ echo "#################################################################" >> $roo
 echo "#!/bin/bash" >> $root/iptables_rules.sh
 # Destinations you don't want routed through Tor
 echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> $root/iptables_rules.sh
-echo "_user_uid=\"999\" ## Tor is the only process that runs as this user" >> $root/iptables_rules.sh
+echo "_user_uid=\"888\" ## Tor is the only process that runs as this user" >> $root/iptables_rules.sh
 # Tor's VirtualAddrNetworkIPv4
 echo "_virt_addr=\"10.192.0.0/10\"" >> $root/iptables_rules.sh
 # Tor's TransPort
@@ -556,7 +556,7 @@ else
 		sleep 3
 		more $root/public-resolvers.md
 	else
-		xterm -T "Resolvers" -e "leafpad $root/public-resolvers.md" &
+		xterm -ls -xrm 'XTerm*selectToClipboard: true' -T "Resolvers" -e "more $root/public-resolvers.md" &
 		sleep 1
 		clear
 	fi
@@ -569,10 +569,11 @@ fi
 if ( ! grep "\<$server1\>" $root/public-resolvers.md > /dev/null ); then
 	echo "";
 	echo "==> First server not found! Please retry";
-	killall leafpad > /dev/null 2>&1
+	killall xterm > /dev/null 2>&1
 	sleep 3
 	echo "";
 	_cconfig
+	return 1
 fi
 if [ -e "configure_option2" ]; then
 	server2="$(cat server2)"
@@ -591,10 +592,11 @@ else
 	if ( ! grep "\<$server2\>" $root/public-resolvers.md > /dev/null ); then
 		echo "";
 		echo "==> Second server not found! Please retry";
-		killall leafpad > /dev/null 2>&1
+		killall xterm > /dev/null 2>&1
 		sleep 3
 		echo "";
-		_cconfig		
+		_cconfig
+		return 1
 	fi
 fi
 if [ -e "configure_option2" ]; then
@@ -603,7 +605,8 @@ else
 	clear
 	echo "==> Opening file contain relays";
 	sleep 2
-	killall leafpad > /dev/null 2>&1
+	killall xterm > /dev/null 2>&1
+	sleep 2
 	echo "";
 	echo "    ***************************************************************************";
 	echo "==> Carefully choose relays/servers so that they are run by different entities!";
@@ -614,6 +617,10 @@ else
 		echo "==> Type "q" to quit";
 		sleep 3
 		more $root/relays.md
+		else
+		xterm -ls -xrm 'XTerm*selectToClipboard: true' -T "Relays" -e "more $root/relays.md" &
+		sleep 1
+		clear
 	fi
 	echo "";
 	echo "==> Please enter the name of the first realy to use!";
@@ -623,10 +630,11 @@ else
 	if ! grep "\<$relay1\>" $root/relays.md > /dev/null; then
 		echo "";
 		echo "==> First relay for the first server not found! Please retry";
-		killall leafpad > /dev/null 2>&1
+		killall xterm > /dev/null 2>&1
 		sleep 3
 		echo "";
 		_cconfig
+		return 1
 	fi
 fi
 if [ -e "configure_option2" ]; then
@@ -647,10 +655,11 @@ else
 	if ( ! grep "\<$relay2\>" $root/relays.md > /dev/null ); then
 		echo "";
 		echo "==> Second relay for the first server not found! Please retry";
-		killall leafpad > /dev/null 2>&1
+		killall xterm > /dev/null 2>&1
 		sleep 3
 		echo "";
 		_cconfig
+		return 1
 	fi
 fi
 if [ -e "configure_option2" ]; then
@@ -670,10 +679,11 @@ else
 	if ( ! grep "\<$relay3\>" $root/relays.md > /dev/null; ) then
 		echo "";
 		echo "==> First relay for the second server not found! Please retry";
-		killall leafpad > /dev/null 2>&1
+		killall xterm > /dev/null 2>&1
 		sleep 3
 		echo "";
 		_cconfig
+		return 1
 	fi
 fi
 if [ -e "configure_option2" ]; then
@@ -693,17 +703,18 @@ else
 	if ( ! grep "\<$relay4\>" $root/relays.md > /dev/null ); then
 		echo "";
 		echo "==> Second relay for the second server not found! Please retry";
-		killall leafpad > /dev/null 2>&1
+		killall xterm > /dev/null 2>&1
 		sleep 3
 		echo "";
 		_cconfig
+		return 1
 	fi
 	clear
 	echo "   #######################################################";
 	echo "   #              ANON-SERVICE CONFIGURATION             #";
 	echo "   #######################################################";
 fi
-killall leafpad > /dev/null 2>&1
+killall xterm > /dev/null 2>&1
 echo "";
 echo "==> Configuring DNSCrypt";
 sleep 1
@@ -836,8 +847,9 @@ if ( ! pgrep -f "restoring_orig.sh " )  > /dev/null; then
 	echo "if [ ! -f /etc/network/if-up.d/anon-service ]; then" >> restoring_orig.sh
 	echo "cp $netman.bak $netman > /dev/null 2>&1" >> restoring_orig.sh
 	echo "chattr -i /etc/resolv.conf > /dev/null 2>&1" >> restoring_orig.sh
-	echo "cp /etc/resolv.conf.bak /etc/resolv.conf > /dev/null 2>&1" >> restoring_orig.sh
-	echo "fi" >> restoring_orig.sh
+	echo "rm /etc/resolv.conf > /dev/null 2>&1" >> restoring_orig.sh
+	echo "echo $'inameserver 1.1.1.1\E:x\n' | vi /etc/resolv.conf > /dev/null 2>&1" >> restoring_orig.sh
+    echo "fi" >> restoring_orig.sh
 	echo "rm $root/running > /dev/null 2>&1" >> restoring_orig.sh
 	echo "exit" >> restoring_orig.sh
 	echo "}" >> restoring_orig.sh
@@ -982,7 +994,7 @@ case "$answer" in
 			echo "";
 			exit 0
 		else
-			xterm -T "Torrc" -e "leafpad $root/torrc" > /dev/null 2>&1 
+			xterm -T "Torrc" -e "nano $root/torrc" > /dev/null 2>&1
 			echo "==> Please restart the service to apply changes";
 			sleep 7
 			_menu
@@ -997,7 +1009,7 @@ case "$answer" in
 				echo "";
 				exit 0
 			else
-				xterm -T "Editor" -e "leafpad /etc/network/if-up.d/anon-service" > /dev/null 2>&1
+				xterm -T "Editor" -e "nano /etc/network/if-up.d/anon-service" > /dev/null 2>&1
 				echo "==> Please restart via command-line option to apply changes!"; 
 				echo "==> Otherwise simply restart your network connection.";
 				sleep 7
@@ -1010,7 +1022,7 @@ case "$answer" in
 				echo "";
 				exit 0
 			else
-				xterm -T "Editor" -e "leafpad $root/iptables_rules.sh" > /dev/null 2>&1
+				xterm -T "Editor" -e "nano $root/iptables_rules.sh" > /dev/null 2>&1
 				echo "==> Please restart the service to apply changes";
 				sleep 7
 				_menu
@@ -1226,7 +1238,7 @@ echo "#################################################################" >> /etc
 echo "#                        IPTABLES RULES                         #" >> /etc/network/if-up.d/anon-service
 echo "#################################################################" >> /etc/network/if-up.d/anon-service
 echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> /etc/network/if-up.d/anon-service
-echo "_user_uid=\"999\"" >> /etc/network/if-up.d/anon-service
+echo "_user_uid=\"888\"" >> /etc/network/if-up.d/anon-service
 echo "_virt_addr=\"10.192.0.0/10\"" >> /etc/network/if-up.d/anon-service
 echo "_trans_port=\"9040\"" >> /etc/network/if-up.d/anon-service
 echo "_resv_iana=\"0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4 255.255.255.255/32\"" >> /etc/network/if-up.d/anon-service
@@ -1374,7 +1386,7 @@ rm $root/tor.txt > /dev/null 2>&1
 rm $root/running > /dev/null 2>&1
 chattr -i /etc/resolv.conf > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
-cp /etc/resolv.conf.bak /etc/resolv.conf > /dev/null 2>&1
+echo $'inameserver 1.1.1.1\E:x\n' | vi /etc/resolv.conf > /dev/null 2>&1
 service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall xterm unbound tor dnscrypt-proxy restoring_orig.sh > /dev/null 2>&1
@@ -1452,7 +1464,7 @@ if [ -s "$netman.bak" ]; then
 fi
 chattr -i /etc/resolv.conf > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
-cp /etc/resolv.conf.bak /etc/resolv.conf > /dev/null 2>&1
+echo $'inameserver 1.1.1.1\E:x\n' | vi /etc/resolv.conf > /dev/null 2>&1
 rm $repo > /dev/null 2>&1
 rm $repo* > /dev/null 2>&1
 rm /etc/network/if-up.d/anon-service > /dev/null 2>&1
@@ -1532,7 +1544,7 @@ read -r selected_view
 echo "";
 if [ $selected_view == 1 ]; then
 	if [[ -e "menu" ]] || [[ -e "$(cat $root/cpath)/temp/menu" ]]; then
-		leafpad $root/notices.log 
+		xterm -T "Cached logs" -e "$root/notices.log"
 	else 
 		more $root/notices.log
 		exit 0
