@@ -398,7 +398,7 @@ elif [ -e "configure_option2" ]; then
 	rm $root/stp-service > /dev/null 2>&1
 	touch $root/stp-service
 	echo "0" > $root/stp-service
-	dnscryptconf
+	_dnscryptconf
 elif [ -e "$(cat $root/cpath)/temp/menu" ] || [ -e "$(cat $root/cpath)/temp/configure" ]; then
 	echo " ";
 	echo "==> Which type of transparent proxy do you prefer to use?";
@@ -420,7 +420,7 @@ elif [ -e "$(cat $root/cpath)/temp/menu" ] || [ -e "$(cat $root/cpath)/temp/conf
 		touch $root/stp-service
 		echo "0" > $root/stp-service
 		echo ""; 
-		dnscryptconf
+		_dnscryptconf
 		;;
 	*)
 		echo "";
@@ -541,7 +541,7 @@ cd $(cat $root/cpath)
 ##
 ## CONFIGURING DNSCRYPT
 ##
-dnscryptconf(){
+_dnscryptconf(){
 ### Configuring dnscrypt_proxy
 rm $root/dnscrypt-proxy.toml > /dev/null 2>&1
 cp $root/dnscrypt-proxy.toml.bak $root/dnscrypt-proxy.toml
@@ -572,7 +572,7 @@ if ( ! grep "\<$server1\>" $root/public-resolvers.md > /dev/null ); then
 	killall xterm > /dev/null 2>&1
 	sleep 3
 	echo "";
-	_cconfig
+	_dnscryptconf
 	return 1
 fi
 if [ -e "configure_option2" ]; then
@@ -595,7 +595,7 @@ else
 		killall xterm > /dev/null 2>&1
 		sleep 3
 		echo "";
-		_cconfig
+		_dnscryptconf
 		return 1
 	fi
 fi
@@ -633,7 +633,7 @@ else
 		killall xterm > /dev/null 2>&1
 		sleep 3
 		echo "";
-		_cconfig
+		_dnscryptconf
 		return 1
 	fi
 fi
@@ -658,7 +658,7 @@ else
 		killall xterm > /dev/null 2>&1
 		sleep 3
 		echo "";
-		_cconfig
+		_dnscryptconf
 		return 1
 	fi
 fi
@@ -682,7 +682,7 @@ else
 		killall xterm > /dev/null 2>&1
 		sleep 3
 		echo "";
-		_cconfig
+		_dnscryptconf
 		return 1
 	fi
 fi
@@ -706,7 +706,7 @@ else
 		killall xterm > /dev/null 2>&1
 		sleep 3
 		echo "";
-		_cconfig
+		_dnscryptconf
 		return 1
 	fi
 	clear
@@ -1393,7 +1393,7 @@ killall xterm unbound tor dnscrypt-proxy restoring_orig.sh > /dev/null 2>&1
 cp $netman.bak $netman > /dev/null 2>&1
 echo "==> Restarting neworking";
 echo "";
-service systemd-resolved restart
+service systemd-resolved restart > /dev/null 2>&1
 service network-manager restart > /dev/null 2>&1
 service networking restart > /dev/null 2>&1
 sleep 3
@@ -1483,7 +1483,7 @@ userdel -r $owner > /dev/null 2>&1
 rm -rf $root > /dev/null 2>&1
 rm cpath > /dev/null 2>&1
 echo "==> Restarting neworking";
-service systemd-resolved restart
+service systemd-resolved restart > /dev/null 2>&1
 rm -rf /opt/anon-service > /dev/null 2>&1
 rm /usr/bin/anon-service > /dev/null 2>&1
 service network-manager restart > /dev/null 2>&1
@@ -1543,6 +1543,12 @@ echo -n  " Choose: ";
 read -r selected_view
 echo "";
 if [ $selected_view == 1 ]; then
+	if [ -e $root/running ]; then
+	echo "==> Service is running! Please view realtime logs instead.";
+	echo "";
+	sleep 3
+	_cquit
+	fi
 	if [[ -e "menu" ]] || [[ -e "$(cat $root/cpath)/temp/menu" ]]; then
 		xterm -T "Cached logs" -e "more $root/notices.log"
 	else 
