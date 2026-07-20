@@ -2,12 +2,12 @@
 
 # ####################################################################
 # anon-service.sh
-# version 2.4
+# version 2.5
 # 
 # Transparent proxy through Tor and optionally DNSCrypt with  
 # Anonymized-DNS feature enabled.
 #
-# Copyright (C) 2020-2024 Bit4mind
+# Copyright (C) 2020-2026 Bit4mind
 #
 # GNU GENERAL PUBLIC LICENSE
 #
@@ -27,10 +27,8 @@
 
 export root=/home/anon-service
 owner=anon-service
-version="2.4"
+version="2.5"
 repo=/etc/apt/sources.list.d/tor.list
-## DNSCrypt-proxy release
-dnscrel="2.1.5"
 ## If necessary, change the path according to your system
 export netman=/etc/NetworkManager/NetworkManager.conf
 tor=/etc/tor/torrc
@@ -179,7 +177,8 @@ fi
 echo "==> Checking dependencies and preparing the system"
 rm -rf $root > /dev/null 2>&1
 adduser -q --disabled-password --gecos "" $owner > /dev/null 2>&1
-usermod -u 888 $owner > /dev/null 2>&1
+export _UID=$(awk -F: 'BEGIN {for(i=800;i<=900;i++) u[i]=1} {delete u[$3]} END {for(i=800;i<=900;i++) if(i in u) {print i; exit}}' /etc/passwd)
+usermod -u $_UID $owner > /dev/null 2>&1
 mv cpath $root > /dev/null 2>&1
 mkdir -p $root/temp
 chmod -R 777 $root/temp
@@ -250,6 +249,9 @@ touch $root/temp/arch.txt > /dev/null
 uname -a > $root/temp/arch.txt
 if ( grep -Fq "x86_64" $root/temp/arch.txt ); then
 	cd $root/temp/
+	## DNSCrypt-proxy release
+	curl -s https://api.github.com/repos/DNSCrypt/dnscrypt-proxy/releases/latest | grep '"tag_name"' | cut -d'"' -f4 > dnscrel.txt
+	dnscrel="$(cat dnscrel.txt)"
 	echo "==> Downloading dnscrypt-proxy";
    	wget -q https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/$dnscrel/dnscrypt-proxy-linux_x86_64-$dnscrel.tar.gz
 else
@@ -461,7 +463,7 @@ if [ -s $netman ]; then
 fi
 rm $root/iptables_rules.sh > /dev/null 2>&1
 touch $root/iptables_rules.sh
-### Configuring basic iptables rules
+### Configuring iptables rules
 ### Reference: https://trac.torproject.org/projects/tor/wiki/doc/TransparentProxy
 echo "#################################################################" > $root/iptables_rules.sh
 echo "#                        IPTABLES RULES                         #" >> $root/iptables_rules.sh
@@ -469,7 +471,7 @@ echo "#################################################################" >> $roo
 echo "#!/bin/bash" >> $root/iptables_rules.sh
 # Destinations you don't want routed through Tor
 echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> $root/iptables_rules.sh
-echo "_user_uid=\"888\" ## Tor is the only process that runs as this user" >> $root/iptables_rules.sh
+echo "_user_uid="$_UID" ## Tor is the only process that runs as this user" >> $root/iptables_rules.sh
 # Tor's VirtualAddrNetworkIPv4
 echo "_virt_addr=\"10.192.0.0/10\"" >> $root/iptables_rules.sh
 # Tor's TransPort
@@ -477,8 +479,36 @@ echo "_trans_port=\"9040\"" >> $root/iptables_rules.sh
 # Other IANA reserved blocks (These are not processed by tor and dropped by default)
 echo "_resv_iana=\"0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4 255.255.255.255/32\"" >> $root/iptables_rules.sh
 echo "_iface=\$(cat \$root/netiface.txt)" >> $root/iptables_rules.sh
-echo "iptables -F" >> $root/iptables_rules.sh
-echo "iptables -t nat -F" >> $root/iptables_rules.sh
+
+#echo "ip6tables -P INPUT DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -P OUTPUT DROP" >> $root/iptables_rules.sh  
+#echo "ip6tables -P FORWARD DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A OUTPUT -p udp --dport 53 -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A OUTPUT -p tcp --dport 53 -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A OUTPUT -p tcp --dport 443 -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A OUTPUT -p tcp --dport 853 -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A OUTPUT -p udp --dport 5353 -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A INPUT  -p udp --dport 5353 -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A INPUT  -p udp --dport 546 -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A OUTPUT -p udp --dport 547 -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A INPUT -p icmpv6 --icmpv6-type router-advertisement -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A INPUT  -p icmpv6 --icmpv6-type neighbour-solicitation -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A INPUT  -p icmpv6 --icmpv6-type neighbour-advertisement -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A OUTPUT -s fe80::/10 -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A INPUT  -d fe80::/10 -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A OUTPUT -s fc00::/7 -j DROP" >> $root/iptables_rules.sh
+#echo "ip6tables -A INPUT  -d fc00::/7 -j DROP" >> $root/iptables_rules.sh
+
+
+#echo "sysctl -w net.ipv6.conf.all.disable_ipv6=1 > /dev/null 2>&1 >> /etc/sysctl.conf" >> $root/iptables_rules.sh
+#echo "sysctl -w net.ipv6.conf.default.disable_ipv6=1 > /dev/null 2>&1 >> /etc/sysctl.conf" >> $root/iptables_rules.sh
+ 
+#echo "iptables -F" >> $root/iptables_rules.sh
+#echo "iptables -t nat -F" >> $root/iptables_rules.sh
+#echo "iptables -P OUTPUT DROP" >> $root/iptables_rules.sh
+#echo "iptables -A OUTPUT -m owner --uid-owner \$_user_uid -j ACCEPT" >> $root/iptables_rules.sh
+#echo "iptables -A OUTPUT -o lo -j ACCEPT" >> $root/iptables_rules.sh
+
 echo "iptables -t nat -A OUTPUT -d \$_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports \$_trans_port" >> $root/iptables_rules.sh
 echo "sleep 1" >> $root/iptables_rules.sh
 if ( grep -Fq "1" $root/stp-service ); then
@@ -728,7 +758,11 @@ sleep 1
 unbound-anchor > /dev/null 2>&1
 sleep 1
 echo "server:" > $unbound
+echo "hide-identity: yes" >> $unbound
+echo "hide-version: yes" >> $unbound   
 echo "tcp-upstream: yes" >> $unbound
+echo "access-control: 0.0.0.0/0 refuse" >> $unbound
+echo "access-control: 127.0.0.1/32 allow" >> $unbound
 echo "domain-insecure: \"onion\"" >> $unbound
 echo "private-domain: \"onion\"" >> $unbound
 echo "do-not-query-localhost: no" >> $unbound
@@ -785,16 +819,17 @@ rm $root/running > /dev/null 2>&1
 ### Firewall flush
 iptables -F
 iptables -t nat -F
-iptables --flush
-iptables --table nat --flush
 iptables --delete-chain
 iptables --table nat --delete-chain 
-iptables -P OUTPUT ACCEPT
-iptables -P INPUT ACCEPT
-iptables -P FORWARD ACCEPT
-ip6tables -P OUTPUT ACCEPT
-ip6tables -P INPUT ACCEPT
-ip6tables -P FORWARD ACCEPT
+iptables -P OUTPUT DROP
+iptables -A OUTPUT -m owner --uid-owner $_UID -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
+#iptables -P OUTPUT ACCEPT
+#iptables -P INPUT ACCEPT
+#iptables -P FORWARD ACCEPT
+ip6tables -P OUTPUT DROP
+ip6tables -P INPUT DROP
+ip6tables -P FORWARD DROP
 netiface
 ### Configure Network-Manager
 cd $root
@@ -825,9 +860,6 @@ if [[ $(cat $root/dnsread) != "nameserver 127.0.0.1" ]]; then
 	_cquit
 fi
 rm $root/dnsread > /dev/null 2>&1
-echo "==> Restarting networking";
-service network-manager restart > /dev/null 2>&1
-service networking restart > /dev/null 2>&1
 sleep 3
 ### Disable ipv6 
 ipv6_status=$(cat /proc/sys/net/ipv6/conf/default/disable_ipv6)
@@ -836,6 +868,10 @@ if [ "$ipv6_status" == "0" ]; then
 	sysctl -w net.ipv6.conf.all.disable_ipv6=1 > /dev/null 2>&1
 	sysctl -w net.ipv6.conf.default.disable_ipv6=1 > /dev/null 2>&1
 fi
+echo "==> Restarting networking";
+service network-manager restart > /dev/null 2>&1
+service networking restart > /dev/null 2>&1
+sleep 3
 sleep 2
 chown -R $owner:$owner $root
 ## Restore original files automatically at shutdown
@@ -1185,25 +1221,35 @@ chattr -i /etc/resolv.conf > /dev/null 2>&1
 rm /etc/resolv.conf > /dev/null 2>&1
 echo $'inameserver 127.0.0.1\E:x\n' | vi /etc/resolv.conf > /dev/null 2>&1
 chattr +i /etc/resolv.conf > /dev/null 2>&1
+### Stopping ufw service
+ufw disable > /dev/null 2>&1
+systemctl disable ufw.service > /dev/null 2>&1
+### Setting networking options
+if [ -s /etc/default/networking ]; then
+	cp /etc/default/networking $root/networking.bak
+	echo "CONFIGURE_INTERFACES=no" > /etc/default/networking
+	echo "WAIT_ONLINE_METHOD=ifup" >> /etc/default/networking
+fi
 echo "#!/bin/sh" > /etc/network/if-up.d/anon-service
 echo "#################################################################" >> /etc/network/if-up.d/anon-service
 echo "#                   DO NOT EDIT THIS SECTION                    #" >> /etc/network/if-up.d/anon-service
 echo "#################################################################" >> /etc/network/if-up.d/anon-service
 echo "root=/home/anon-service" >> /etc/network/if-up.d/anon-service
 echo "owner=anon-service" >> /etc/network/if-up.d/anon-service
+echo "_user_uid="$_UID"" >> /etc/network/if-up.d/anon-service
 echo "rm $root/running > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
-echo "iptables -F" >> /etc/network/if-up.d/anon-service
-echo "iptables -t nat -F" >> /etc/network/if-up.d/anon-service
-echo "iptables --flush" >> /etc/network/if-up.d/anon-service
-echo "iptables --table nat --flush" >> /etc/network/if-up.d/anon-service
-echo "iptables --delete-chain" >> /etc/network/if-up.d/anon-service
-echo "iptables --table nat --delete-chain" >> /etc/network/if-up.d/anon-service 
 echo "iptables -P OUTPUT ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "iptables -P INPUT ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "ip6tables -P FORWARD ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "ip6tables -P OUTPUT ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "ip6tables -P INPUT ACCEPT" >> /etc/network/if-up.d/anon-service
-echo "iptables -P FORWARD ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "iptables -F" >> /etc/network/if-up.d/anon-service
+echo "iptables -t nat -F" >> /etc/network/if-up.d/anon-service
+echo "iptables --delete-chain" >> /etc/network/if-up.d/anon-service
+echo "iptables --table nat --delete-chain" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -m owner --uid-owner \$_user_uid -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "iptables -A OUTPUT -o lo -j ACCEPT" >> /etc/network/if-up.d/anon-service
+echo "iptables -P FORWARD DROP" >> /etc/network/if-up.d/anon-service
+echo "ip6tables -P INPUT DROP" >> /etc/network/if-up.d/anon-service
+echo "ip6tables -P OUTPUT DROP" >> /etc/network/if-up.d/anon-service 
+echo "ip6tables -P FORWARD DROP" >> /etc/network/if-up.d/anon-service
 echo "service dnsmasq stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "service bind stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "service resolvconf stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
@@ -1238,7 +1284,6 @@ echo "#################################################################" >> /etc
 echo "#                        IPTABLES RULES                         #" >> /etc/network/if-up.d/anon-service
 echo "#################################################################" >> /etc/network/if-up.d/anon-service
 echo "_non_tor=\"127.0.0.0/8 10.0.0.0/8 172.16.0.0/12 192.168.0.0/16\"" >> /etc/network/if-up.d/anon-service
-echo "_user_uid=\"888\"" >> /etc/network/if-up.d/anon-service
 echo "_virt_addr=\"10.192.0.0/10\"" >> /etc/network/if-up.d/anon-service
 echo "_trans_port=\"9040\"" >> /etc/network/if-up.d/anon-service
 echo "_resv_iana=\"0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4 255.255.255.255/32\"" >> /etc/network/if-up.d/anon-service
@@ -1258,11 +1303,11 @@ echo "iptables -t nat -A OUTPUT -o lo -j RETURN" >> /etc/network/if-up.d/anon-se
 echo "for _lan in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -d \$_lan -j RETURN" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
-echo "sleep 3s" >> /etc/network/if-up.d/anon-service
+echo "sleep 1s" >> /etc/network/if-up.d/anon-service
 echo "for _iana in \$_resv_iana; do" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -d \$_iana -j RETURN" >> /etc/network/if-up.d/anon-service
 echo "done" >> /etc/network/if-up.d/anon-service
-echo "sleep 3s" >> /etc/network/if-up.d/anon-service
+echo "sleep 5s" >> /etc/network/if-up.d/anon-service
 echo "iptables -t nat -A OUTPUT -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports \$_trans_port" >> /etc/network/if-up.d/anon-service
 echo "## Uncomment the next line to grant yourself ssh access from remote machines before the DROP." >> /etc/network/if-up.d/anon-service
 echo "#iptables -A INPUT -i \$_iface -p tcp --dport 22 -m state --state NEW -j ACCEPT" >> /etc/network/if-up.d/anon-service
@@ -1273,7 +1318,7 @@ echo "## Uncomment the next 4 lines to enable" >> /etc/network/if-up.d/anon-serv
 echo "#for _lan in \$_non_tor; do" >> /etc/network/if-up.d/anon-service
 echo "# iptables -A INPUT -s \$_lan -j ACCEPT" >> /etc/network/if-up.d/anon-service
 echo "#done" >> /etc/network/if-up.d/anon-service
-echo "#sleep 2s" >> /etc/network/if-up.d/anon-service
+echo "#sleep 7s" >> /etc/network/if-up.d/anon-service
 echo "## Uncomment the next line to enable logging" >> /etc/network/if-up.d/anon-service
 echo "#iptables -A INPUT -j LOG --log-prefix "Dropped INPUT packet: " --log-level 7 --log-uid" >> /etc/network/if-up.d/anon-service
 echo "iptables -A INPUT -j DROP" >> /etc/network/if-up.d/anon-service
@@ -1304,7 +1349,6 @@ echo "ip6tables -P OUTPUT DROP" >> /etc/network/if-up.d/anon-service
 if ( grep -Fq "0" $root/stp-service ); then
 	echo "unbound" >> /etc/network/if-up.d/anon-service
 fi
-echo "echo \"+++ anon-service started +++\"" >> /etc/network/if-up.d/anon-service
 echo "touch \$root/running > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 chown root:root /etc/network/if-up.d/anon-service
 chmod 755 /etc/network/if-up.d/anon-service
@@ -1391,24 +1435,24 @@ service tor stop > /dev/null 2>&1
 service unbound stop > /dev/null 2>&1
 killall xterm unbound tor dnscrypt-proxy restoring_orig.sh > /dev/null 2>&1
 cp $netman.bak $netman > /dev/null 2>&1
+if [ -s "/etc/network/if-up.d/anon-service" ]; then
+	rm /etc/network/if-up.d/anon-service
+	echo "==> Now the service is no more enabled at startup!";
+	echo "==> You can reactivate it using appropriate option.";
+	echo "";
+if [ -s $root/networking.bak ]; then
+	cp $root/networking.bak /etc/default/networking
+fi
 echo "==> Restarting neworking";
 echo "";
 service systemd-resolved restart > /dev/null 2>&1
 service network-manager restart > /dev/null 2>&1
 service networking restart > /dev/null 2>&1
 sleep 3
-if [ -s "/etc/network/if-up.d/anon-service" ]; then
-	rm /etc/network/if-up.d/anon-service
-	echo "==> Now the service is no more enabled at startup!";
-	echo "==> You can reactivate it using appropriate option.";
-	echo "";
-	sleep 7
 fi
 ### Firewall flush
 iptables -F
 iptables -t nat -F
-iptables --flush
-iptables --table nat --flush
 iptables --delete-chain
 iptables --table nat --delete-chain 
 iptables -P OUTPUT ACCEPT
@@ -1417,6 +1461,9 @@ iptables -P FORWARD ACCEPT
 ip6tables -P OUTPUT ACCEPT
 ip6tables -P INPUT ACCEPT
 ip6tables -P FORWARD ACCEPT
+### Restarting ufw service
+ufw enable
+systemctl enable ufw.service > /dev/null 2>&1
 if [ -e $root/cpath ]; then
 	cd $(cat $root/cpath)
 fi
@@ -1459,6 +1506,9 @@ else
 	sleep 1
 fi
 echo "==> Removing anon-service files and settings from system";
+if [ -s $root/networking.bak ]; then
+	cp $root/networking.bak /etc/default/networking
+fi
 if [ -s "$netman.bak" ]; then
 	cp $netman.bak $netman > /dev/null 2>&1
 fi
@@ -1492,8 +1542,6 @@ sleep 3
 ### Firewall flush
 iptables -F
 iptables -t nat -F
-iptables --flush
-iptables --table nat --flush
 iptables --delete-chain
 iptables --table nat --delete-chain 
 iptables -P OUTPUT ACCEPT
@@ -1502,6 +1550,9 @@ iptables -P FORWARD ACCEPT
 ip6tables -P OUTPUT ACCEPT
 ip6tables -P INPUT ACCEPT
 ip6tables -P FORWARD ACCEPT
+### Restarting ufw service
+ufw enable
+systemctl enable ufw.service > /dev/null 2>&1
 clear
 echo -e "\n\n\n\n\n\n";
 echo "    ______________________________________________";
