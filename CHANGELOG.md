@@ -7,7 +7,7 @@ Released
 
 Added
 
-    Modern Distro support
+    Modern Distros support
     Auto-detect and update to the lastest DNSCrypt version
 
 Changed
