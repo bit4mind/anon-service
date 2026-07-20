@@ -100,13 +100,7 @@ a graphical environment: some interactive menu options may not work.
 If you install the script to start automatically at boot, be aware that the service 
 will start with a small delay after the host has established the connection to the 
 network. 
-Before the service is fully loaded, the connection will not work: you can 
-check status via syslog with the command:
-
-```
-tail -f /var/log/syslog
-```
-
+Before the service is fully loaded, the connection will not work.
 If you enable service to start automatically at boot, will be configured
 the last type of trasparent proxy used.
 
