@@ -479,36 +479,6 @@ echo "_trans_port=\"9040\"" >> $root/iptables_rules.sh
 # Other IANA reserved blocks (These are not processed by tor and dropped by default)
 echo "_resv_iana=\"0.0.0.0/8 100.64.0.0/10 169.254.0.0/16 192.0.0.0/24 192.0.2.0/24 192.88.99.0/24 198.18.0.0/15 198.51.100.0/24 203.0.113.0/24 224.0.0.0/4 240.0.0.0/4 255.255.255.255/32\"" >> $root/iptables_rules.sh
 echo "_iface=\$(cat \$root/netiface.txt)" >> $root/iptables_rules.sh
-
-#echo "ip6tables -P INPUT DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -P OUTPUT DROP" >> $root/iptables_rules.sh  
-#echo "ip6tables -P FORWARD DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A OUTPUT -p udp --dport 53 -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A OUTPUT -p tcp --dport 53 -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A OUTPUT -p tcp --dport 443 -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A OUTPUT -p tcp --dport 853 -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A OUTPUT -p udp --dport 5353 -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A INPUT  -p udp --dport 5353 -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A INPUT  -p udp --dport 546 -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A OUTPUT -p udp --dport 547 -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A INPUT -p icmpv6 --icmpv6-type router-advertisement -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A INPUT  -p icmpv6 --icmpv6-type neighbour-solicitation -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A INPUT  -p icmpv6 --icmpv6-type neighbour-advertisement -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A OUTPUT -s fe80::/10 -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A INPUT  -d fe80::/10 -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A OUTPUT -s fc00::/7 -j DROP" >> $root/iptables_rules.sh
-#echo "ip6tables -A INPUT  -d fc00::/7 -j DROP" >> $root/iptables_rules.sh
-
-
-#echo "sysctl -w net.ipv6.conf.all.disable_ipv6=1 > /dev/null 2>&1 >> /etc/sysctl.conf" >> $root/iptables_rules.sh
-#echo "sysctl -w net.ipv6.conf.default.disable_ipv6=1 > /dev/null 2>&1 >> /etc/sysctl.conf" >> $root/iptables_rules.sh
- 
-#echo "iptables -F" >> $root/iptables_rules.sh
-#echo "iptables -t nat -F" >> $root/iptables_rules.sh
-#echo "iptables -P OUTPUT DROP" >> $root/iptables_rules.sh
-#echo "iptables -A OUTPUT -m owner --uid-owner \$_user_uid -j ACCEPT" >> $root/iptables_rules.sh
-#echo "iptables -A OUTPUT -o lo -j ACCEPT" >> $root/iptables_rules.sh
-
 echo "iptables -t nat -A OUTPUT -d \$_virt_addr -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports \$_trans_port" >> $root/iptables_rules.sh
 echo "sleep 1" >> $root/iptables_rules.sh
 if ( grep -Fq "1" $root/stp-service ); then
@@ -824,12 +794,27 @@ iptables --table nat --delete-chain
 iptables -P OUTPUT DROP
 iptables -A OUTPUT -m owner --uid-owner $_UID -j ACCEPT
 iptables -A OUTPUT -o lo -j ACCEPT
-#iptables -P OUTPUT ACCEPT
-#iptables -P INPUT ACCEPT
-#iptables -P FORWARD ACCEPT
 ip6tables -P OUTPUT DROP
 ip6tables -P INPUT DROP
 ip6tables -P FORWARD DROP
+#ip6tables -P INPUT DROP
+#ip6tables -P OUTPUT DROP
+#ip6tables -P FORWARD DROP
+#ip6tables -A OUTPUT -p udp --dport 53 -j DROP
+#ip6tables -A OUTPUT -p tcp --dport 53 -j DROP
+#ip6tables -A OUTPUT -p tcp --dport 443 -j DROP
+#ip6tables -A OUTPUT -p tcp --dport 853 -j DROP
+#ip6tables -A OUTPUT -p udp --dport 5353 -j DROP
+#ip6tables -A INPUT  -p udp --dport 5353 -j DROP
+#ip6tables -A INPUT  -p udp --dport 546 -j DROP
+#ip6tables -A OUTPUT -p udp --dport 547 -j DROP
+#ip6tables -A INPUT -p icmpv6 --icmpv6-type router-advertisement -j DROP
+#ip6tables -A INPUT  -p icmpv6 --icmpv6-type neighbour-solicitation -j DROP
+#ip6tables -A INPUT  -p icmpv6 --icmpv6-type neighbour-advertisement -j DROP
+#ip6tables -A OUTPUT -s fe80::/10 -j DROP
+#ip6tables -A INPUT  -d fe80::/10 -j DROP
+#ip6tables -A OUTPUT -s fc00::/7 -j DROP
+#ip6tables -A INPUT  -d fc00::/7 -j DROP
 netiface
 ### Configure Network-Manager
 cd $root
@@ -1250,6 +1235,24 @@ echo "iptables -P FORWARD DROP" >> /etc/network/if-up.d/anon-service
 echo "ip6tables -P INPUT DROP" >> /etc/network/if-up.d/anon-service
 echo "ip6tables -P OUTPUT DROP" >> /etc/network/if-up.d/anon-service 
 echo "ip6tables -P FORWARD DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -P INPUT DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -P OUTPUT DROP" >> /etc/network/if-up.d/anon-service 
+#echo "ip6tables -P FORWARD DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A OUTPUT -p udp --dport 53 -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A OUTPUT -p tcp --dport 53 -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A OUTPUT -p tcp --dport 443 -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A OUTPUT -p tcp --dport 853 -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A OUTPUT -p udp --dport 5353 -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A INPUT  -p udp --dport 5353 -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A INPUT  -p udp --dport 546 -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A OUTPUT -p udp --dport 547 -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A INPUT -p icmpv6 --icmpv6-type router-advertisement -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A INPUT  -p icmpv6 --icmpv6-type neighbour-solicitation -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A INPUT  -p icmpv6 --icmpv6-type neighbour-advertisement -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A OUTPUT -s fe80::/10 -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A INPUT  -d fe80::/10 -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A OUTPUT -s fc00::/7 -j DROP" >> /etc/network/if-up.d/anon-service
+#echo "ip6tables -A INPUT  -d fc00::/7 -j DROP" >> /etc/network/if-up.d/anon-service
 echo "service dnsmasq stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "service bind stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
 echo "service resolvconf stop > /dev/null 2>&1" >> /etc/network/if-up.d/anon-service
