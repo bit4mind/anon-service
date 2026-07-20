@@ -185,9 +185,9 @@ chmod -R 777 $root/temp
 apt-get update > $root/temp/apt.log
 #
 if [[ ! -e "menu" ]] || [[ ! -e "$(cat $root/cpath)/temp/menu" ]]; then
-	apt-get install -y curl wget psmisc nano apt-transport-https unbound net-tools ifupdown > /dev/null
+	apt-get install -y curl wget vim-tiny psmisc nano apt-transport-https unbound net-tools ifupdown > /dev/null
 else
-	apt-get install -y curl wget xterm psmisc wmctrl apt-transport-https net-tools unbound > /dev/null
+	apt-get install -y curl wget vim-tiny xterm psmisc wmctrl apt-transport-https net-tools unbound > /dev/null
 fi
 sleep 1
 if [ -e tor_option1 ]; then
