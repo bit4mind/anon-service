@@ -854,10 +854,9 @@ if [ "$ipv6_status" == "0" ]; then
 	sysctl -w net.ipv6.conf.default.disable_ipv6=1 > /dev/null 2>&1
 fi
 echo "==> Restarting networking";
-service network-manager restart > /dev/null 2>&1
 service networking restart > /dev/null 2>&1
 sleep 3
-sleep 2
+service network-manager restart > /dev/null 2>&1
 chown -R $owner:$owner $root
 ## Restore original files automatically at shutdown
 if ( ! pgrep -f "restoring_orig.sh " )  > /dev/null; then
@@ -1449,9 +1448,9 @@ fi
 echo "==> Restarting neworking";
 echo "";
 service systemd-resolved restart > /dev/null 2>&1
-service network-manager restart > /dev/null 2>&1
 service networking restart > /dev/null 2>&1
 sleep 3
+service network-manager restart > /dev/null 2>&1
 fi
 ### Firewall flush
 iptables -F
@@ -1539,9 +1538,9 @@ echo "==> Restarting neworking";
 service systemd-resolved restart > /dev/null 2>&1
 rm -rf /opt/anon-service > /dev/null 2>&1
 rm /usr/bin/anon-service > /dev/null 2>&1
-service network-manager restart > /dev/null 2>&1
 service networking restart > /dev/null 2>&1
 sleep 3
+service network-manager restart > /dev/null 2>&1
 ### Firewall flush
 iptables -F
 iptables -t nat -F
