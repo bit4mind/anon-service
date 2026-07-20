@@ -3,6 +3,19 @@ CHANGELOG
 All notable changes to this project will be documented in this file.
 
 Released
+2.5 - 2026-07-21
+
+Added
+
+    Modern Distro support
+    Auto-detect and update to the lastest DNSCrypt version
+
+Changed
+
+    Iptables rules
+    
+
+Released
 2.4 - 2024-07-23
 
 Added
