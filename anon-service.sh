@@ -845,7 +845,6 @@ if [[ $(cat $root/dnsread) != "nameserver 127.0.0.1" ]]; then
 	_cquit
 fi
 rm $root/dnsread > /dev/null 2>&1
-sleep 3
 ### Disable ipv6 
 ipv6_status=$(cat /proc/sys/net/ipv6/conf/default/disable_ipv6)
 if [ "$ipv6_status" == "0" ]; then
@@ -853,10 +852,14 @@ if [ "$ipv6_status" == "0" ]; then
 	sysctl -w net.ipv6.conf.all.disable_ipv6=1 > /dev/null 2>&1
 	sysctl -w net.ipv6.conf.default.disable_ipv6=1 > /dev/null 2>&1
 fi
+sleep 3
 echo "==> Restarting networking";
 service networking restart > /dev/null 2>&1
 sleep 3
-service network-manager restart > /dev/null 2>&1
+service network-manager stop > /dev/null 2>&1
+sleep 3
+service network-manager start > /dev/null 2>&1
+sleep 6
 chown -R $owner:$owner $root
 ## Restore original files automatically at shutdown
 if ( ! pgrep -f "restoring_orig.sh " )  > /dev/null; then
@@ -1445,12 +1448,13 @@ if [ -s "/etc/network/if-up.d/anon-service" ]; then
 if [ -s $root/networking.bak ]; then
 	cp $root/networking.bak /etc/default/networking
 fi
-echo "==> Restarting neworking";
-echo "";
-service systemd-resolved restart > /dev/null 2>&1
+echo "==> Restarting networking";
 service networking restart > /dev/null 2>&1
 sleep 3
-service network-manager restart > /dev/null 2>&1
+service network-manager stop > /dev/null 2>&1
+sleep 3
+service network-manager start > /dev/null 2>&1
+sleep 6
 fi
 ### Firewall flush
 iptables -F
@@ -1464,7 +1468,7 @@ ip6tables -P OUTPUT ACCEPT
 ip6tables -P INPUT ACCEPT
 ip6tables -P FORWARD ACCEPT
 ### Restarting ufw service
-ufw enable
+ufw enable > /dev/null 2>&1
 systemctl enable ufw.service > /dev/null 2>&1
 if [ -e $root/cpath ]; then
 	cd $(cat $root/cpath)
@@ -1534,13 +1538,15 @@ fi
 userdel -r $owner > /dev/null 2>&1
 rm -rf $root > /dev/null 2>&1
 rm cpath > /dev/null 2>&1
-echo "==> Restarting neworking";
-service systemd-resolved restart > /dev/null 2>&1
 rm -rf /opt/anon-service > /dev/null 2>&1
 rm /usr/bin/anon-service > /dev/null 2>&1
+echo "==> Restarting networking";
 service networking restart > /dev/null 2>&1
 sleep 3
-service network-manager restart > /dev/null 2>&1
+service network-manager stop > /dev/null 2>&1
+sleep 3
+service network-manager start > /dev/null 2>&1
+sleep 6
 ### Firewall flush
 iptables -F
 iptables -t nat -F
@@ -1553,7 +1559,7 @@ ip6tables -P OUTPUT ACCEPT
 ip6tables -P INPUT ACCEPT
 ip6tables -P FORWARD ACCEPT
 ### Restarting ufw service
-ufw enable
+ufw enable > /dev/null 2>&1
 systemctl enable ufw.service > /dev/null 2>&1
 clear
 echo -e "\n\n\n\n\n\n";
@@ -1852,9 +1858,13 @@ if [ "$#" -gt 0 ]; then
 				mv cpath $root/ > /dev/null 2>&1
 			fi
 			if [ -s "/etc/network/if-up.d/anon-service" ]; then
-				service network-manager restart > /dev/null 2>&1
+				echo "==> Restarting networking";
 				service networking restart > /dev/null 2>&1
 				sleep 3
+				service network-manager stop > /dev/null 2>&1
+				sleep 3
+				service network-manager start > /dev/null 2>&1
+				sleep 6
 				exit 0
 			else
 				start_service
